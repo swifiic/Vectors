@@ -6,13 +6,53 @@
     android:layout_height="match_parent"
     tools:context="com.arnavdhamija.roamnet.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="20dp"
+        tools:layout_editor_absoluteY="20dp">
 
+        <Button
+            android:id="@+id/toggleRoamnet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Roamnet" />
+
+        <TextView
+            android:id="@+id/deviceIdView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="DeviceId"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/connectionStatusView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="No Connection"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/availableFilesView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Available Files"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/logClearButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Clear Log" />
+
+        <TextView
+            android:id="@+id/logView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
