@@ -20,6 +20,7 @@ android {
 
 dependencies {
     compile 'com.jaredrummler:android-device-names:1.1.6'
+    compile 'com.google.code.gson:gson:2.8.2'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.google.android.gms:play-services-nearby:11.8.0'

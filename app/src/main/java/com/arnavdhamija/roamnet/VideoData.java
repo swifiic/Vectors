@@ -1,10 +1,15 @@
 package com.arnavdhamija.roamnet;
 
+import android.util.Log;
+
+import com.google.gson.Gson;
+
 /**
  * Created by nic on 23/2/18.
  */
 
 public class VideoData {
+    private final String TAG = "VideoData";
     private String fileName;
     private int sequenceNumber;
     private int tickets;
@@ -51,5 +56,27 @@ public class VideoData {
 
     public void setFrameRate(int frameRate) {
         this.frameRate = frameRate;
+    }
+
+    public void logVideoData() {
+        Log.d(TAG, fileName + " " + sequenceNumber + " " + tickets + " " + resolution + " " + frameRate);
+    }
+
+    public void fromString(String jsonEncodedVideoData) {
+        Gson gson = new Gson();
+        VideoData res = gson.fromJson(jsonEncodedVideoData, VideoData.class);
+        setFileName(res.getFileName());
+        setSequenceNumber(res.getSequenceNumber());
+        setTickets(res.getTickets());
+        setResolution(res.getResolution());
+        setFrameRate(res.getFrameRate());
+        Log.d(TAG, "Done encoding");
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        Log.d(TAG, "JSON string " + gson.toJson(this));
+        return gson.toJson(this);
     }
 }
