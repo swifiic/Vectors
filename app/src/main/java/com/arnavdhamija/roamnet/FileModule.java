@@ -14,6 +14,7 @@ public class FileModule {
     private File fileLedger;
     private File destinationStrategy;
     private final String TAG = "FileModule";
+
     FileModule() {
         dataDirectory = new File(Environment.getExternalStorageDirectory()+"/RoamnetData");
         if (!dataDirectory.exists()) {

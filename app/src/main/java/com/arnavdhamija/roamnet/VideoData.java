@@ -5,8 +5,8 @@ package com.arnavdhamija.roamnet;
  */
 
 public class VideoData {
-    private int sequenceNumber;
     private String fileName;
+    private int sequenceNumber;
     private int tickets;
     private int resolution;
     private int frameRate;
