@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private boolean connectionActive = false;
+    private FileModule fileModule = new FileModule();
 
     final String TAG = "Roamnet";
     String deviceId;
@@ -94,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
 
         TextView deviceIdView = findViewById(R.id.deviceIdView);
         deviceIdView.setText("Device ID: " + deviceId);
+
+        TextView availableFilesView = findViewById(R.id.availableFilesView);
+        availableFilesView.setText("Available Files Count: " + fileModule.getFilesCount());
 
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
