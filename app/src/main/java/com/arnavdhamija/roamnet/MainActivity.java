@@ -40,12 +40,18 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class MainActivity extends AppCompatActivity {
     private ConnectionsClient mConnectionClient;
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private boolean connectionActive = false;
     private FileModule mFileModule;
+
+    enum MessageType {
+        WELCOME, JSON, FILENAME, EXTRA, ERROR;
+    }
 
     final String TAG = "Roamnet";
     String deviceId;
@@ -235,6 +241,46 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
+    String createStringType(MessageType type, String msg) {
+        if (type == MessageType.WELCOME) {
+            return "WLCM" + msg;
+        } else if (type == MessageType.JSON) {
+            return "JSON" + msg;
+        } else if (type == MessageType.FILENAME) {
+            return "FLNM" + msg;
+        } else if (type == MessageType.EXTRA) {
+            return "EXTR" + msg;
+        } else {
+            return null;
+        }
+    }
+
+    MessageType getMessageType(String originalMsg) {
+        String msgHeader = originalMsg.substring(0,4);
+        customLogger("HEader " + msgHeader);
+        if (msgHeader.compareTo("WLCM") == 0) {
+            return MessageType.WELCOME;
+        } else if (msgHeader.compareTo("JSON") == 0) {
+            return MessageType.JSON;
+        } else if (msgHeader.compareTo("FLNM") == 0) {
+            return MessageType.FILENAME;
+        } else if (msgHeader.compareTo("EXTR") == 0) {
+            return MessageType.EXTRA;
+        } else {
+            return MessageType.ERROR;
+        }
+    }
+
+    String parsePayloadString(String originalMsg) {
+        return originalMsg.substring(4);
+    }
+
+    private void sendWelcomeMessage() {
+        String welcome = "welcome2beconnected from  to " + connectedEndpoint;
+        welcome = createStringType(MessageType.WELCOME, welcome);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
+    }
+
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
                 String endpointName;
@@ -258,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
                             TextView textView = (TextView) findViewById(R.id.connectionStatusView);
                             textView.setText("Connected To: " + endpointId);
                             connectedEndpoint = endpointId;
+                            sendWelcomeMessage();
                             customLogger("stopping AD");
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
@@ -297,6 +344,10 @@ public class MainActivity extends AppCompatActivity {
         filePayloadFilenames.put(Long.valueOf(payloadId), filename);
     }
 
+    private void handleJSONMsg() {
+
+    }
+
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
                 @Override
@@ -304,12 +355,25 @@ public class MainActivity extends AppCompatActivity {
                     customLogger("getting a payload");
                     if (payload.getType() == Payload.Type.BYTES) {
                         try {
-                            String payloadFilenameMessage = new String(payload.asBytes(), "UTF-8");
-                            addPayloadFilename(payloadFilenameMessage);
-                            customLogger("Getting a byte pyalod" + payloadFilenameMessage);
-//                            addPayloadFilename(payloadFilenameMessage);
-                        } catch (Exception e) {
+                            String payloadMsg = new String(payload.asBytes(), "UTF-8");
+                            customLogger("Getting a byte pyalod " + payloadMsg);
+                            MessageType type = getMessageType(payloadMsg);
+                            String parsedMsg = parsePayloadString(payloadMsg);
 
+                            customLogger("MSG TYpeVAL" + type);
+                            if (type == MessageType.WELCOME) {
+                                customLogger("Got a welcome MSG! " + parsedMsg);
+                            } else if (type == MessageType.JSON) {
+                                handleJSONMsg();
+                            } else if (type == MessageType.FILENAME) {
+                                //add this to tracking map
+                            } else if (type == MessageType.EXTRA) {
+                                customLogger("Got an extra msg!" + parsedMsg);
+                            } else {
+                                customLogger(" got diff type " + parsedMsg);
+                            }
+                        } catch (Exception e) {
+                            customLogger("Byte payload fail");
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file pyalod " + payload.asFile().getSize());
@@ -317,6 +381,8 @@ public class MainActivity extends AppCompatActivity {
                         mNotificationManager.notify((int) payload.getId(), notification.build());
                         incomingPayloads.put(Long.valueOf(payload.getId()), notification);
                         incomingPayloadReferences.put(payload.getId(), payload);
+                    } else {
+                        customLogger("Diff type payload");
                     }
                 }
 

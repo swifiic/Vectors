@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import java.io.File;
+
 /**
  * Created by nic on 23/2/18.
  */
@@ -59,7 +61,7 @@ public class VideoData {
     }
 
     public void logVideoData() {
-        Log.d(TAG, fileName + " " + sequenceNumber + " " + tickets + " " + resolution + " " + frameRate);
+        Log.d(TAG, this.toString());
     }
 
     public void fromString(String jsonEncodedVideoData) {
