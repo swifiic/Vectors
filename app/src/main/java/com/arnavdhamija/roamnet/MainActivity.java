@@ -365,6 +365,24 @@ public class MainActivity extends AppCompatActivity {
         List<String> currFilenames = Arrays.asList(mFileModule.getFileList());
 
         rcvdFilenames.removeAll(currFilenames); // gives us the list of files we don't have, but want to get
+
+        String requestedFiles = convertListToCSV(rcvdFilenames);
+        customLogger("We want the files of: " + requestedFiles);
+    }
+
+    private String convertListToCSV(List<String> files) {
+        String fileName;
+        StringBuilder csvFileList = new StringBuilder();
+        for (int i = 0; i < files.size(); i++) {
+            fileName = files.get(i);
+            if (!fileName.contains(".json")) {
+                if (i > 0) {
+                    csvFileList.append(",");
+                }
+                csvFileList.append(fileName);
+            }
+        }
+        return csvFileList.toString();
     }
 
     private final PayloadCallback mPayloadCallback =
