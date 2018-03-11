@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private FileModule mFileModule;
 
     enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, FILELIST, ERROR;
+        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR;
     }
 
     final String TAG = "Roamnet";
@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
+    private List<VideoData> pendingTransfers = new ArrayList<>();
 
     void getPermissions() {
         if (ContextCompat.checkSelfPermission(this,
@@ -255,6 +256,8 @@ public class MainActivity extends AppCompatActivity {
             return "EXTR" + msg;
         } else if (type == MessageType.FILELIST) {
             return "FLST" + msg;
+        } else if (type == MessageType.REQUESTFILES) {
+            return "REQE" + msg;
         } else {
             return null;
         }
@@ -273,6 +276,8 @@ public class MainActivity extends AppCompatActivity {
             return MessageType.EXTRA;
         } else if (msgHeader.compareTo("FLST") == 0) {
             return MessageType.FILELIST;
+        } else if (msgHeader.compareTo("REQE") == 0) {
+            return MessageType.REQUESTFILES;
         } else {
             return MessageType.ERROR;
         }
@@ -358,8 +363,29 @@ public class MainActivity extends AppCompatActivity {
         filePayloadFilenames.put(Long.valueOf(payloadId), filename);
     }
 
-    private void handleJSONMsg() {
+    private void processJSONMsg(String parseMsg) {
+        VideoData vd = new VideoData();
+        vd.fromString(parseMsg);
+        // this list has to be managed, when we start sending files of course
+        pendingTransfers.add(vd);
+        // for now we will just write the vd to a file to make sure things are OK
+        mFileModule.writeToJSONFile(vd);
+        customLogger("Wrote the VIDEOJSON TO A file!");
+    }
 
+    private void processRequestFiles(String filelist) {
+        List<String> requestedFiles = Arrays.asList(filelist.split(","));
+        for (int i = 0; i < requestedFiles.size(); i++) {
+            VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
+            if (vd != null) {
+                if (vd.getTickets() > 1) {
+                    vd.setTickets(vd.getTickets()/2); // SNW strategy allows us to only send half
+                    String data = vd.toString();
+                    data = createStringType(MessageType.JSON, data);
+                    mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(data.getBytes(UTF_8)));
+                }
+            }
+        }
     }
 
     private void processFileList(String filelist) {
@@ -384,8 +410,11 @@ public class MainActivity extends AppCompatActivity {
                 requestFilenames.add(rcvdFilenames.get(i));
             }
         }
-
-        customLogger("We want the files of " + convertListToCSV(requestFilenames));
+        String requestFilesCSV = convertListToCSV(requestFilenames);
+        customLogger("We want the files of " + requestFilesCSV);
+        // we send the files we want to get here
+        requestFilesCSV = createStringType(MessageType.REQUESTFILES, requestFilesCSV);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
     }
 
     private String convertListToCSV(List<String> files) {
@@ -421,13 +450,15 @@ public class MainActivity extends AppCompatActivity {
                             if (type == MessageType.WELCOME) {
                                 customLogger("Got a welcome MSG! " + parsedMsg);
                             } else if (type == MessageType.JSON) {
-                                handleJSONMsg();
+                                processJSONMsg(parsedMsg);
                             } else if (type == MessageType.FILENAME) {
                                 //add this to tracking map
                             } else if (type == MessageType.EXTRA) {
                                 customLogger("Got an extra msg!" + parsedMsg);
                             } else if (type == MessageType.FILELIST) {
                                 processFileList(parsedMsg);
+                            } else if (type == MessageType.REQUESTFILES) {
+                                processRequestFiles(parsedMsg);
                             } else {
                                 customLogger(" got diff type " + parsedMsg);
                             }
