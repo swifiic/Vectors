@@ -38,7 +38,9 @@ import com.jaredrummler.android.device.DeviceName;
 import java.io.File;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -50,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private FileModule mFileModule;
 
     enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, ERROR;
+        WELCOME, JSON, FILENAME, EXTRA, FILELIST, ERROR;
     }
 
     final String TAG = "Roamnet";
@@ -250,13 +252,15 @@ public class MainActivity extends AppCompatActivity {
             return "FLNM" + msg;
         } else if (type == MessageType.EXTRA) {
             return "EXTR" + msg;
+        } else if (type == MessageType.FILELIST) {
+            return "FLST" + msg;
         } else {
             return null;
         }
     }
 
     MessageType getMessageType(String originalMsg) {
-        String msgHeader = originalMsg.substring(0,4);
+        String msgHeader = originalMsg.substring(0, 4);
         customLogger("HEader " + msgHeader);
         if (msgHeader.compareTo("WLCM") == 0) {
             return MessageType.WELCOME;
@@ -266,6 +270,8 @@ public class MainActivity extends AppCompatActivity {
             return MessageType.FILENAME;
         } else if (msgHeader.compareTo("EXTR") == 0) {
             return MessageType.EXTRA;
+        } else if (msgHeader.compareTo("FLST") == 0) {
+            return MessageType.FILELIST;
         } else {
             return MessageType.ERROR;
         }
@@ -279,6 +285,11 @@ public class MainActivity extends AppCompatActivity {
         String welcome = "welcome2beconnected from  to " + connectedEndpoint;
         welcome = createStringType(MessageType.WELCOME, welcome);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
+    }
+
+    private void sendFileList() {
+        String fileList = mFileModule.getFileList();
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
@@ -348,6 +359,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void processFileList(String filelist) {
+        customLogger("Rcvd a filelist of " + filelist);
+        List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
+        List<String> currFilenames = Arrays.asList(mFileModule.getFileList());
+
+        rcvdFilenames.removeAll(currFilenames); // gives us the list of files we don't have, but want to get
+    }
+
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
                 @Override
@@ -369,6 +388,8 @@ public class MainActivity extends AppCompatActivity {
                                 //add this to tracking map
                             } else if (type == MessageType.EXTRA) {
                                 customLogger("Got an extra msg!" + parsedMsg);
+                            } else if (type == MessageType.FILELIST) {
+                                processFileList(parsedMsg);
                             } else {
                                 customLogger(" got diff type " + parsedMsg);
                             }

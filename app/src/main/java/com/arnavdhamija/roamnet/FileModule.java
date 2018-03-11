@@ -41,6 +41,7 @@ public class FileModule {
         String fileName;
         String tokens[];
         File[] files = dataDirectory.listFiles();
+        Log.d(TAG, "FILELIST" + getFileList());
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
@@ -82,10 +83,10 @@ public class FileModule {
         StringBuilder csvFileList = new StringBuilder();
         for (int i = 0; i < files.length; i++) {
             fileName = files[i].getName();
-            if (i > 0) {
-                csvFileList.append(",");
-            }
             if (!fileName.contains(".json")) {
+                if (i > 0) {
+                    csvFileList.append(",");
+                }
                 csvFileList.append(fileName);
             }
         }
