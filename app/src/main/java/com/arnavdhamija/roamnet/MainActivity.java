@@ -38,6 +38,7 @@ import com.jaredrummler.android.device.DeviceName;
 import java.io.File;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -289,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendFileList() {
         String fileList = mFileModule.getFileList();
+        fileList = createStringType(MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
@@ -315,7 +317,8 @@ public class MainActivity extends AppCompatActivity {
                             TextView textView = (TextView) findViewById(R.id.connectionStatusView);
                             textView.setText("Connected To: " + endpointId);
                             connectedEndpoint = endpointId;
-                            sendWelcomeMessage();
+//                            sendWelcomeMessage();
+                            sendFileList();
                             customLogger("stopping AD");
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
@@ -362,12 +365,27 @@ public class MainActivity extends AppCompatActivity {
     private void processFileList(String filelist) {
         customLogger("Rcvd a filelist of " + filelist);
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
-        List<String> currFilenames = Arrays.asList(mFileModule.getFileList());
+        List<String> currFilenames = Arrays.asList(mFileModule.getFileList().split(","));
+        List<String> requestFilenames = new ArrayList<>();;
 
-        rcvdFilenames.removeAll(currFilenames); // gives us the list of files we don't have, but want to get
+        for (String x : rcvdFilenames) {
+            customLogger("LIST: " + x);
+        }
 
-        String requestedFiles = convertListToCSV(rcvdFilenames);
-        customLogger("We want the files of: " + requestedFiles);
+        // This code makes me want to throw up, but it's the only way not to get a NPE :P
+        for (int i = 0; i < rcvdFilenames.size(); i++) {
+            boolean includeVid = true;
+            for (int j = 0; j < currFilenames.size(); j++) {
+                if (rcvdFilenames.get(i).compareTo(currFilenames.get(j)) == 0) {
+                    includeVid = false;
+                }
+            }
+            if (includeVid) {
+                requestFilenames.add(rcvdFilenames.get(i));
+            }
+        }
+
+        customLogger("We want the files of " + convertListToCSV(requestFilenames));
     }
 
     private String convertListToCSV(List<String> files) {
@@ -396,7 +414,9 @@ public class MainActivity extends AppCompatActivity {
                             customLogger("Getting a byte pyalod " + payloadMsg);
                             MessageType type = getMessageType(payloadMsg);
                             String parsedMsg = parsePayloadString(payloadMsg);
-
+                            if (parsedMsg == null) {
+                                customLogger("We got a null string?!?!?!");
+                            }
                             customLogger("MSG TYpeVAL" + type);
                             if (type == MessageType.WELCOME) {
                                 customLogger("Got a welcome MSG! " + parsedMsg);
@@ -412,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
                                 customLogger(" got diff type " + parsedMsg);
                             }
                         } catch (Exception e) {
-                            customLogger("Byte payload fail");
+                            customLogger("Byte payload fail" + e.getMessage());
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file pyalod " + payload.asFile().getSize());
