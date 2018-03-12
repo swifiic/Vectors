@@ -42,6 +42,10 @@ public class FileModule {
         buildFileLedger();
     }
 
+    public File getDataDirectory() {
+        return dataDirectory;
+    }
+
     public ParcelFileDescriptor getPfd(String filename) {
         Uri uri = Uri.fromFile(new File(dataDirectory, filename));
         Log.d(TAG, "Chosen file URI: " + uri);
@@ -88,7 +92,7 @@ public class FileModule {
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
-                if (!fileName.contains(".json")) {
+                if (!fileName.contains(".json") && fileName.startsWith("video")) {
                     tokens = fileName.split("_");
                     VideoData videoData = new VideoData();
                     videoData.setFileName(fileName);

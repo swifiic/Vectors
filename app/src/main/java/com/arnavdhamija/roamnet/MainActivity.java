@@ -66,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-    private List<VideoData> incomingTransfersJSON = new ArrayList<>();
-    private List<VideoData> outgoingTransfersJSON = new ArrayList<>();
+    private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
+    private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
 
     void getPermissions() {
         if (ContextCompat.checkSelfPermission(this,
@@ -269,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
     MessageType getMessageType(String originalMsg) {
         String msgHeader = originalMsg.substring(0, 4);
-        customLogger("HEader " + msgHeader);
+//        customLogger("Header " + msgHeader);
         if (msgHeader.compareTo("WLCM") == 0) {
             return MessageType.WELCOME;
         } else if (msgHeader.compareTo("JSON") == 0) {
@@ -291,45 +291,6 @@ public class MainActivity extends AppCompatActivity {
         return originalMsg.substring(4);
     }
 
-    private void sendWelcomeMessage() {
-        String welcome = "welcome2beconnected from  to " + connectedEndpoint;
-        welcome = createStringType(MessageType.WELCOME, welcome);
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
-    }
-
-    private void sendFile(String filename) {
-        ParcelFileDescriptor pfd = mFileModule.getPfd(filename);
-        if (pfd == null) {
-            customLogger("File not found - lite");
-            return;
-        }
-        Payload filePayload = Payload.fromFile(pfd);
-
-        String payloadFilenameMessage = filePayload.getId() + ":" + filename;
-        Payload.File file = filePayload.asFile(); // do we need this line?
-        sendFile(connectedEndpoint, filePayload, payloadFilenameMessage);
-    }
-
-    private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg) {
-        NotificationCompat.Builder notification = buildNotification(payload, false);
-        mNotificationManager.notify((int)payload.getId(), notification.build());
-        outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
-        try {
-            payloadFilenameMsg = createStringType(MessageType.FILENAME, payloadFilenameMsg);
-            customLogger("Sending a file - filename is : " + payloadFilenameMsg);
-            mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
-        } catch (UnsupportedEncodingException e) {
-            customLogger("encode fail");
-        }
-        mConnectionClient.sendPayload(endpointId, payload);
-    }
-
-    private void sendFileList() {
-        String fileList = mFileModule.getFileList();
-        fileList = createStringType(MessageType.FILELIST, fileList);
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
-    }
-
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
                 String endpointName;
@@ -348,17 +309,18 @@ public class MainActivity extends AppCompatActivity {
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
-                            customLogger("GGWP! :D:D:D");
+//                            customLogger("GGWP! :D:D:D");
                             Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             TextView textView = (TextView) findViewById(R.id.connectionStatusView);
                             textView.setText("Connected To: " + endpointId);
                             connectedEndpoint = endpointId;
 //                            sendWelcomeMessage();
                             sendFileList();
-                            customLogger("stopping AD");
+//                            sendFile("img.jpg");
+//                            customLogger("stopping AD");
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
-                            customLogger("stopped AD!!");
+//                            customLogger("stopped AD!!");
                             // We're connected! Can now start sending and receiving data.
                             break;
                         case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR: //this code is ignored
@@ -394,14 +356,57 @@ public class MainActivity extends AppCompatActivity {
         filePayloadFilenames.put(Long.valueOf(payloadId), filename);
     }
 
+    private void sendWelcomeMessage() {
+        String welcome = "welcome2beconnected from  to " + connectedEndpoint;
+        welcome = createStringType(MessageType.WELCOME, welcome);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
+    }
+
+    private void sendFile(VideoData data) {
+        ParcelFileDescriptor pfd = mFileModule.getPfd(data.getFileName());
+        if (pfd == null) {
+            customLogger("File not found - lite");
+            return;
+        }
+        Payload filePayload = Payload.fromFile(pfd);
+
+        String payloadFilenameMessage = filePayload.getId() + ":" + data.getFileName();
+        Payload.File file = filePayload.asFile(); // do we need this line?
+        sendFile(connectedEndpoint, filePayload, payloadFilenameMessage, data);
+    }
+
+    private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg, VideoData data) {
+        NotificationCompat.Builder notification = buildNotification(payload, false);
+        mNotificationManager.notify((int)payload.getId(), notification.build());
+        outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
+
+        // now we send the JSON metadata mapped by the payload ID
+        String videoDataJSON = data.toString();
+        videoDataJSON = createStringType(MessageType.JSON, videoDataJSON);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+        outgoingTransfersMetadata.put(Long.valueOf(payload.getId()), data);
+
+        try {
+            payloadFilenameMsg = createStringType(MessageType.FILENAME, payloadFilenameMsg);
+            customLogger("Sending a file - filename is : " + payloadFilenameMsg);
+            mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            customLogger("encode fail");
+        }
+        mConnectionClient.sendPayload(endpointId, payload);
+    }
+
+    private void sendFileList() {
+        String fileList = mFileModule.getFileList();
+        fileList = createStringType(MessageType.FILELIST, fileList);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
+    }
+
     private void processJSONMsg(String parseMsg) {
         VideoData vd = new VideoData();
         vd.fromString(parseMsg);
-        // this list has to be managed, when we start sending files of course
-        incomingTransfersJSON.add(vd);
-        // for now we will just write the vd to a file to make sure things are OK
-        mFileModule.writeToJSONFile(vd);
-        customLogger("Wrote the VIDEOJSON TO A file!");
+        // this list has to be managed, when we start getting files of course
+        incomingTransfersMetadata.add(vd);
     }
 
     private void processRequestFiles(String filelist) {
@@ -412,9 +417,8 @@ public class MainActivity extends AppCompatActivity {
                 if (vd.getTickets() > 1) {
                     vd.setTickets(vd.getTickets()/2); // SNW strategy allows us to only send half
                     String data = vd.toString();
-                    data = createStringType(MessageType.JSON, data);
-                    mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(data.getBytes(UTF_8)));
-                    outgoingTransfersJSON.add(vd);
+                    //send JSON and file
+                    sendFile(vd);
                 }
             }
         }
@@ -424,9 +428,9 @@ public class MainActivity extends AppCompatActivity {
         customLogger("Rcvd a filelist of " + filelist);
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
         List<String> currFilenames = Arrays.asList(mFileModule.getFileList().split(","));
-        List<String> requestFilenames = new ArrayList<>();;
+        List<String> requestFilenames = new ArrayList<>();
 
-        // This code makes me want to throw up, but it's the only way not to get a NPE :P
+        // This code is very bad, but it's the only way not to get a NPE :P
         for (int i = 0; i < rcvdFilenames.size(); i++) {
             boolean includeVid = true;
             for (int j = 0; j < currFilenames.size(); j++) {
@@ -464,7 +468,6 @@ public class MainActivity extends AppCompatActivity {
             new PayloadCallback() {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
-                    customLogger("getting a payload");
                     if (payload.getType() == Payload.Type.BYTES) {
                         try {
                             String payloadMsg = new String(payload.asBytes(), "UTF-8");
@@ -474,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                             if (parsedMsg == null) {
                                 customLogger("We got a null string?!?!?!");
                             }
-                            customLogger("MSG TYpeVAL" + type);
+//                            customLogger("MSG TYpeVAL" + type);
                             if (type == MessageType.WELCOME) {
                                 customLogger("Got a welcome MSG! " + parsedMsg);
                             } else if (type == MessageType.JSON) {
@@ -494,7 +497,7 @@ public class MainActivity extends AppCompatActivity {
                             customLogger("Byte payload fail" + e.getMessage());
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
-                        customLogger("Getting a file pyalod " + payload.asFile().getSize());
+                        customLogger("Getting a file payload " + payload.asFile().getSize());
                         NotificationCompat.Builder notification = buildNotification(payload, true /*isIncoming*/);
                         mNotificationManager.notify((int) payload.getId(), notification.build());
                         incomingPayloads.put(Long.valueOf(payload.getId()), notification);
@@ -511,40 +514,42 @@ public class MainActivity extends AppCompatActivity {
                     if (incomingPayloads.containsKey(payloadId)) {
                         notification = incomingPayloads.get(payloadId);
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
-                            // This is the last update, so we no longer need to keep track of this notification.
                             incomingPayloads.remove(payloadId);
                         }
                     } else if (outgoingPayloads.containsKey(payloadId)) {
                         notification = outgoingPayloads.get(payloadId);
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
-                            // This is the last update, so we no longer need to keep track of this notification.
                             outgoingPayloads.remove(payloadId);
+                            VideoData vd = outgoingTransfersMetadata.remove(payloadId);
+                            mFileModule.writeToJSONFile(vd); // update JSON file
+                            customLogger("Updated the outbound JSON");
                         }
                     }
                     Payload payload = incomingPayloadReferences.get(update.getPayloadId());
                     switch(update.getStatus()) {
                         case PayloadTransferUpdate.Status.IN_PROGRESS:
                             int size = (int)update.getTotalBytes();
-//                            customLogger("Bytes transferred " + update.getBytesTransferred());
-                            if (size == -1) {
-                                // This is a stream payload, so we don't need to update anything at this point.
-                                return;
-                            }
                             notification.setProgress(size, (int)update.getBytesTransferred(), false /* indeterminate */);
                             break;
                         case PayloadTransferUpdate.Status.SUCCESS:
-                            // SUCCESS always means that we transferred 100%.
                             notification
                                     .setProgress(100, 100, false /* indeterminate */)
                                     .setContentText("Transfer complete!");
-                            customLogger("Transfer done");
                             String filename = filePayloadFilenames.remove(update.getPayloadId());
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
-                                payloadFile.renameTo(new File(payloadFile.getParentFile(), filename));
-                                customLogger("found N renamed");
-                            } else {
-                                customLogger("NUll");
+                                payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
+
+                                // remove it from being tracked by the incomingJSONs and write that to a file
+                                for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
+                                    if (incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0) {
+                                        mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
+                                        customLogger("Wrote the incoming JSON");
+                                        incomingTransfersMetadata.remove(i);
+                                        break;
+                                    }
+                                }
+                                customLogger("Wrote the data to a file");
                             }
                             break;
                         case PayloadTransferUpdate.Status.FAILURE:
@@ -553,9 +558,7 @@ public class MainActivity extends AppCompatActivity {
                                     .setContentText("Transfer failed");
                             break;
                     }
-//                    if (payload != null) {
                     mNotificationManager.notify((int) payloadId, notification.build());
-//                    }
                 }
 
             };
