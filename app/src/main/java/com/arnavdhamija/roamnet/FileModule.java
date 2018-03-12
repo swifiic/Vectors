@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -92,7 +93,8 @@ public class FileModule {
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
-                if (!fileName.contains(".json") && fileName.startsWith("video")) {
+//                test if this ignores which already have a JSON
+                if (!fileName.contains(".json") && fileName.startsWith("video") && Arrays.asList(files).indexOf(fileName + ".json") == -1) {
                     tokens = fileName.split("_");
                     VideoData videoData = new VideoData();
                     videoData.setFileName(fileName);
@@ -100,7 +102,6 @@ public class FileModule {
                     videoData.setResolution(Integer.parseInt(tokens[2]));
                     videoData.setFrameRate(Integer.parseInt(tokens[3]));
                     videoData.setTickets(128);
-//                videoData.logVideoData();
                     if (useDb) {
                         mDatabaseModule.addVideoData(videoData);
                     } else {
