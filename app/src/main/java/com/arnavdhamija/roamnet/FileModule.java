@@ -1,12 +1,17 @@
 package com.arnavdhamija.roamnet;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -35,6 +40,44 @@ public class FileModule {
         mContext = context;
         mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
         buildFileLedger();
+    }
+
+    public ParcelFileDescriptor getPfd(String filename) {
+        Uri uri = Uri.fromFile(new File(dataDirectory, filename));
+        Log.d(TAG, "Chosen file URI: " + uri);
+        try {
+            ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(uri, "r");
+            return pfd;
+        } catch (FileNotFoundException fne) {
+            Log.d(TAG, "File not found for PFD");
+        }
+        return null;
+    }
+
+    public String getFileName(String filename) {
+        return getFileName(Uri.fromFile(new File(dataDirectory, filename)));
+    }
+
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 
     public void buildFileLedger() {

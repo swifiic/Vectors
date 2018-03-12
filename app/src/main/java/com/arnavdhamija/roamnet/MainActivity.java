@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -36,6 +38,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -63,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-    private List<VideoData> pendingTransfers = new ArrayList<>();
+    private List<VideoData> incomingTransfersJSON = new ArrayList<>();
+    private List<VideoData> outgoingTransfersJSON = new ArrayList<>();
 
     void getPermissions() {
         if (ContextCompat.checkSelfPermission(this,
@@ -170,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 deviceId,
                 getPackageName(),
                 mConnectionLifecycleCallback,
-                new AdvertisingOptions(Strategy.P2P_STAR))
+                new AdvertisingOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(
                         new OnSuccessListener<Void>() {
                             @Override
@@ -192,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         mConnectionClient.startDiscovery(
                 getPackageName(),
                 mEndpointDiscoveryCallback,
-                new DiscoveryOptions(Strategy.P2P_STAR))
+                new DiscoveryOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(
                         new OnSuccessListener<Void>() {
                             @Override
@@ -293,6 +297,33 @@ public class MainActivity extends AppCompatActivity {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
     }
 
+    private void sendFile(String filename) {
+        ParcelFileDescriptor pfd = mFileModule.getPfd(filename);
+        if (pfd == null) {
+            customLogger("File not found - lite");
+            return;
+        }
+        Payload filePayload = Payload.fromFile(pfd);
+
+        String payloadFilenameMessage = filePayload.getId() + ":" + filename;
+        Payload.File file = filePayload.asFile(); // do we need this line?
+        sendFile(connectedEndpoint, filePayload, payloadFilenameMessage);
+    }
+
+    private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg) {
+        NotificationCompat.Builder notification = buildNotification(payload, false);
+        mNotificationManager.notify((int)payload.getId(), notification.build());
+        outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
+        try {
+            payloadFilenameMsg = createStringType(MessageType.FILENAME, payloadFilenameMsg);
+            customLogger("Sending a file - filename is : " + payloadFilenameMsg);
+            mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            customLogger("encode fail");
+        }
+        mConnectionClient.sendPayload(endpointId, payload);
+    }
+
     private void sendFileList() {
         String fileList = mFileModule.getFileList();
         fileList = createStringType(MessageType.FILELIST, fileList);
@@ -367,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
         VideoData vd = new VideoData();
         vd.fromString(parseMsg);
         // this list has to be managed, when we start sending files of course
-        pendingTransfers.add(vd);
+        incomingTransfersJSON.add(vd);
         // for now we will just write the vd to a file to make sure things are OK
         mFileModule.writeToJSONFile(vd);
         customLogger("Wrote the VIDEOJSON TO A file!");
@@ -383,6 +414,7 @@ public class MainActivity extends AppCompatActivity {
                     String data = vd.toString();
                     data = createStringType(MessageType.JSON, data);
                     mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(data.getBytes(UTF_8)));
+                    outgoingTransfersJSON.add(vd);
                 }
             }
         }
@@ -393,10 +425,6 @@ public class MainActivity extends AppCompatActivity {
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
         List<String> currFilenames = Arrays.asList(mFileModule.getFileList().split(","));
         List<String> requestFilenames = new ArrayList<>();;
-
-        for (String x : rcvdFilenames) {
-            customLogger("LIST: " + x);
-        }
 
         // This code makes me want to throw up, but it's the only way not to get a NPE :P
         for (int i = 0; i < rcvdFilenames.size(); i++) {
@@ -452,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
                             } else if (type == MessageType.JSON) {
                                 processJSONMsg(parsedMsg);
                             } else if (type == MessageType.FILENAME) {
-                                //add this to tracking map
+                                addPayloadFilename(parsedMsg);
                             } else if (type == MessageType.EXTRA) {
                                 customLogger("Got an extra msg!" + parsedMsg);
                             } else if (type == MessageType.FILELIST) {
