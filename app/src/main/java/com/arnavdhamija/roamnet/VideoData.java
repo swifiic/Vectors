@@ -17,8 +17,24 @@ public class VideoData {
     private int tickets;
     private int resolution;
     private int frameRate;
+    private int svcLayer;
+    private int maxLayer;
 
-    VideoData(){}
+    public int getSvcLayer() {
+        return svcLayer;
+    }
+
+    public void setSvcLayer(int svcLayer) {
+        this.svcLayer = svcLayer;
+    }
+
+    public int getMaxLayer() {
+        return maxLayer;
+    }
+
+    public void setMaxLayer(int maxLayer) {
+        this.maxLayer = maxLayer;
+    }
 
     public int getSequenceNumber() {
         return sequenceNumber;
@@ -81,4 +97,6 @@ public class VideoData {
         Log.d(TAG, "JSON string " + gson.toJson(this));
         return gson.toJson(this);
     }
+
+    VideoData(){}
 }
