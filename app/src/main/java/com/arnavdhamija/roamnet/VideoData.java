@@ -19,6 +19,15 @@ public class VideoData {
     private int frameRate;
     private int svcLayer;
     private int maxLayer;
+    private long creationTime;
+
+    public long getCreationTime() {
+        return creationTime;
+    }
+
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+    }
 
     public int getSvcLayer() {
         return svcLayer;

@@ -39,6 +39,7 @@ import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.security.Permission;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -70,37 +71,70 @@ public class MainActivity extends AppCompatActivity {
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
 
     void getPermissions() {
+        List<String> listPermissionsNeeded = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                    0);
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+//                    0);
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    0);
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+//                    0);
+            listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    0);
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                    0);
+            listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
+
+        if (!listPermissionsNeeded.isEmpty()) {
+            String[] requiredPermissionsArray = listPermissionsNeeded.toArray(new String[0]);
+            ActivityCompat.requestPermissions(this, requiredPermissionsArray, 0);
+        }
+    }
+
+    boolean checkPermissions() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED &&
+        ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED &&
+        ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
+        case 0:
+            if (grantResults.length > 0) {
+                for (int i : grantResults) {
+                    if (i == PackageManager.PERMISSION_GRANTED) {
+                        Log.d(TAG, "Perm granted");
+                        startApp();
+                        return;
+                    } else {
+                        Log.d(TAG, "We didn't get perms :(");
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        getPermissions();
+    private void startApp() {
         mFileModule = new FileModule(this);
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
         customLogger(deviceId);
@@ -139,6 +173,18 @@ public class MainActivity extends AppCompatActivity {
                 logView.setText("");
             }
         });
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        if (!checkPermissions()) {
+            getPermissions();
+        } else {
+            startApp();
+        }
     }
 
     private void customLogger(String msg) {
