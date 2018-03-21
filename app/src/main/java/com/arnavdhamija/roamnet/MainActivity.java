@@ -148,29 +148,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startApp() {
-
+        Intent intent = new Intent(this, MainBGService.class);
+        startService(intent);
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mBound) {
-                    if (!mService.isConnectionActive()) {
-                        mService.startAdvertising();
-                        mService.startDiscovery();
-                        mService.setConnectionStatus(true);
-                        setButtonText();
-                        customLogger("Starting!");
-                    } else {
-                        mService.stopDiscovery();
-                        mService.stopAdvertising();
-                        mService.stopAllEndpoints();
-                        mService.setConnectionStatus(false);
-                        setButtonText();
-                        customLogger("Stopping!");
-                    }
+                if (!mService.isConnectionActive()) {
+                    mService.startAdvertising();
+                    mService.startDiscovery();
+                    mService.setConnectionStatus(true);
+                    setButtonText();
+                    customLogger("Starting!");
                 } else {
-                    rebindBGService();
+                    mService.stopDiscovery();
+                    mService.stopAdvertising();
+                    mService.stopAllEndpoints();
+                    mService.setConnectionStatus(false);
+                    setButtonText();
+                    customLogger("Stopping!");
                 }
+                rebindBGService();
             }
         });
 
@@ -182,9 +180,6 @@ public class MainActivity extends AppCompatActivity {
                 logView.setText("");
             }
         });
-
-        getPermissions();
-
         IntentFilter statusIntentFilter = new IntentFilter(
                 Constants.BROADCAST_ACTION);
         BGServiceUIUpdateReceiver bgServiceUIUpdateReceiver =  new BGServiceUIUpdateReceiver();
@@ -206,11 +201,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void rebindBGService() {
-        if (!mBound) {
-            if (checkPermissions()) {
-                Intent intent = new Intent(this, MainBGService.class);
-                bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            }
+        if (checkPermissions()) {
+            Intent intent = new Intent(this, MainBGService.class);
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
     }
 
@@ -240,13 +233,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unbindService(mConnection);
-//        customLogger("SerivcePause");
-//        mBound = false;
-//    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unbindService(mConnection);
+        customLogger("SerivcePause");
+        mBound = false;
+    }
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
