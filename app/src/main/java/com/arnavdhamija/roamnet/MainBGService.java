@@ -67,7 +67,7 @@ public class MainBGService extends IntentService {
     private String connectedEndpoint;
 
 
-    private boolean connectionActive = false;
+    private boolean connectionActive;
     private FileModule mFileModule;
 
     enum MessageType {
@@ -316,25 +316,25 @@ public class MainBGService extends IntentService {
         }
     }
 
-    MainActivity.MessageType getMessageType(String originalMsg) {
+    MessageType getMessageType(String originalMsg) {
         String msgHeader = originalMsg.substring(0, 4);
 //        customLogger("Header " + msgHeader);
         if (msgHeader.compareTo("WLCM") == 0) {
-            return MainActivity.MessageType.WELCOME;
+            return MessageType.WELCOME;
         } else if (msgHeader.compareTo("JSON") == 0) {
-            return MainActivity.MessageType.JSON;
+            return MessageType.JSON;
         } else if (msgHeader.compareTo("FLNM") == 0) {
-            return MainActivity.MessageType.FILENAME;
+            return MessageType.FILENAME;
         } else if (msgHeader.compareTo("EXTR") == 0) {
-            return MainActivity.MessageType.EXTRA;
+            return MessageType.EXTRA;
         } else if (msgHeader.compareTo("FLST") == 0) {
-            return MainActivity.MessageType.FILELIST;
+            return MessageType.FILELIST;
         } else if (msgHeader.compareTo("REQE") == 0) {
-            return MainActivity.MessageType.REQUESTFILES;
+            return MessageType.REQUESTFILES;
         } else if (msgHeader.compareTo("DACK") == 0) {
-            return MainActivity.MessageType.DESTINATIONACK;
+            return MessageType.DESTINATIONACK;
         } else {
-            return MainActivity.MessageType.ERROR;
+            return MessageType.ERROR;
         }
     }
 
