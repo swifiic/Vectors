@@ -241,6 +241,13 @@ public class MainActivity extends AppCompatActivity {
         mBound = false;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent(this, MainBGService.class);
+        stopService(intent);
+    }
+
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
