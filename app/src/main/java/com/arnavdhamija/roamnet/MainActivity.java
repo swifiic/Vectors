@@ -136,6 +136,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void setButtonText() {
+        final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
+        if (mBound) {
+            if (mService.isConnectionActive()) {
+                toggleRoamnetButton.setText("Stop Roamnet");
+            } else {
+                toggleRoamnetButton.setText("Start Roamnet");
+            }
+        }
+    }
+
     private void startApp() {
 
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
@@ -143,19 +154,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(mBound) {
-                    if (!roamnetRunning) {
+                    if (!mService.isConnectionActive()) {
                         mService.startAdvertising();
                         mService.startDiscovery();
+                        mService.setConnectionStatus(true);
+                        setButtonText();
                         customLogger("Starting!");
-                        toggleRoamnetButton.setText("Stop Roamnet");
-                        roamnetRunning = true;
                     } else {
                         mService.stopDiscovery();
                         mService.stopAdvertising();
                         mService.stopAllEndpoints();
+                        mService.setConnectionStatus(false);
+                        setButtonText();
                         customLogger("Stopping!");
-                        toggleRoamnetButton.setText("Start Roamnet");
-                        roamnetRunning = false;
                     }
                 } else {
                     rebindBGService();
@@ -172,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         getPermissions();
 
         IntentFilter statusIntentFilter = new IntentFilter(
@@ -187,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setButtonText();
         if (!checkPermissions()) {
             getPermissions();
         } else {
@@ -194,25 +205,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void rebindBGService(){
-        Intent intent = new Intent(this, MainBGService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    private void rebindBGService() {
+        if (!mBound) {
+            if (checkPermissions()) {
+                Intent intent = new Intent(this, MainBGService.class);
+                bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            }
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (checkPermissions()) {
-            rebindBGService();
-        }
-    }
+        rebindBGService();
+     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        setButtonText();
         // populate content from the Service
         if(mBound){
-
+            customLogger("Started at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
             deviceIdView.setText("Device ID: " + mService.getDeviceId());
 
@@ -227,10 +241,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 //    @Override
-//    protected void onStop() {
-//        super.onStop();
+//    protected void onPause() {
+//        super.onPause();
 //        unbindService(mConnection);
-//        customLogger("SerivceStop");
+//        customLogger("SerivcePause");
 //        mBound = false;
 //    }
 
@@ -242,7 +256,9 @@ public class MainActivity extends AppCompatActivity {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             MainBGService.LocalBinder binder = (MainBGService.LocalBinder) service;
             mService = binder.getService();
-            customLogger("Service conn!");
+//            customLogger("Service conn!");
+            customLogger("Started at: " + mService.getStartTime());
+
             mBound = true;
         }
 

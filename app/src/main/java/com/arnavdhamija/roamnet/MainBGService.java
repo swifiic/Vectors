@@ -65,6 +65,7 @@ public class MainBGService extends IntentService {
     private ConnectionsClient mConnectionClient;
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
+    private String startTime;
 
 
     private boolean connectionActive;
@@ -100,6 +101,14 @@ public class MainBGService extends IntentService {
 
     public boolean isConnectionActive() {
         return connectionActive;
+    }
+
+    public void setConnectionStatus(boolean status) {
+        connectionActive = status;
+    }
+
+    public String getStartTime() {
+        return startTime;
     }
 
     public int getFileListSize() {
@@ -145,6 +154,8 @@ public class MainBGService extends IntentService {
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
         customLogger(deviceId);
         initConnectionAndNotif();
+        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
+
     }
 
     public MainBGService(String workerName) {
@@ -153,7 +164,7 @@ public class MainBGService extends IntentService {
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
         customLogger(deviceId);
         initConnectionAndNotif();
-
+        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
     }
 
     private void customLogger(String msg) {
