@@ -10,16 +10,25 @@ import java.io.File;
  * Created by nic on 23/2/18.
  */
 
+// filename structure video0_1_64_0_10_100
+
 public class VideoData {
     private final String TAG = "VideoData";
     private String fileName;
     private int sequenceNumber;
     private int tickets;
-    private int resolution;
-    private int frameRate;
     private int svcLayer;
     private int maxLayer;
-    private long creationTime;
+    private long creationTime; // unix time
+    private int ttl; // in seconds
+
+    public int getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(int ttl) {
+        this.ttl = ttl;
+    }
 
     public long getCreationTime() {
         return creationTime;
@@ -69,22 +78,6 @@ public class VideoData {
         this.tickets = tickets;
     }
 
-    public int getResolution() {
-        return resolution;
-    }
-
-    public void setResolution(int resolution) {
-        this.resolution = resolution;
-    }
-
-    public int getFrameRate() {
-        return frameRate;
-    }
-
-    public void setFrameRate(int frameRate) {
-        this.frameRate = frameRate;
-    }
-
     public void logVideoData() {
         Log.d(TAG, this.toString());
     }
@@ -95,8 +88,10 @@ public class VideoData {
         setFileName(res.getFileName());
         setSequenceNumber(res.getSequenceNumber());
         setTickets(res.getTickets());
-        setResolution(res.getResolution());
-        setFrameRate(res.getFrameRate());
+        setSvcLayer(res.getSvcLayer());
+        setMaxLayer(res.getMaxLayer());
+        setCreationTime(res.getCreationTime());
+        setTtl(res.getTtl());
         Log.d(TAG, "Done encoding");
     }
 

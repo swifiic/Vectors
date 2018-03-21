@@ -44,6 +44,8 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private FileModule mFileModule;
 
     enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR;
+        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK;
     }
 
     final String TAG = "Roamnet";
@@ -457,11 +459,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void processRequestFiles(String filelist) {
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
+        List<VideoData> requestedVideoDatas = new ArrayList<>();
         for (int i = 0; i < requestedFiles.size(); i++) {
-            VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
+            requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+        }
+
+        // sort by tickets and send in that order
+        Collections.sort(requestedVideoDatas, new Comparator<VideoData>() {
+            @Override
+            public int compare(VideoData o1, VideoData o2) {
+                if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+        });
+
+        for (VideoData vd : requestedVideoDatas) {
             if (vd != null) {
                 if (vd.getTickets() > 1) {
-                    vd.setTickets(vd.getTickets()/2); // SNW strategy allows us to only send half
+                    vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
                     String data = vd.toString();
                     //send JSON and file
                     sendFile(vd);

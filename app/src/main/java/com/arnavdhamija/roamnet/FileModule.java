@@ -39,7 +39,7 @@ public class FileModule {
         }
         Log.d(TAG, "Created dir");
         mContext = context;
-        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
+//        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
         buildFileLedger();
     }
 
@@ -85,6 +85,28 @@ public class FileModule {
         return result;
     }
 
+    private int getRequiredTickets(int svcLayer) {
+        switch (svcLayer) {
+            case 0:
+                return 32;
+            case 1:
+                return 16;
+            case 2:
+                return 12;
+            case 3:
+                return 10;
+            case 4:
+                return 8;
+            case 5:
+                return 7;
+            case 6:
+                return 6;
+            default:
+                return -1;
+        }
+    }
+
+// filename structure video0_1_0_10_100
     public void buildFileLedger() {
         String fileName;
         String tokens[];
@@ -99,11 +121,12 @@ public class FileModule {
                     VideoData videoData = new VideoData();
                     videoData.setFileName(fileName);
                     videoData.setSequenceNumber(Integer.parseInt(tokens[1]));
-                    videoData.setResolution(Integer.parseInt(tokens[2]));
-                    videoData.setFrameRate(Integer.parseInt(tokens[3]));
-                    videoData.setTickets(128);
+                    videoData.setSvcLayer(Integer.parseInt(tokens[2]));
+                    videoData.setMaxLayer(Integer.parseInt(tokens[3]));
+                    videoData.setCreationTime(Integer.parseInt(tokens[4]));
+                    videoData.setTickets(getRequiredTickets(videoData.getSvcLayer()));
                     if (useDb) {
-                        mDatabaseModule.addVideoData(videoData);
+//                        mDatabaseModule.addVideoData(videoData);
                     } else {
                         writeToJSONFile(videoData);
                     }
