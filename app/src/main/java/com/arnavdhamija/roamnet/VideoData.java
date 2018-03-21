@@ -13,7 +13,7 @@ import java.io.File;
 // filename structure video0_1_64_0_10_100
 
 public class VideoData {
-    private final String TAG = "VideoData";
+    private final static String TAG = "VideoData";
     private String fileName;
     private int sequenceNumber;
     private int tickets;

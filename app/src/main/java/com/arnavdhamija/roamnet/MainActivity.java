@@ -310,6 +310,8 @@ public class MainActivity extends AppCompatActivity {
             return "FLST" + msg;
         } else if (type == MessageType.REQUESTFILES) {
             return "REQE" + msg;
+        } else if (type == MessageType.DESTINATIONACK) {
+            return "DACK" + msg;
         } else {
             return null;
         }
@@ -330,6 +332,8 @@ public class MainActivity extends AppCompatActivity {
             return MessageType.FILELIST;
         } else if (msgHeader.compareTo("REQE") == 0) {
             return MessageType.REQUESTFILES;
+        } else if (msgHeader.compareTo("DACK") == 0) {
+            return MessageType.DESTINATIONACK;
         } else {
             return MessageType.ERROR;
         }
