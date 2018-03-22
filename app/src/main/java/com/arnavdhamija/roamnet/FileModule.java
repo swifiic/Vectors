@@ -148,6 +148,18 @@ public class FileModule {
         }
     }
 
+    public void writeToJSONFile(DestinationAck destinationAck) {
+        String data = destinationAck.toString();
+        try {
+            FileWriter writer = new FileWriter( new File(dataDirectory, Constants.ACK_FILENAME + ".json"), false);
+            writer.write(data);
+            writer.close();
+            Log.d(TAG, "File written");
+        } catch (IOException e) {
+            Log.d(TAG, "File write failed");
+        }
+    }
+
     public String getFileList() {
         File[] files = dataDirectory.listFiles();
         String fileName;
@@ -168,11 +180,20 @@ public class FileModule {
         String jsonFilename = videoFileName + ".json";
         try {
             String videoDataJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
-            VideoData videoData = new VideoData();
-            videoData = VideoData.fromString(videoDataJSON);
-            return videoData;
+            return VideoData.fromString(videoDataJSON);
         } catch (IOException e) {
             Log.d(TAG, "File not found");
+        }
+        return null;
+    }
+
+    public DestinationAck getAckFromFile() {
+        String jsonFilename = Constants.ACK_FILENAME + ".json";
+        try {
+            String ackJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
+            return DestinationAck.fromString(ackJSON);
+        } catch (IOException e) {
+            Log.d(TAG, "Ack not found");
         }
         return null;
     }

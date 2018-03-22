@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -66,6 +67,7 @@ public class MainBGService extends IntentService {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
+    private boolean checkTimestamp = false;
 
 
     private boolean connectionActive;
@@ -377,6 +379,7 @@ public class MainBGService extends IntentService {
                             connectedEndpoint = endpointId;
 //                            sendWelcomeMessage();
                             sendFileList();
+                            sendDestinationAck();
 //                            sendFile("img.jpg");
 //                            customLogger("stopping AD");
                             mConnectionClient.stopAdvertising();
@@ -462,11 +465,33 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
+    private void sendDestinationAck() {
+        DestinationAck ack = mFileModule.getAckFromFile();
+        if (ack != null) {
+            String dackMsg = ack.toString();
+            dackMsg = createStringType(MessageType.DESTINATIONACK, dackMsg);
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
+        }
+    }
+
     private void processJSONMsg(String parseMsg) {
         VideoData vd = new VideoData();
         vd = VideoData.fromString(parseMsg);
         // this list has to be managed, when we start getting files of course
         incomingTransfersMetadata.add(vd);
+    }
+
+    private void processDackJSON(String parseMsg) {
+        DestinationAck incomingAck = DestinationAck.fromString(parseMsg);
+        DestinationAck currentAck = mFileModule.getAckFromFile();
+        if (currentAck == null) {
+            mFileModule.writeToJSONFile(incomingAck);
+        } else {
+            if (incomingAck.getTimestamp() > currentAck.getTimestamp()) {
+                customLogger("Newer ack received, writing back to file");
+                mFileModule.writeToJSONFile(incomingAck);
+            }
+        }
     }
 
     private void processRequestFiles(String filelist) {
@@ -494,7 +519,13 @@ public class MainBGService extends IntentService {
                     vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
                     String data = vd.toString();
                     //send JSON and file
-                    sendFile(vd);
+                    boolean sendFile = true;
+                    if (checkTimestamp && vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000) {
+                        sendFile = false;
+                    }
+                    if (sendFile) {
+                        sendFile(vd);
+                    }
                 }
             }
         }
@@ -566,9 +597,12 @@ public class MainBGService extends IntentService {
                                 processFileList(parsedMsg);
                             } else if (type == MessageType.REQUESTFILES) {
                                 processRequestFiles(parsedMsg);
+                            } else if (type == MessageType.DESTINATIONACK) {
+                                processDackJSON(parsedMsg);
                             } else {
-                                customLogger(" got diff type " + parsedMsg);
+                                    customLogger(" got diff type " + parsedMsg);
                             }
+
                         } catch (Exception e) {
                             customLogger("Byte payload fail" + e.getMessage());
                         }

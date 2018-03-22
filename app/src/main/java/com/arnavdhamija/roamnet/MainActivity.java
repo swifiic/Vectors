@@ -150,6 +150,8 @@ public class MainActivity extends AppCompatActivity {
     private void startApp() {
         Intent intent = new Intent(this, MainBGService.class);
         startService(intent);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     setButtonText();
                     customLogger("Stopping!");
                 }
-                rebindBGService();
+//                rebindBGService();
             }
         });
 
@@ -200,38 +202,38 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void rebindBGService() {
-        if (checkPermissions()) {
-            Intent intent = new Intent(this, MainBGService.class);
-            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        }
-    }
+//    private void rebindBGService() {
+//        if (checkPermissions()) {
+//            Intent intent = new Intent(this, MainBGService.class);
+//            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+//        }
+//    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        rebindBGService();
-     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setButtonText();
-        // populate content from the Service
-        if(mBound){
-            customLogger("Started at: " + mService.getStartTime());
-            TextView deviceIdView = findViewById(R.id.deviceIdView);
-            deviceIdView.setText("Device ID: " + mService.getDeviceId());
-
-            TextView availableFilesView = findViewById(R.id.availableFilesView);
-            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
-
-
-        } else {
-            Toast.makeText(getApplicationContext(), "Resume Without Bound", Toast.LENGTH_LONG).show();
-            rebindBGService();
-        }
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+////        rebindBGService();
+//     }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        setButtonText();
+//        // populate content from the Service
+//        if(mBound){
+//            customLogger("Started at: " + mService.getStartTime());
+//            TextView deviceIdView = findViewById(R.id.deviceIdView);
+//            deviceIdView.setText("Device ID: " + mService.getDeviceId());
+//
+//            TextView availableFilesView = findViewById(R.id.availableFilesView);
+//            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
+//
+//
+//        } else {
+//            Toast.makeText(getApplicationContext(), "Resume Without Bound", Toast.LENGTH_LONG).show();
+////            rebindBGService();
+//        }
+//    }
 
 //    @Override
 //    protected void onPause() {

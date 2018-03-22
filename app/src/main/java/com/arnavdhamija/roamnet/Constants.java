@@ -13,6 +13,7 @@ public final class Constants {
 
     public static final String CONNECTION_STATUS =
             "swifiic.roamnet.android.CONNECTION_STATUS";
-
+    public static final String ACK_FILENAME =
+            "ack";
 
 }
