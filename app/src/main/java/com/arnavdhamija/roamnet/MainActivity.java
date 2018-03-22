@@ -1,3 +1,8 @@
+//2do: test bgservice
+//remove notifs
+//nodes traversed
+//del on ACK
+
 package com.arnavdhamija.roamnet;
 
 import android.Manifest;
@@ -126,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i : grantResults) {
                     if (i == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Perm granted");
+                        startApp();
                         return;
                     } else {
                         Log.d(TAG, "We didn't get perms :(");
@@ -144,6 +150,13 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 toggleRoamnetButton.setText("Start Roamnet");
             }
+            customLogger("Started at: " + mService.getStartTime());
+            TextView deviceIdView = findViewById(R.id.deviceIdView);
+            deviceIdView.setText("Device ID: " + mService.getDeviceId());
+
+            TextView availableFilesView = findViewById(R.id.availableFilesView);
+            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
+
         }
     }
 
@@ -300,14 +313,13 @@ public class MainActivity extends AppCompatActivity {
         private BGServiceUIUpdateReceiver() {}         // Prevents instantiation
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.hasExtra(Constants.CONNECTION_STATUS)){
+            if (intent.hasExtra(Constants.CONNECTION_STATUS)){
                 TextView textView = (TextView) findViewById(R.id.connectionStatusView);
                 textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS));
-
-            } else if(intent.hasExtra(Constants.LOG_STATUS)){
+            }
+            if(intent.hasExtra(Constants.LOG_STATUS)){
                 TextView logView = findViewById(R.id.logView);
                 logView.append(intent.getStringExtra(Constants.LOG_STATUS));
-
             }
         }
     }

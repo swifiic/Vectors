@@ -67,7 +67,7 @@ public class MainBGService extends IntentService {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
-    private boolean checkTimestamp = false;
+    private boolean extraChecks = false;
 
 
     private boolean connectionActive;
@@ -116,7 +116,6 @@ public class MainBGService extends IntentService {
     public int getFileListSize() {
         return mFileModule.getFilesCount();
     }
-
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -373,19 +372,13 @@ public class MainBGService extends IntentService {
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
-//                            customLogger("GGWP! :D:D:D");
                             Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             sendConnectionStatus("Connected To: " + endpointId);
                             connectedEndpoint = endpointId;
-//                            sendWelcomeMessage();
                             sendFileList();
                             sendDestinationAck();
-//                            sendFile("img.jpg");
-//                            customLogger("stopping AD");
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
-//                            customLogger("stopped AD!!");
-                            // We're connected! Can now start sending and receiving data.
                             break;
                         case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR: //this code is ignored
                             customLogger("endpt error, restart");
@@ -495,6 +488,7 @@ public class MainBGService extends IntentService {
     }
 
     private void processRequestFiles(String filelist) {
+        DestinationAck dack = mFileModule.getAckFromFile();
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         for (int i = 0; i < requestedFiles.size(); i++) {
@@ -517,10 +511,11 @@ public class MainBGService extends IntentService {
             if (vd != null) {
                 if (vd.getTickets() > 1) {
                     vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
-                    String data = vd.toString();
+                    vd.addTraversedNode(deviceId);
                     //send JSON and file
                     boolean sendFile = true;
-                    if (checkTimestamp && vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000) {
+                    if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000 
+                            || dack.getAckedFiles().contains(vd.getFileName()))) {
                         sendFile = false;
                     }
                     if (sendFile) {

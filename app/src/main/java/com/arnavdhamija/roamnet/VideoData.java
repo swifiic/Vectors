@@ -1,10 +1,12 @@
 package com.arnavdhamija.roamnet;
 
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by nic on 23/2/18.
@@ -21,6 +23,13 @@ public class VideoData {
     private int maxLayer;
     private long creationTime; // unix time
     private int ttl; // in seconds
+    private ArrayList<Pair<Long, String>> traversal;
+
+    public void addTraversedNode(String deviceName) {
+        Long epochTimeSeconds = System.currentTimeMillis()/1000;
+        Pair<Long, String> pair = new Pair<>(epochTimeSeconds, deviceName);
+        traversal.add(pair);
+    }
 
     public int getTtl() {
         return ttl;
@@ -94,5 +103,7 @@ public class VideoData {
         return gson.toJson(this);
     }
 
-    VideoData(){}
+    VideoData() {
+        traversal = new ArrayList<>();
+    }
 }
