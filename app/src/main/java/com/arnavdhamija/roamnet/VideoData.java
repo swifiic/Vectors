@@ -82,17 +82,9 @@ public class VideoData {
         Log.d(TAG, this.toString());
     }
 
-    public void fromString(String jsonEncodedVideoData) {
+    public static VideoData fromString(String jsonEncodedVideoData) {
         Gson gson = new Gson();
-        VideoData res = gson.fromJson(jsonEncodedVideoData, VideoData.class);
-        setFileName(res.getFileName());
-        setSequenceNumber(res.getSequenceNumber());
-        setTickets(res.getTickets());
-        setSvcLayer(res.getSvcLayer());
-        setMaxLayer(res.getMaxLayer());
-        setCreationTime(res.getCreationTime());
-        setTtl(res.getTtl());
-        Log.d(TAG, "Done encoding");
+        return gson.fromJson(jsonEncodedVideoData, VideoData.class);
     }
 
     @Override

@@ -464,7 +464,7 @@ public class MainBGService extends IntentService {
 
     private void processJSONMsg(String parseMsg) {
         VideoData vd = new VideoData();
-        vd.fromString(parseMsg);
+        vd = VideoData.fromString(parseMsg);
         // this list has to be managed, when we start getting files of course
         incomingTransfersMetadata.add(vd);
     }

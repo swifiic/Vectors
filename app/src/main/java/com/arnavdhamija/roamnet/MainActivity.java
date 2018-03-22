@@ -233,13 +233,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unbindService(mConnection);
-        customLogger("SerivcePause");
-        mBound = false;
-    }
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        unbindService(mConnection);
+//        customLogger("SerivcePause");
+//        mBound = false;
+//    }
 
     @Override
     protected void onDestroy() {

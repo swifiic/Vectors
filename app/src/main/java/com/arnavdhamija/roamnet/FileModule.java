@@ -169,7 +169,7 @@ public class FileModule {
         try {
             String videoDataJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
             VideoData videoData = new VideoData();
-            videoData.fromString(videoDataJSON);
+            videoData = VideoData.fromString(videoDataJSON);
             return videoData;
         } catch (IOException e) {
             Log.d(TAG, "File not found");
