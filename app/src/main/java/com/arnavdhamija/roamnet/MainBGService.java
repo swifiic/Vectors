@@ -176,8 +176,11 @@ public class MainBGService extends IntentService {
                         .putExtra(Constants.LOG_STATUS, logMsg);
 
         // Broadcasts the Intent to receivers in this app.
-        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-
+        if (this != null) {
+            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+        } else {
+            Log.d(TAG, "NullPointerException - why?");
+        }
     }
 
     private void sendConnectionStatus(String msg){
@@ -514,7 +517,7 @@ public class MainBGService extends IntentService {
                     vd.addTraversedNode(deviceId);
                     //send JSON and file
                     boolean sendFile = true;
-                    if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000 
+                    if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000
                             || dack.getAckedFiles().contains(vd.getFileName()))) {
                         sendFile = false;
                     }
