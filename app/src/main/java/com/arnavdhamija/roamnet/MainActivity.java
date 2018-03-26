@@ -18,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -66,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     boolean mBound = false;
 
     SharedPreferences mSharedPreferences;
+    SharedPreferences.Editor mEditor;
 
     final String TAG = "RoamnetUI";
 
@@ -137,19 +139,24 @@ public class MainActivity extends AppCompatActivity {
     private void enableRoamnet() {
         mService.startAdvertising();
         mService.startDiscovery();
-        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
-        mSharedPreferences.edit().commit();
+//        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
+//        mSharedPreferences.edit().commit();
+        mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
+        mEditor.apply();
     }
 
     private void disableRoamnet() {
         mService.stopDiscovery();
         mService.stopAdvertising();
         mService.stopAllEndpoints();
-        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
-        mSharedPreferences.edit().commit();
+//        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+//        mSharedPreferences.edit().commit();
+        mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+        mEditor.apply();
     }
 
     private boolean getRoamnetStatus() {
+        customLogger("getting status " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
     }
 
@@ -167,7 +174,8 @@ public class MainActivity extends AppCompatActivity {
 
             TextView availableFilesView = findViewById(R.id.availableFilesView);
             availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
-
+        } else {
+            customLogger("Not bound!");
         }
     }
 
@@ -182,14 +190,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (!getRoamnetStatus()) {
                     enableRoamnet();
-                    setButtonText();
                     customLogger("Starting!");
                 } else {
                     disableRoamnet();
-                    setButtonText();
                     customLogger("Stopping!");
                 }
-//                rebindBGService();
+                setButtonText();
             }
         });
 
@@ -213,55 +219,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setButtonText();
-        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
+        customLogger("StartStatus " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
+
+        mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {
             getPermissions();
         } else {
             startApp();
         }
     }
-
-//    private void rebindBGService() {
-//        if (checkPermissions()) {
-//            Intent intent = new Intent(this, MainBGService.class);
-//            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-//        }
-//    }
-
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-////        rebindBGService();
-//     }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        setButtonText();
-//        // populate content from the Service
-//        if(mBound){
-//            customLogger("Started at: " + mService.getStartTime());
-//            TextView deviceIdView = findViewById(R.id.deviceIdView);
-//            deviceIdView.setText("Device ID: " + mService.getDeviceId());
-//
-//            TextView availableFilesView = findViewById(R.id.availableFilesView);
-//            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
-//
-//
-//        } else {
-//            Toast.makeText(getApplicationContext(), "Resume Without Bound", Toast.LENGTH_LONG).show();
-////            rebindBGService();
-//        }
-//    }
-
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unbindService(mConnection);
-//        customLogger("SerivcePause");
-//        mBound = false;
-//    }
 
     @Override
     protected void onDestroy() {
@@ -279,9 +246,9 @@ public class MainActivity extends AppCompatActivity {
             MainBGService.LocalBinder binder = (MainBGService.LocalBinder) service;
             mService = binder.getService();
 //            customLogger("Service conn!");
-            customLogger("Started at: " + mService.getStartTime());
-
             mBound = true;
+            customLogger("Started w/bound: " + mService.getStartTime());
+            setButtonText();
         }
 
         @Override
@@ -331,3 +298,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
+
+
+//    private void rebindBGService() {
+//        if (checkPermissions()) {
+//            Intent intent = new Intent(this, MainBGService.class);
+//            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+//        }
+//    }
+
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+////        rebindBGService();
+//     }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        setButtonText();
+//        // populate content from the Service
+//        if(mBound){
+//            customLogger("Started at: " + mService.getStartTime());
+//            TextView deviceIdView = findViewById(R.id.deviceIdView);
+//            deviceIdView.setText("Device ID: " + mService.getDeviceId());
+//
+//            TextView availableFilesView = findViewById(R.id.availableFilesView);
+//            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
+//
+//
+//        } else {
+//            Toast.makeText(getApplicationContext(), "Resume Without Bound", Toast.LENGTH_LONG).show();
+////            rebindBGService();
+//        }
+//    }
+
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        unbindService(mConnection);
+//        customLogger("SerivcePause");
+//        mBound = false;
+//    }
