@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.IBinder;
@@ -61,16 +62,12 @@ import java.util.List;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class MainActivity extends AppCompatActivity {
-
     MainBGService mService;
     boolean mBound = false;
 
-
-    //private NotificationManager mNotificationManager;
-
+    SharedPreferences mSharedPreferences;
 
     final String TAG = "RoamnetUI";
-    boolean roamnetRunning = false;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -78,27 +75,22 @@ public class MainActivity extends AppCompatActivity {
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
     private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
+
     void getPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-//                    0);
             listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-//                    0);
             listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-//                    0);
             listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 
@@ -142,10 +134,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void enableRoamnet() {
+        mService.startAdvertising();
+        mService.startDiscovery();
+        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
+        mSharedPreferences.edit().commit();
+    }
+
+    private void disableRoamnet() {
+        mService.stopDiscovery();
+        mService.stopAdvertising();
+        mService.stopAllEndpoints();
+        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+        mSharedPreferences.edit().commit();
+    }
+
+    private boolean getRoamnetStatus() {
+        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+    }
+
     private void setButtonText() {
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         if (mBound) {
-            if (mService.isConnectionActive()) {
+            if (getRoamnetStatus()) {
                 toggleRoamnetButton.setText("Stop Roamnet");
             } else {
                 toggleRoamnetButton.setText("Start Roamnet");
@@ -169,17 +180,12 @@ public class MainActivity extends AppCompatActivity {
         toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mService.isConnectionActive()) {
-                    mService.startAdvertising();
-                    mService.startDiscovery();
-                    mService.setConnectionStatus(true);
+                if (!getRoamnetStatus()) {
+                    enableRoamnet();
                     setButtonText();
                     customLogger("Starting!");
                 } else {
-                    mService.stopDiscovery();
-                    mService.stopAdvertising();
-                    mService.stopAllEndpoints();
-                    mService.setConnectionStatus(false);
+                    disableRoamnet();
                     setButtonText();
                     customLogger("Stopping!");
                 }
@@ -208,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setButtonText();
+        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
         if (!checkPermissions()) {
             getPermissions();
         } else {

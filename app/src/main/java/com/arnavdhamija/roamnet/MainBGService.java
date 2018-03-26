@@ -1,27 +1,18 @@
 package com.arnavdhamija.roamnet;
 
-import android.Manifest;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.SimpleArrayMap;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.nearby.Nearby;
@@ -68,9 +59,7 @@ public class MainBGService extends IntentService {
     private String connectedEndpoint;
     private String startTime;
     private boolean extraChecks = false;
-
-
-    private boolean connectionActive;
+    SharedPreferences mSharedPreferences;
     private FileModule mFileModule;
 
     enum MessageType {
@@ -101,12 +90,8 @@ public class MainBGService extends IntentService {
         return deviceId;
     }
 
-    public boolean isConnectionActive() {
-        return connectionActive;
-    }
-
-    public void setConnectionStatus(boolean status) {
-        connectionActive = status;
+    public boolean enableBackgroundService() {
+        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
     }
 
     public String getStartTime() {
@@ -130,7 +115,7 @@ public class MainBGService extends IntentService {
             mNotificationManager = (NotificationManager) RoamNetApp.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         }
     }
-    
+
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId){
         initConnectionAndNotif();
@@ -156,6 +141,7 @@ public class MainBGService extends IntentService {
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
         customLogger(deviceId);
         initConnectionAndNotif();
+        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
 
     }
