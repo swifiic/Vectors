@@ -429,6 +429,12 @@ public class MainBGService extends IntentService {
         }
         Payload filePayload = Payload.fromFile(pfd);
         String payloadFilenameMessage = filePayload.getId() + ":" + filename;
+
+        NotificationCompat.Builder notification = buildNotification(filePayload, false);
+        mNotificationManager.notify((int)filePayload.getId(), notification.build());
+        outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+        mConnectionClient.sendPayload(connectedEndpoint, filePayload);
+
     }
 
     private void sendFile(VideoData data) {
@@ -442,7 +448,7 @@ public class MainBGService extends IntentService {
         String payloadFilenameMessage = filePayload.getId() + ":" + data.getFileName();
         sendFile(connectedEndpoint, filePayload, payloadFilenameMessage, data);
     }
-
+    // remove endpoint id from here?!
     private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg, VideoData data) {
         NotificationCompat.Builder notification = buildNotification(payload, false);
         mNotificationManager.notify((int)payload.getId(), notification.build());
@@ -504,7 +510,9 @@ public class MainBGService extends IntentService {
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         for (int i = 0; i < requestedFiles.size(); i++) {
-            requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+            if (requestedFiles.get(i).startsWith("video")) {
+                requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+            }
         }
 
         // sort by tickets and send in that order
@@ -546,13 +554,13 @@ public class MainBGService extends IntentService {
 
         // This code is very bad, but it's the only way not to get a NPE :P
         for (int i = 0; i < rcvdFilenames.size(); i++) {
-            boolean includeVid = true;
+            boolean includeFile = true;
             for (int j = 0; j < currFilenames.size(); j++) {
                 if (rcvdFilenames.get(i).compareTo(currFilenames.get(j)) == 0) {
-                    includeVid = false;
+                    includeFile = false;
                 }
             }
-            if (includeVid) {
+            if (includeFile) {
                 requestFilenames.add(rcvdFilenames.get(i));
             }
         }
