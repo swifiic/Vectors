@@ -119,12 +119,16 @@ public class FileModule {
                 if (!fileName.contains(".json") && fileName.startsWith("video") && Arrays.asList(files).indexOf(fileName + ".json") == -1) {
                     tokens = fileName.split("_");
                     VideoData videoData = new VideoData();
-                    videoData.setFileName(fileName);
-                    videoData.setSequenceNumber(Integer.parseInt(tokens[1]));
-                    videoData.setSvcLayer(Integer.parseInt(tokens[2]));
-                    videoData.setMaxLayer(Integer.parseInt(tokens[3]));
-                    videoData.setCreationTime(Integer.parseInt(tokens[4]));
-                    videoData.setTickets(getRequiredTickets(videoData.getSvcLayer()));
+                    if (tokens.length == 5) {
+                        videoData.setFileName(fileName);
+                        videoData.setSequenceNumber(Integer.parseInt(tokens[1]));
+                        videoData.setSvcLayer(Integer.parseInt(tokens[2]));
+                        videoData.setMaxLayer(Integer.parseInt(tokens[3]));
+                        videoData.setCreationTime(Integer.parseInt(tokens[4]));
+                        videoData.setTickets(getRequiredTickets(videoData.getSvcLayer()));
+                    } else {
+                        Log.d(TAG, "Invalid file");
+                    }
                     if (useDb) {
 //                        mDatabaseModule.addVideoData(videoData);
                     } else {
