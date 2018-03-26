@@ -132,7 +132,10 @@ public class FileModule {
                     if (useDb) {
 //                        mDatabaseModule.addVideoData(videoData);
                     } else {
-                        writeToJSONFile(videoData);
+                        File file = new File(dataDirectory, videoData.getFileName() + ".json");
+                        if (!file.exists()) {
+                            writeToJSONFile(videoData);
+                        }
                     }
                     Log.d(TAG, fileName);
                 }
@@ -143,7 +146,7 @@ public class FileModule {
     public void writeToJSONFile(VideoData videoData) {
         String data = videoData.toString();
         try {
-            FileWriter writer = new FileWriter( new File(dataDirectory, videoData.getFileName() + ".json"), false);
+            FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
             writer.write(data);
             writer.close();
             Log.d(TAG, "File written");

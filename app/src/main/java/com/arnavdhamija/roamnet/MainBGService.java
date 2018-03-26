@@ -421,6 +421,16 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
     }
 
+    private void sendFile(String filename) {
+        ParcelFileDescriptor pfd = mFileModule.getPfd(filename);
+        if (pfd == null) {
+            customLogger("File not found - lite");
+            return;
+        }
+        Payload filePayload = Payload.fromFile(pfd);
+        String payloadFilenameMessage = filePayload.getId() + ":" + filename;
+    }
+
     private void sendFile(VideoData data) {
         ParcelFileDescriptor pfd = mFileModule.getPfd(data.getFileName());
         if (pfd == null) {
@@ -430,7 +440,6 @@ public class MainBGService extends IntentService {
         Payload filePayload = Payload.fromFile(pfd);
 
         String payloadFilenameMessage = filePayload.getId() + ":" + data.getFileName();
-        Payload.File file = filePayload.asFile(); // do we need this line?
         sendFile(connectedEndpoint, filePayload, payloadFilenameMessage, data);
     }
 
