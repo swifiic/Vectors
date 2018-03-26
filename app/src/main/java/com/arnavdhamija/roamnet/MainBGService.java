@@ -509,9 +509,12 @@ public class MainBGService extends IntentService {
         DestinationAck dack = mFileModule.getAckFromFile();
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
+        List<String> otherFileTypes = new ArrayList<>();
         for (int i = 0; i < requestedFiles.size(); i++) {
             if (requestedFiles.get(i).startsWith("video")) {
                 requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+            } else {
+                otherFileTypes.add(requestedFiles.get(i));
             }
         }
 
@@ -543,6 +546,11 @@ public class MainBGService extends IntentService {
                     }
                 }
             }
+        }
+
+        // for metadata files
+        for (String filename : otherFileTypes) {
+            sendFile(filename);
         }
     }
 
