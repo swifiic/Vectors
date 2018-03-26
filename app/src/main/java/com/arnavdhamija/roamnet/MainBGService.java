@@ -144,10 +144,10 @@ public class MainBGService extends IntentService {
         mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
 //        add check for sharedpref check
-//        if (enableBackgroundService()) {
-//            startAdvertising();
-//            startDiscovery();
-//        }
+        if (enableBackgroundService()) {
+            startAdvertising();
+            startDiscovery();
+        }
     }
 
     public MainBGService(String workerName) {

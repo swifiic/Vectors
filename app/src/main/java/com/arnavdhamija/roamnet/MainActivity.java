@@ -237,6 +237,14 @@ public class MainActivity extends AppCompatActivity {
 //        stopService(intent);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(mConnection);
+        customLogger("Stop!");
+        mBound = false;
+    }
+
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
@@ -333,10 +341,4 @@ public class MainActivity extends AppCompatActivity {
 //        }
 //    }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unbindService(mConnection);
-//        customLogger("SerivcePause");
-//        mBound = false;
-//    }
+
