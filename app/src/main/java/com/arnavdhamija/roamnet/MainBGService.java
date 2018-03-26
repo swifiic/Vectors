@@ -130,6 +130,7 @@ public class MainBGService extends IntentService {
             mNotificationManager = (NotificationManager) RoamNetApp.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         }
     }
+    
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId){
         initConnectionAndNotif();
@@ -176,11 +177,7 @@ public class MainBGService extends IntentService {
                         .putExtra(Constants.LOG_STATUS, logMsg);
 
         // Broadcasts the Intent to receivers in this app.
-        if (this != null) {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        } else {
-            Log.d(TAG, "NullPointerException - why?");
-        }
+        LocalBroadcastManager.getInstance(RoamNetApp.getContext()).sendBroadcast(localIntent);
     }
 
     private void sendConnectionStatus(String msg){

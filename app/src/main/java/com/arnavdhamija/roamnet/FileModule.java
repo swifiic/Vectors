@@ -8,14 +8,11 @@ import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -122,10 +119,10 @@ public class FileModule {
                     if (tokens.length == 5) {
                         videoData.setFileName(fileName);
                         videoData.setSequenceNumber(Integer.parseInt(tokens[1]));
-                        videoData.setSvcLayer(Integer.parseInt(tokens[2]));
-                        videoData.setMaxLayer(Integer.parseInt(tokens[3]));
+                        videoData.setTemporalLayer(Integer.parseInt(tokens[2]));
+                        videoData.setMaxTemporalLayer(Integer.parseInt(tokens[3]));
                         videoData.setCreationTime(Integer.parseInt(tokens[4]));
-                        videoData.setTickets(getRequiredTickets(videoData.getSvcLayer()));
+                        videoData.setTickets(getRequiredTickets(videoData.getTemporalLayer()));
                     } else {
                         Log.d(TAG, "Invalid file");
                     }

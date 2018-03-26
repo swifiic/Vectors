@@ -5,7 +5,6 @@ import android.util.Pair;
 
 import com.google.gson.Gson;
 
-import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -19,8 +18,10 @@ public class VideoData {
     private String fileName;
     private int sequenceNumber;
     private int tickets;
+    private int temporalLayer;
+    private int maxTemporalLayer;
     private int svcLayer;
-    private int maxLayer;
+    private int maxSvcLayer;
     private long creationTime; // unix time
     private int ttl; // in seconds
     private ArrayList<Pair<Long, String>> traversal;
@@ -47,20 +48,20 @@ public class VideoData {
         this.creationTime = creationTime;
     }
 
-    public int getSvcLayer() {
-        return svcLayer;
+    public int getTemporalLayer() {
+        return temporalLayer;
     }
 
-    public void setSvcLayer(int svcLayer) {
-        this.svcLayer = svcLayer;
+    public void setTemporalLayer(int temporalLayer) {
+        this.temporalLayer = temporalLayer;
     }
 
-    public int getMaxLayer() {
-        return maxLayer;
+    public int getMaxTemporalLayer() {
+        return maxTemporalLayer;
     }
 
-    public void setMaxLayer(int maxLayer) {
-        this.maxLayer = maxLayer;
+    public void setMaxTemporalLayer(int maxTemporalLayer) {
+        this.maxTemporalLayer = maxTemporalLayer;
     }
 
     public int getSequenceNumber() {
@@ -69,6 +70,22 @@ public class VideoData {
 
     public void setSequenceNumber(int sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
+    }
+
+    public int getSvcLayer() {
+        return svcLayer;
+    }
+
+    public void setSvcLayer(int svcLayer) {
+        this.svcLayer = svcLayer;
+    }
+
+    public int getMaxSvcLayer() {
+        return maxSvcLayer;
+    }
+
+    public void setMaxSvcLayer(int maxSvcLayer) {
+        this.maxSvcLayer = maxSvcLayer;
     }
 
     public String getFileName() {
