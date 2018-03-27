@@ -1,2 +1,2 @@
 rootProject.name = 'roamnet-multiApp'
-include ':app',':bridge:app'
+include ':app',':bridge:app', ':common'
