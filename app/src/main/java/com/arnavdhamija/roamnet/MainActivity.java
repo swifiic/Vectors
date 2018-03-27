@@ -111,18 +111,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void enableRoamnet() {
-        mService.startAdvertising();
-        mService.startDiscovery();
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
         mEditor.apply();
+        mService.setBackgroundService();
     }
 
     private void disableRoamnet() {
-        mService.stopDiscovery();
-        mService.stopAdvertising();
-        mService.stopAllEndpoints();
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
         mEditor.apply();
+        mService.setBackgroundService();
     }
 
     private boolean getRoamnetStatus() {
@@ -133,10 +130,8 @@ public class MainActivity extends AppCompatActivity {
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         if (mBound) {
             if (getRoamnetStatus()) {
-                enableRoamnet();
                 toggleRoamnetButton.setText("Stop Roamnet");
             } else {
-                disableRoamnet();
                 toggleRoamnetButton.setText("Start Roamnet");
             }
             customLogger("Started at: " + mService.getStartTime());
@@ -154,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
     private void startApp() {
         Intent intent = new Intent(this, MainBGService.class);
         startService(intent);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
 
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
@@ -162,15 +157,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (!getRoamnetStatus()) {
                     enableRoamnet();
-                    customLogger("Starting!");
                 } else {
                     disableRoamnet();
-                    customLogger("Stopping!");
                 }
                 setUIText();
             }
         });
-
         Button logClearButton = findViewById(R.id.logClearButton);
         logClearButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,22 +198,20 @@ public class MainActivity extends AppCompatActivity {
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
-    @Override
-    protected void onStart() {
-        customLogger("StartTime");
-        super.onStart();
-        rebindBGService();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        unbindService(mConnection);
-        customLogger("Stop!");
-        mBound = false;
-    }
-
-
+//    @Override
+//    protected void onStart() {
+//        customLogger("StartTime");
+//        super.onStart();
+//        rebindBGService();
+//    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        unbindService(mConnection);
+//        customLogger("Stop!");
+//        mBound = false;
+//    }
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -235,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
             mBound = true;
             customLogger("Started w/bound: " + mService.getStartTime());
             setUIText();
+            mService.setBackgroundService();
         }
 
         @Override

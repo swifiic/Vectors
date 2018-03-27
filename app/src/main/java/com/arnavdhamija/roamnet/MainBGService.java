@@ -54,6 +54,7 @@ public class MainBGService extends IntentService {
 
     // Binder given to clients
     private final IBinder mBinder = new LocalBinder();
+    private boolean nearbyEnabled = false;
 
     private ConnectionsClient mConnectionClient;
     private NotificationManager mNotificationManager;
@@ -61,7 +62,9 @@ public class MainBGService extends IntentService {
     private String startTime;
     private boolean extraChecks = false;
     SharedPreferences mSharedPreferences;
-    SharedPreferences.Editor mEditor;
+    SharedPreferences.Editor mEditor; // TODO - may not need edit
+
+    static MainBGService ourRef = null;
 
     private FileModule mFileModule;
 
@@ -85,6 +88,7 @@ public class MainBGService extends IntentService {
     public class LocalBinder extends Binder {
         MainBGService getService() {
             // Return this instance of LocalService so clients can call public methods
+            ourRef = MainBGService.this;
             return MainBGService.this;
         }
     }
@@ -95,6 +99,22 @@ public class MainBGService extends IntentService {
 
     public boolean enableBackgroundService() {
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+    }
+
+
+    public void setBackgroundService() {
+        if (enableBackgroundService()) {
+            if (!nearbyEnabled) {
+                startAdvertising();
+                startDiscovery();
+                nearbyEnabled = true;
+            }
+        } else {
+            stopAllEndpoints();
+            stopDiscovery();
+            stopAdvertising();
+            nearbyEnabled = false;
+        }
     }
 
     public String getStartTime() {
@@ -120,14 +140,14 @@ public class MainBGService extends IntentService {
     }
 
     @Override
-    public int onStartCommand(Intent startIntent, int flags, int startId){
-        initConnectionAndNotif();
+    public int onStartCommand(Intent startIntent, int flags, int startId) {
+//        super.onStartCommand(startIntent, flags, startId);
+//        initConnectionAndNotif();
         return START_STICKY;
     }
 
     @Override
     protected void onHandleIntent(Intent workIntent) {
-
         initConnectionAndNotif();
         // Gets data from the incoming Intent
         String dataString = workIntent.getDataString();
@@ -210,7 +230,7 @@ public class MainBGService extends IntentService {
 
 
     /******** wrappers for mConnection based on UI trigger *******/
-    protected void startAdvertising() {
+    private void startAdvertising() {
         mConnectionClient.startAdvertising(
                 deviceId,
                 getPackageName(),
@@ -233,7 +253,7 @@ public class MainBGService extends IntentService {
                         });
     }
 
-    protected void startDiscovery() {
+    private void startDiscovery() {
         mConnectionClient.startDiscovery(
                 getPackageName(),
                 mEndpointDiscoveryCallback,
@@ -255,18 +275,16 @@ public class MainBGService extends IntentService {
                         });
     }
 
-    protected void stopDiscovery() {
+    private void stopDiscovery() {
         mConnectionClient.stopDiscovery();
     }
 
-    protected void stopAdvertising() {
+    private void stopAdvertising() {
         mConnectionClient.stopAdvertising();
-
     }
 
-    protected void stopAllEndpoints() {
+    private void stopAllEndpoints() {
         mConnectionClient.stopAllEndpoints();
-
     }
 
 
@@ -277,8 +295,8 @@ public class MainBGService extends IntentService {
                         String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
                     if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet")) {
-                        mConnectionClient.stopAdvertising();
-                        mConnectionClient.stopDiscovery();
+                        stopAdvertising();
+                        stopDiscovery();
                         customLogger("Stopping before requesting Conn");
                         mConnectionClient.requestConnection(
                                 deviceId,
@@ -713,3 +731,9 @@ public class MainBGService extends IntentService {
 
             };
 }
+
+//    private enum connectionStates {
+//        ENABLED, DISABLED;
+//    }
+//
+//    private connectionStates mCurrentState = connectionStates.DISABLED;
