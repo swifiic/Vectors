@@ -37,7 +37,7 @@ public class FileModule {
         Log.d(TAG, "Created dir");
         mContext = context;
 //        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
-        buildFileLedger();
+//        buildFileLedger();
     }
 
     public File getDataDirectory() {
@@ -147,7 +147,7 @@ public class FileModule {
                 FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
                 writer.write(data);
                 writer.close();
-                Log.d(TAG, "File written");
+                Log.d(TAG, "File written" + videoData.getFileName());
             } catch (IOException e) {
                 Log.d(TAG, "File write failed");
             }

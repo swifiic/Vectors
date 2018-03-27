@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -454,11 +455,11 @@ public class MainBGService extends IntentService {
             customLogger("using method2 to send" + payloadFilenameMessage);
             payloadFilenameMessage = createStringType(MessageType.FILENAME, payloadFilenameMessage);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
+            SystemClock.sleep(1000);
+            mConnectionClient.sendPayload(connectedEndpoint, filePayload);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
-        mConnectionClient.sendPayload(connectedEndpoint, filePayload);
-
     }
 
     private void sendFile(VideoData data) {
@@ -489,10 +490,13 @@ public class MainBGService extends IntentService {
             payloadFilenameMsg = createStringType(MessageType.FILENAME, payloadFilenameMsg);
             customLogger("Sending a file - filename is : " + payloadFilenameMsg);
             mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
+            customLogger("Sleeping");
+            SystemClock.sleep(1000);
+            customLogger("Waking2send");
+            mConnectionClient.sendPayload(endpointId, payload);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
-        mConnectionClient.sendPayload(endpointId, payload);
     }
 
     private void sendFileList() {
@@ -541,7 +545,7 @@ public class MainBGService extends IntentService {
                     requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
                 } else {
                     if (requestedFiles.get(i) != "") {
-                        customLogger("OtherFileType! - " + requestedFiles.get(i));
+                        customLogger("OtherFileType! " + requestedFiles.get(i));
                         otherFileTypes.add(requestedFiles.get(i));
                     }
                 }
@@ -688,7 +692,7 @@ public class MainBGService extends IntentService {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
                                 customLogger("Updated the outbound JSON");
                             } else {
-                                customLogger("Working with non-vid file, DLed");
+                                customLogger("Working with non-vid file, DLed"); //very strange stuff
                             }
                         }
                     }
@@ -703,6 +707,7 @@ public class MainBGService extends IntentService {
                                     .setProgress(100, 100, false /* indeterminate */)
                                     .setContentText("Transfer complete!");
                             String filename = filePayloadFilenames.remove(update.getPayloadId());
+//                            customLogger("Renaming" + filename);
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
                                 if (filename == null) {
@@ -714,7 +719,7 @@ public class MainBGService extends IntentService {
 
                                 // remove it from being tracked by the incomingJSONs and write that to a file
                                 for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
-                                    if (incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0) {
+                                    if (filename != null && incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0 && incomingTransfersMetadata.get(i) != null) {
                                         mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
                                         customLogger("Wrote the incoming JSON of " + filename);
                                         incomingTransfersMetadata.remove(i);
