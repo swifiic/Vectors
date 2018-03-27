@@ -133,8 +133,10 @@ public class MainActivity extends AppCompatActivity {
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         if (mBound) {
             if (getRoamnetStatus()) {
+                enableRoamnet();
                 toggleRoamnetButton.setText("Stop Roamnet");
             } else {
+                disableRoamnet();
                 toggleRoamnetButton.setText("Start Roamnet");
             }
             customLogger("Started at: " + mService.getStartTime());
