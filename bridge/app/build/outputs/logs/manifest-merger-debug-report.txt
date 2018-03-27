@@ -5,6 +5,7 @@ INJECTED from /home/nic/swifiic/Roamnet/bridge/app/src/main/AndroidManifest.xml:
 INJECTED from /home/nic/swifiic/Roamnet/bridge/app/src/main/AndroidManifest.xml:2:1-32:12
 INJECTED from /home/nic/swifiic/Roamnet/bridge/app/src/main/AndroidManifest.xml:2:1-32:12
 MERGED from [com.jaredrummler:android-device-names:1.1.6] /home/nic/.gradle/caches/transforms-1/files-1.1/android-device-names-1.1.6.aar/f5e042aa567a2c83bea13f89a0aec86b/AndroidManifest.xml:2:1-10:12
+MERGED from [:common] /home/nic/swifiic/Roamnet/common/build/intermediates/manifests/full/debug/AndroidManifest.xml:2:1-11:12
 MERGED from [com.android.support:appcompat-v7:26.1.0] /home/nic/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/6c40991a26e23ae3ba0afd929842f9d2/AndroidManifest.xml:17:1-31:12
 MERGED from [com.google.android.gms:play-services-nearby:11.8.0] /home/nic/.gradle/caches/transforms-1/files-1.1/play-services-nearby-11.8.0.aar/891bf44a5f1848cc530888888499e45b/AndroidManifest.xml:2:1-11:12
 MERGED from [com.android.support.constraint:constraint-layout:1.0.2] /home/nic/.gradle/caches/transforms-1/files-1.1/constraint-layout-1.0.2.aar/9ae440f45dd8c99f5c06b3c23f5422e0/AndroidManifest.xml:2:1-11:12
@@ -149,6 +150,8 @@ INJECTED from /home/nic/swifiic/Roamnet/bridge/app/src/main/AndroidManifest.xml
 INJECTED from /home/nic/swifiic/Roamnet/bridge/app/src/main/AndroidManifest.xml
 MERGED from [com.jaredrummler:android-device-names:1.1.6] /home/nic/.gradle/caches/transforms-1/files-1.1/android-device-names-1.1.6.aar/f5e042aa567a2c83bea13f89a0aec86b/AndroidManifest.xml:6:5-8:41
 MERGED from [com.jaredrummler:android-device-names:1.1.6] /home/nic/.gradle/caches/transforms-1/files-1.1/android-device-names-1.1.6.aar/f5e042aa567a2c83bea13f89a0aec86b/AndroidManifest.xml:6:5-8:41
+MERGED from [:common] /home/nic/swifiic/Roamnet/common/build/intermediates/manifests/full/debug/AndroidManifest.xml:7:5-9:41
+MERGED from [:common] /home/nic/swifiic/Roamnet/common/build/intermediates/manifests/full/debug/AndroidManifest.xml:7:5-9:41
 MERGED from [com.android.support:appcompat-v7:26.1.0] /home/nic/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/6c40991a26e23ae3ba0afd929842f9d2/AndroidManifest.xml:21:5-23:78
 MERGED from [com.android.support:appcompat-v7:26.1.0] /home/nic/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/6c40991a26e23ae3ba0afd929842f9d2/AndroidManifest.xml:21:5-23:78
 MERGED from [com.google.android.gms:play-services-nearby:11.8.0] /home/nic/.gradle/caches/transforms-1/files-1.1/play-services-nearby-11.8.0.aar/891bf44a5f1848cc530888888499e45b/AndroidManifest.xml:5:5-44

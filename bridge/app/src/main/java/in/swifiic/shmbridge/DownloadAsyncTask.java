@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.arnavdhamija.common.FileModule;
 import com.google.gson.Gson;
 
 import java.io.BufferedInputStream;
@@ -163,15 +164,15 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                     sb.append(line+"\n");
                 }
                 br.close();
-                String strJSon = sb.toString();
-                Gson gson = new Gson();
-                CopyCount res = gson.fromJson(strJSon, CopyCount.class);
-                copyCount = Integer.parseInt(res.getCopycount());
+//                String strJSon = sb.toString();
+//                Gson gson = new Gson();
+//                CopyCount res = gson.fromJson(strJSon, CopyCount.class);
+//                copyCount = Integer.parseInt(res.getCopycount());
             }
 
             // getting file length
 
-            Log.d(TAG, "CopyCount for filename:" + nameOfFile + " is " + copyCount);
+//            Log.d(TAG, "CopyCount for filename:" + nameOfFile + " is " + copyCount);
 
         } catch (Exception e) {
             Log.e("Error: ", e.getMessage());

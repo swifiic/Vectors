@@ -6,6 +6,8 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.arnavdhamija.common.FileModule;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;

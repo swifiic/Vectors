@@ -551,6 +551,21 @@
             ]
         },
         {
+            "outputFile": "/home/nic/swifiic/Roamnet/bridge/app/build/intermediates/res/merged/debug/values-land_values-land.arsc.flat",
+            "map": [
+                {
+                    "source": "/home/nic/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/6c40991a26e23ae3ba0afd929842f9d2/res/values-land/values-land.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,125,189,260",
+                        "endColumns": "69,63,70,67",
+                        "endOffsets": "120,184,255,323"
+                    }
+                }
+            ]
+        },
+        {
             "outputFile": "/home/nic/swifiic/Roamnet/bridge/app/build/intermediates/res/merged/debug/values-eu_values-eu.arsc.flat",
             "map": [
                 {
@@ -602,21 +617,6 @@
                         "startOffsets": "2109,2215,2423,2551,2662,2868,2997,3150,3487,3730,3840,4038,4170,4397,4586,4682,4777",
                         "endColumns": "105,207,127,110,205,128,152,135,242,109,197,131,226,188,95,94,107",
                         "endOffsets": "2210,2418,2546,2657,2863,2992,3145,3281,3725,3835,4033,4165,4392,4581,4677,4772,4880"
-                    }
-                }
-            ]
-        },
-        {
-            "outputFile": "/home/nic/swifiic/Roamnet/bridge/app/build/intermediates/res/merged/debug/values-land_values-land.arsc.flat",
-            "map": [
-                {
-                    "source": "/home/nic/.gradle/caches/transforms-1/files-1.1/appcompat-v7-26.1.0.aar/6c40991a26e23ae3ba0afd929842f9d2/res/values-land/values-land.xml",
-                    "from": {
-                        "startLines": "2,3,4,5",
-                        "startColumns": "4,4,4,4",
-                        "startOffsets": "55,125,189,260",
-                        "endColumns": "69,63,70,67",
-                        "endOffsets": "120,184,255,323"
                     }
                 }
             ]

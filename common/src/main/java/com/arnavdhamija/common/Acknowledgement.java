@@ -1,4 +1,4 @@
-package in.swifiic.shmbridge;
+package com.arnavdhamija.common;
 
 /**
  * Created by abhishek on 27/3/18.

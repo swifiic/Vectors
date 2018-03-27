@@ -1,16 +1,20 @@
-package in.swifiic.shmbridge;
+package com.arnavdhamija.common;
+
+/**
+ * Created by abhishek on 27/3/18.
+ */
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class CopyCount {
+public class AckItem {
 
     @SerializedName("filename")
     @Expose
     private String filename;
-    @SerializedName("copycount")
+    @SerializedName("time")
     @Expose
-    private String copycount;
+    private Long time;
 
     public String getFilename() {
         return filename;
@@ -20,12 +24,12 @@ public class CopyCount {
         this.filename = filename;
     }
 
-    public String getCopycount() {
-        return copycount;
+    public Long getTime() {
+        return time;
     }
 
-    public void setCopycount(String copycount) {
-        this.copycount = copycount;
+    public void setTime(Long time) {
+        this.time = time;
     }
 
 }
