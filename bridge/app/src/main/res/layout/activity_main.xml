@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="in.swifiic.shmbridge.MainActivity">
+
+    <LinearLayout
+        android:layout_width="368dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/title_home"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="22dp"
+                android:text="  Source URL:" />
+
+            <EditText
+                android:id="@+id/idSrcVal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="URL of Source"
+                android:inputType="textUri"
+                android:text="http://172.16.2.194/php_server" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:text="         Dest URL:"
+                />
+
+            <EditText
+                android:id="@+id/idDestVal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="URL of Destination"
+                android:inputType="textUri"
+                android:text="Destination"
+                 />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/CheckNow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Check Now" />
+
+            <Button
+                android:id="@+id/InjectNow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Inject Burst" />
+
+            <Button
+                android:id="@+id/SoakNow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Soak Content" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:orientation="horizontal">
+
+
+            <EditText
+                android:id="@+id/editText4"
+                android:layout_width="351dp"
+                android:layout_height="261dp"
+                android:ems="10"
+                android:inputType="textMultiLine"
+                android:scrollbarAlwaysDrawHorizontalTrack="true"
+                android:scrollbarAlwaysDrawVerticalTrack="true"
+                tools:layout_editor_absoluteX="16dp"
+                tools:layout_editor_absoluteY="181dp"
+                tools:scrollbarAlwaysDrawVerticalTrack="true" />
+
+
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
