@@ -6,7 +6,6 @@
 package com.arnavdhamija.roamnet;
 
 import android.Manifest;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,9 +14,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.IBinder;
-import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -31,36 +28,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.connection.AdvertisingOptions;
-import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
-import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.ConnectionsClient;
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
-import com.google.android.gms.nearby.connection.DiscoveryOptions;
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
-import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-import com.google.android.gms.nearby.connection.Strategy;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.jaredrummler.android.device.DeviceName;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class MainActivity extends AppCompatActivity {
     MainBGService mService;
@@ -149,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
         mService.stopDiscovery();
         mService.stopAdvertising();
         mService.stopAllEndpoints();
-//        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
-//        mSharedPreferences.edit().commit();
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
         mEditor.apply();
     }
@@ -160,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
     }
 
-    private void setButtonText() {
+    private void setUIText() {
         final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
         if (mBound) {
             if (getRoamnetStatus()) {
@@ -171,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
             customLogger("Started at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
             deviceIdView.setText("Device ID: " + mService.getDeviceId());
+//            deviceIdView.setText("Device ID: " + mSharedPreferences.getString(Constants.DEVICE_ID, "Roamnet_Undefined"));
 
             TextView availableFilesView = findViewById(R.id.availableFilesView);
             availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
@@ -195,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
                     disableRoamnet();
                     customLogger("Stopping!");
                 }
-                setButtonText();
+                setUIText();
             }
         });
 
@@ -220,8 +193,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
-        customLogger("StartStatus " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
-
+//        customLogger("StartStatus " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
+        customLogger("OncReate");
         mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {
             getPermissions();
@@ -230,11 +203,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void rebindBGService() {
+        Intent intent = new Intent(this, MainBGService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        Intent intent = new Intent(this, MainBGService.class);
-//        stopService(intent);
+    protected void onStart() {
+        customLogger("StartTine");
+        super.onStart();
+        rebindBGService();
     }
 
     @Override
@@ -244,6 +222,8 @@ public class MainActivity extends AppCompatActivity {
         customLogger("Stop!");
         mBound = false;
     }
+
+
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -256,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
 //            customLogger("Service conn!");
             mBound = true;
             customLogger("Started w/bound: " + mService.getStartTime());
-            setButtonText();
+            setUIText();
         }
 
         @Override
@@ -306,14 +286,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
-
-
-//    private void rebindBGService() {
-//        if (checkPermissions()) {
-//            Intent intent = new Intent(this, MainBGService.class);
-//            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-//        }
-//    }
 
 //    @Override
 //    protected void onStart() {

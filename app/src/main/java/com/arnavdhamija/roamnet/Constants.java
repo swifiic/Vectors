@@ -17,6 +17,8 @@ public final class Constants {
             "ack";
     public static final String APP_KEY =
             "RoamnetSharedPrefs";
+    public static final String DEVICE_ID =
+            "DEVICE_ID";
     public static final String ANDROID_BOOT_COMPLETION =
             "android.intent.action.BOOT_COMPLETED";
 }

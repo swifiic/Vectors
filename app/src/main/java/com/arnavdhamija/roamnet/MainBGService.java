@@ -60,6 +60,8 @@ public class MainBGService extends IntentService {
     private String startTime;
     private boolean extraChecks = false;
     SharedPreferences mSharedPreferences;
+    SharedPreferences.Editor mEditor;
+
     private FileModule mFileModule;
 
     enum MessageType {
@@ -141,9 +143,13 @@ public class MainBGService extends IntentService {
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
         customLogger(deviceId);
         initConnectionAndNotif();
-        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
 //        add check for sharedpref check
+        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
+        mEditor = mSharedPreferences.edit();
+        mEditor.putString(Constants.DEVICE_ID, deviceId);
+        mEditor.apply();
+
         if (enableBackgroundService()) {
             startAdvertising();
             startDiscovery();
