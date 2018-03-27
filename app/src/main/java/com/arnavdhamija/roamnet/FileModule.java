@@ -141,14 +141,18 @@ public class FileModule {
     }
 
     public void writeToJSONFile(VideoData videoData) {
-        String data = videoData.toString();
-        try {
-            FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
-            writer.write(data);
-            writer.close();
-            Log.d(TAG, "File written");
-        } catch (IOException e) {
-            Log.d(TAG, "File write failed");
+        if (videoData != null) {
+            String data = videoData.toString();
+            try {
+                FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
+                writer.write(data);
+                writer.close();
+                Log.d(TAG, "File written");
+            } catch (IOException e) {
+                Log.d(TAG, "File write failed");
+            }
+        } else {
+            Log.d(TAG, "null???");
         }
     }
 

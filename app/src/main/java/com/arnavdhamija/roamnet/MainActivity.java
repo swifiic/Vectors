@@ -128,7 +128,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean getRoamnetStatus() {
-        customLogger("getting status " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
     }
 
@@ -193,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
-//        customLogger("StartStatus " + mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false));
         customLogger("OncReate");
         mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {
@@ -210,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        customLogger("StartTine");
+        customLogger("StartTime");
         super.onStart();
         rebindBGService();
     }

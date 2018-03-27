@@ -402,6 +402,7 @@ public class MainBGService extends IntentService {
             };
 
     private void addPayloadFilename(String payloadFilenameMessage) {
+        customLogger("adding2fnamerefs" + payloadFilenameMessage);
         int colonIndex = payloadFilenameMessage.indexOf(':');
         String payloadId = payloadFilenameMessage.substring(0, colonIndex);
         String filename = payloadFilenameMessage.substring(colonIndex + 1);
@@ -421,11 +422,18 @@ public class MainBGService extends IntentService {
             return;
         }
         Payload filePayload = Payload.fromFile(pfd);
-        String payloadFilenameMessage = filePayload.getId() + ":" + filename;
-
         NotificationCompat.Builder notification = buildNotification(filePayload, false);
+
         mNotificationManager.notify((int)filePayload.getId(), notification.build());
         outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+        try {
+            String payloadFilenameMessage = filePayload.getId() + ":" + filename;
+            customLogger("using method2 to send" + payloadFilenameMessage);
+            payloadFilenameMessage = createStringType(MessageType.FILENAME, payloadFilenameMessage);
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
+        } catch (UnsupportedEncodingException e) {
+            customLogger("encode fail");
+        }
         mConnectionClient.sendPayload(connectedEndpoint, filePayload);
 
     }
@@ -441,6 +449,7 @@ public class MainBGService extends IntentService {
         String payloadFilenameMessage = filePayload.getId() + ":" + data.getFileName();
         sendFile(connectedEndpoint, filePayload, payloadFilenameMessage, data);
     }
+
     // remove endpoint id from here?!
     private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg, VideoData data) {
         NotificationCompat.Builder notification = buildNotification(payload, false);
@@ -503,47 +512,52 @@ public class MainBGService extends IntentService {
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         List<String> otherFileTypes = new ArrayList<>();
-        for (int i = 0; i < requestedFiles.size(); i++) {
-            if (requestedFiles.get(i).startsWith("video")) {
-                requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
-            } else {
-                otherFileTypes.add(requestedFiles.get(i));
-            }
-        }
-
-        // sort by tickets and send in that order
-        Collections.sort(requestedVideoDatas, new Comparator<VideoData>() {
-            @Override
-            public int compare(VideoData o1, VideoData o2) {
-                if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
-                    return 1;
+        if (requestedFiles.size() > 0) {
+            for (int i = 0; i < requestedFiles.size(); i++) {
+                if (requestedFiles.get(i).startsWith("video")) {
+                    requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
                 } else {
-                    return -1;
-                }
-            }
-        });
-
-        for (VideoData vd : requestedVideoDatas) {
-            if (vd != null) {
-                if (vd.getTickets() > 1) {
-                    vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
-                    vd.addTraversedNode(deviceId);
-                    //send JSON and file
-                    boolean sendFile = true;
-                    if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis()/1000
-                            || dack.getAckedFiles().contains(vd.getFileName()))) {
-                        sendFile = false;
-                    }
-                    if (sendFile) {
-                        sendFile(vd);
+                    if (requestedFiles.get(i) != "") {
+                        customLogger("OtherFileType! - " + requestedFiles.get(i));
+                        otherFileTypes.add(requestedFiles.get(i));
                     }
                 }
             }
-        }
 
-        // for metadata files
-        for (String filename : otherFileTypes) {
-            sendFile(filename);
+            // sort by tickets and send in that order
+            Collections.sort(requestedVideoDatas, new Comparator<VideoData>() {
+                @Override
+                public int compare(VideoData o1, VideoData o2) {
+                    if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                }
+            });
+
+            for (VideoData vd : requestedVideoDatas) {
+                if (vd != null) {
+                    if (vd.getTickets() > 1) {
+                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
+                        vd.addTraversedNode(deviceId);
+                        //send JSON and file
+                        boolean sendFile = true;
+                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000
+                                || dack.getAckedFiles().contains(vd.getFileName()))) {
+                            sendFile = false;
+                        }
+                        if (sendFile) {
+                            sendFile(vd);
+                        }
+                    }
+                }
+            }
+
+            // for metadata files
+            for (String filename : otherFileTypes) {
+                sendFile(filename);
+            }
         }
     }
 
@@ -594,7 +608,7 @@ public class MainBGService extends IntentService {
                     if (payload.getType() == Payload.Type.BYTES) {
                         try {
                             String payloadMsg = new String(payload.asBytes(), "UTF-8");
-                            customLogger("Getting a byte pyalod " + payloadMsg);
+//                            customLogger("Getting a byte pyalod " + payloadMsg);
                             MessageType type = getMessageType(payloadMsg);
                             String parsedMsg = parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
@@ -616,7 +630,7 @@ public class MainBGService extends IntentService {
                             } else if (type == MessageType.DESTINATIONACK) {
                                 processDackJSON(parsedMsg);
                             } else {
-                                    customLogger(" got diff type " + parsedMsg);
+                                customLogger(" got diff type " + parsedMsg);
                             }
 
                         } catch (Exception e) {
@@ -647,8 +661,12 @@ public class MainBGService extends IntentService {
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
                             outgoingPayloads.remove(payloadId);
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
-                            mFileModule.writeToJSONFile(vd); // update JSON file
-                            customLogger("Updated the outbound JSON");
+                            if (vd != null) {
+                                mFileModule.writeToJSONFile(vd); // update JSON file
+                                customLogger("Updated the outbound JSON");
+                            } else {
+                                customLogger("Working with non-vid file, DLed");
+                            }
                         }
                     }
                     Payload payload = incomingPayloadReferences.get(update.getPayloadId());
@@ -664,13 +682,18 @@ public class MainBGService extends IntentService {
                             String filename = filePayloadFilenames.remove(update.getPayloadId());
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
+                                if (filename == null) {
+                                    customLogger("Strange wrong fname!");
+                                } else {
+                                    customLogger("Fname " + filename);
+                                }
                                 payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
 
                                 // remove it from being tracked by the incomingJSONs and write that to a file
                                 for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
                                     if (incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0) {
                                         mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
-                                        customLogger("Wrote the incoming JSON");
+                                        customLogger("Wrote the incoming JSON of " + filename);
                                         incomingTransfersMetadata.remove(i);
                                         break;
                                     }
