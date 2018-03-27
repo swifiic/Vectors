@@ -29,6 +29,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.arnavdhamija.common.Constants;
+import com.arnavdhamija.common.VideoData;
 import com.google.android.gms.nearby.connection.Payload;
 
 import java.text.SimpleDateFormat;

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.arnavdhamija.common.Constants;
+
 public class BootBroadcastReceiver extends BroadcastReceiver {
 
     @Override

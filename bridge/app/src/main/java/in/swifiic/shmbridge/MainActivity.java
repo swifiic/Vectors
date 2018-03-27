@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
         vd.addTraversedNode("injector");
         String jsonStr = vd.toString();
         byte[] data = jsonStr.getBytes();
-        createFile(fileBase + ".json", data.length, jsonStr);
+        createFile(fileBase + ".out.json", data.length, jsonStr);
     }
 
     private void createFile(String name, int size, String dataStr){

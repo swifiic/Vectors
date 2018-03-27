@@ -16,6 +16,10 @@ import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.arnavdhamija.common.Constants;
+import com.arnavdhamija.common.DestinationAck;
+import com.arnavdhamija.common.FileModule;
+import com.arnavdhamija.common.VideoData;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
