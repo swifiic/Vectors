@@ -9,8 +9,6 @@
 
     $sql = "SELECT FileName, ReceivedTime FROM ReceivedFiles ORDER BY ReceivedTime DESC;";
 
-    $complete_json = array();
-
     $result = $conn->query($sql);
     $ack_json->type = "Acknowledgment";
     $ack_json->ack_time = time();
