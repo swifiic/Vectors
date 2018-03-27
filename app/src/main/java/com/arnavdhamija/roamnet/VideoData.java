@@ -27,6 +27,12 @@ public class VideoData {
     private ArrayList<Pair<Long, String>> traversal;
 
     public void addTraversedNode(String deviceName) {
+        for (Pair pair : traversal) {
+            String _deviceName = (String)pair.second;
+            if (_deviceName.compareTo(deviceName) == 0) {
+                return;
+            }
+        }
         Long epochTimeSeconds = System.currentTimeMillis()/1000;
         Pair<Long, String> pair = new Pair<>(epochTimeSeconds, deviceName);
         traversal.add(pair);
