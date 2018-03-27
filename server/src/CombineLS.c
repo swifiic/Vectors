@@ -158,10 +158,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  for (i = 0 ; i <= layerIdMax; i++)
+  for (i = 0 ; i < layerIdMax; i++)
   {
-    for (j = 0 ; j <= tIdMax ; j ++) {
-        snprintf(fileName, 1023, "%s_%d_%d.out", argv[1], i , j);
+    for (j = 1 ; j <= tIdMax ; j ++) {
+        snprintf(fileName, 1023, "%s_L%dT%d.out", argv[1], i , j);
         inFile[i][j] = fopen(fileName, "rb");
     }
   }
@@ -214,8 +214,8 @@ int main(int argc, char **argv)
   }
   
   fclose(outFile);
-  for (i = 0 ; i <= layerIdMax; i++) {
-    for (j = 0 ; j <= tIdMax ; j ++) {
+  for (i = 0 ; i < layerIdMax; i++) {
+    for (j = 1 ; j <= tIdMax ; j ++) {
         if(NULL!= inFile[i][j])
              fclose(inFile[i][j]);
     }
