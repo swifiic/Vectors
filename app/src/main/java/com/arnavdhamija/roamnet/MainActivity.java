@@ -113,8 +113,6 @@ public class MainActivity extends AppCompatActivity {
     private void enableRoamnet() {
         mService.startAdvertising();
         mService.startDiscovery();
-//        mSharedPreferences.edit().putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
-//        mSharedPreferences.edit().commit();
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
         mEditor.apply();
     }

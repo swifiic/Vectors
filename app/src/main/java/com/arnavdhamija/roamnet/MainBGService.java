@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -135,34 +136,34 @@ public class MainBGService extends IntentService {
 
     }
 
+    void initBGService() {
+        mFileModule = new FileModule(this);
+        deviceId = "Roamnet_" + DeviceName.getDeviceName();
+        customLogger("From bgservice" + deviceId);
+        initConnectionAndNotif();
+        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
+        mEditor = mSharedPreferences.edit();
+        mEditor.putString(Constants.DEVICE_ID, deviceId);
+        mEditor.apply();
+        if (enableBackgroundService()) {
+            customLogger( "BgserviceEnable");
+//            startAdvertising();
+//            startDiscovery();
+        } else {
+            customLogger( "Bgservicedisable");
+        }
+    }
 
     public MainBGService() {
     // default Constructor
         super("DemoWorkerName");
-        mFileModule = new FileModule(this);
-        deviceId = "Roamnet_" + DeviceName.getDeviceName();
-        customLogger(deviceId);
-        initConnectionAndNotif();
-        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
-//        add check for sharedpref check
-        mSharedPreferences = RoamNetApp.getContext().getSharedPreferences(Constants.APP_KEY, Context.MODE_PRIVATE);
-        mEditor = mSharedPreferences.edit();
-        mEditor.putString(Constants.DEVICE_ID, deviceId);
-        mEditor.apply();
-
-        if (enableBackgroundService()) {
-            startAdvertising();
-            startDiscovery();
-        }
+        initBGService();
     }
 
     public MainBGService(String workerName) {
         super(workerName);
-        mFileModule = new FileModule(this);
-        deviceId = "Roamnet_" + DeviceName.getDeviceName();
-        customLogger(deviceId);
-        initConnectionAndNotif();
-        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
+        initBGService();
     }
 
     private void customLogger(String msg) {
