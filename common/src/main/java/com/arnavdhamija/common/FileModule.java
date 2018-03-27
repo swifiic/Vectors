@@ -156,7 +156,7 @@ public class FileModule {
         }
     }
 
-    public void writeToJSONFile(DestinationAck destinationAck) {
+    public void writeToJSONFile(Acknowledgement destinationAck) {
         String data = destinationAck.toString();
         try {
             FileWriter writer = new FileWriter( new File(dataDirectory, Constants.ACK_FILENAME + ".json"), false);
@@ -195,11 +195,11 @@ public class FileModule {
         return null;
     }
 
-    public DestinationAck getAckFromFile() {
+    public Acknowledgement getAckFromFile() {
         String jsonFilename = Constants.ACK_FILENAME + ".json";
         try {
             String ackJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
-            return DestinationAck.fromString(ackJSON);
+            return Acknowledgement.fromString(ackJSON);
         } catch (IOException e) {
             Log.d(TAG, "Ack not found");
         }

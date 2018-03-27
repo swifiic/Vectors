@@ -14,8 +14,8 @@ public final class Constants {
             "swifiic.roamnet.android.CONNECTION_STATUS";
     public static final String STATUS_ENABLE_BG_SERVICE =
             "connectionStatus";
-    public static final String ACK_FILENAME =
-            "ack";
+//    public static final String ACK_FILENAME =
+//            "ack";
     public static final String APP_KEY =
             "RoamnetSharedPrefs";
     public static final String DEVICE_ID =
@@ -25,8 +25,9 @@ public final class Constants {
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
     public static final String FLDR =  "/RoamnetData";
-
+    public static final String ACK_PREFIX = "ack_";
     public static final String BASE_NAME =  "video_00";
+    public static final String ACK_FILENAME = ACK_PREFIX + BASE_NAME;
 
     public static final int[]  fileSizeArrayL0 = {5, 3, 3, 4, 3, 3, 4};
     public static final int[]  fileSizeArrayL1 = {21, 13, 13, 24, 28, 25, 28};

@@ -285,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
             String ackStr = ack.toString();
             byte[] data = ackStr.getBytes();
 
-            createFile(Constants.BASE_NAME + ".ack.json", data.length, ackStr);
+            createFile(Constants.ACK_FILENAME + ".json", data.length, ackStr);
         }
 
 

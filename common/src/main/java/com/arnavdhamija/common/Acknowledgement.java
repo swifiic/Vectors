@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Acknowledgement {
@@ -46,6 +47,14 @@ public class Acknowledgement {
         return items;
     }
 
+    public List<String> getAckedFilenames() {
+        List<String> filenames = new ArrayList<>();
+        for (AckItem item : items) {
+            filenames.add(item.getFilename());
+        }
+        return getAckedFilenames();
+    }
+
     public void setItems(List<AckItem> items) {
         this.items = items;
     }
@@ -56,5 +65,11 @@ public class Acknowledgement {
         Log.d(TAG, "JSON string " + gson.toJson(this));
         return gson.toJson(this);
     }
+
+    public static Acknowledgement fromString(String jsonEncodedAcknowledgement) {
+        Gson gson = new Gson();
+        return gson.fromJson(jsonEncodedAcknowledgement, Acknowledgement.class);
+    }
+
 }
 

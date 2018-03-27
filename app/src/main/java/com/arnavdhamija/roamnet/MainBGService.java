@@ -16,8 +16,8 @@ import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.arnavdhamija.common.Acknowledgement;
 import com.arnavdhamija.common.Constants;
-import com.arnavdhamija.common.DestinationAck;
 import com.arnavdhamija.common.FileModule;
 import com.arnavdhamija.common.VideoData;
 import com.google.android.gms.nearby.Nearby;
@@ -502,7 +502,7 @@ public class MainBGService extends IntentService {
     }
 
     private void sendDestinationAck() {
-        DestinationAck ack = mFileModule.getAckFromFile();
+        Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
             String dackMsg = ack.toString();
             dackMsg = createStringType(MessageType.DESTINATIONACK, dackMsg);
@@ -518,12 +518,12 @@ public class MainBGService extends IntentService {
     }
 
     private void processDackJSON(String parseMsg) {
-        DestinationAck incomingAck = DestinationAck.fromString(parseMsg);
-        DestinationAck currentAck = mFileModule.getAckFromFile();
+        Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
+        Acknowledgement currentAck = mFileModule.getAckFromFile();
         if (currentAck == null) {
             mFileModule.writeToJSONFile(incomingAck);
         } else {
-            if (incomingAck.getTimestamp() > currentAck.getTimestamp()) {
+            if (incomingAck.getAckTime() > currentAck.getAckTime()) {
                 customLogger("Newer ack received, writing back to file");
                 mFileModule.writeToJSONFile(incomingAck);
             }
@@ -531,7 +531,7 @@ public class MainBGService extends IntentService {
     }
 
     private void processRequestFiles(String filelist) {
-        DestinationAck dack = mFileModule.getAckFromFile();
+        Acknowledgement dack = mFileModule.getAckFromFile();
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         List<String> otherFileTypes = new ArrayList<>();
@@ -567,7 +567,7 @@ public class MainBGService extends IntentService {
                         //send JSON and file
                         boolean sendFile = true;
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000
-                                || dack.getAckedFiles().contains(vd.getFileName()))) {
+                                || dack.getAckedFilenames().contains(vd.getFileName()))) {
                             sendFile = false;
                         }
                         if (sendFile) {
