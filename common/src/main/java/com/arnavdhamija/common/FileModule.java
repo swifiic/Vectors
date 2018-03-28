@@ -184,6 +184,19 @@ public class FileModule {
         return csvFileList.toString();
     }
 
+    public boolean deleteFile(String filename) {
+        boolean jsonDeleted = true;
+        boolean fileDeleted = true;
+        if (filename.startsWith("video")) {
+            File jsonFile = new File(dataDirectory, filename + ".json");
+            jsonDeleted = jsonFile.delete();
+
+        }
+        File file = new File(dataDirectory, filename);
+        fileDeleted = file.delete();
+        return fileDeleted && jsonDeleted;
+    }
+
     public VideoData getVideoDataFromFile(String videoFileName) {
         String jsonFilename = videoFileName + ".json";
         try {

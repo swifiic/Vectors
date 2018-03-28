@@ -136,11 +136,9 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 toggleRoamnetButton.setText("Start Roamnet");
             }
-            customLogger("Started at: " + mService.getStartTime());
+            customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
             deviceIdView.setText("Device ID: " + mService.getDeviceId());
-//            deviceIdView.setText("Device ID: " + mSharedPreferences.getString(Constants.DEVICE_ID, "Roamnet_Undefined"));
-
             TextView availableFilesView = findViewById(R.id.availableFilesView);
             availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
         } else {
@@ -170,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 TextView logView = findViewById(R.id.logView);
+                setUIText();
                 logView.setText("");
             }
         });

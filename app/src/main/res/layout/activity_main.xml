@@ -48,7 +48,7 @@
             android:id="@+id/logClearButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Clear Log" />
+            android:text="Refresh" />
 
         <TextView
             android:id="@+id/logView"

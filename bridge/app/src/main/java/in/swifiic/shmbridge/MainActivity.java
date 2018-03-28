@@ -208,13 +208,13 @@ public class MainActivity extends AppCompatActivity {
         createFile(fileBase + ".out", sizeOfFile, dataStr);
 
         VideoData vd = new VideoData();
-        vd.setCreationTime(System.currentTimeMillis());
+        vd.setCreationTime(System.currentTimeMillis()/1000);
         vd.setFileName(fileBase + ".out");
         vd.setMaxSvcLayer(1);
         vd.setMaxTemporalLayer(5);
         vd.setSequenceNumber(burstNum);
         vd.setTickets(Constants.CopyCountL0[temp]);
-        vd.setTtl(24 * 3600); // TODO TTL in seconds?
+        vd.setTtl(24 * 3600);
         vd.addTraversedNode("injector");
         String jsonStr = vd.toString();
         byte[] data = jsonStr.getBytes();
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
         List<AckItem> ackItemList = new ArrayList<AckItem>();
 
         for(int i =0; i < fileNames.length; i++){
-            if(fileNames[i].length() > Constants.BASE_NAME.length()){
+            if(fileNames[i].length() > Constants.BASE_NAME.length() && fileNames[i].startsWith(Constants.ACK_PREFIX) == false){
                 ackedFiles.add(fileNames[i]);
                 File toMove = new File(folderBase + "/" + fileNames[i]);
                 File dest = new File (folderOther + "/" + fileNames[i]);

@@ -17,6 +17,7 @@ import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.arnavdhamija.common.AckItem;
 import com.arnavdhamija.common.Acknowledgement;
 import com.arnavdhamija.common.Constants;
 import com.arnavdhamija.common.FileModule;
@@ -65,7 +66,7 @@ public class MainBGService extends IntentService {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = false;
+    private boolean extraChecks = true;
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor; // TODO - may not need edit
 
@@ -323,7 +324,7 @@ public class MainBGService extends IntentService {
                 }
 
                 @Override
-                pubic void onEndpointLost(String endpointId) {
+                public void onEndpointLost(String endpointId) {
                     customLogger("lost ENDPOINT: " + endpointId);
                 }
             };
@@ -532,6 +533,12 @@ public class MainBGService extends IntentService {
                 mFileModule.writeToJSONFile(incomingAck);
             }
         }
+
+        for (AckItem item : mFileModule.getAckFromFile().getItems()) {
+            if (mFileModule.getFileList().contains(item.getFilename())) {
+                deleteFile(item.getFilename());
+            }
+        }
     }
 
     private void processRequestFiles(String filelist) {
@@ -572,6 +579,7 @@ public class MainBGService extends IntentService {
                         boolean sendFile = true;
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000
                                 || dack.getAckedFilenames().contains(vd.getFileName()))) {
+                            customLogger("File has been acked/too old to send");
                             sendFile = false;
                         }
                         if (sendFile) {
