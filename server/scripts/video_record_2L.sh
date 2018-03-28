@@ -24,8 +24,8 @@ echo ${temp_file_counter} > ./counter
 inputOutputFiles=" -i0 rec/output_${counterPart}_Q.yuv -i1 rec/output_${counterPart}.yuv -b rec/output_${counterPart}.bin"
 framerateStr=" -fr0 ${framerate} -fr1 ${framerate} "
 encoderCommand="bin/TAppEncoderStaticd -c cfg/encoder_randomaccess_scalable.cfg -c cfg/2L-2X_vector.cfg -c cfg/layers2_final.cfg ${inputOutputFiles} ${srcWidthStr} ${framerateStr} -f ${num_frames}"
-extractCommand="../bin/ExtractAddLSStaticd output_${counterPart}.bin video_${counterPart} 5 2"
-
+extractCommand="../bin/ExtractAddLS output_${counterPart}.bin video_${counterPart} 5 2"
+downConvertCommand="bin/DownConvertStaticd 640 480 rec/output_${counterPart}.yuv 320 240 rec/output_${counterPart}_Q.yuv"
 ffmpegPath=`which ffmpeg`
 
 if [ -z $ffmpegPath ]; then
@@ -33,35 +33,33 @@ if [ -z $ffmpegPath ]; then
     exit 5
 fi
 
-    # recording and down converting to get QCIF file.
-    ${ffmpegPath} -f v4l2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
+# recording and down converting to get QCIF file.
+${ffmpegPath} -f v4l2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
+${downConvertCommand}
 
-    bin/DownConvertStaticd 640 480 rec/output_${counterPart}.yuv 320 240 rec/output_${counterPart}_Q.yuv
-
-    echo "Downconverded the file";
-    ls -l rec/output_${counterPart}*
-
-
-    # Runing Enncoder to encode the recorded sample.
-    echo "Coding as ${encoderCommand}"
-    ${encoderCommand}
+echo "Downconverded the file";
+ls -l rec/output_${counterPart}*
 
 
-    # Extracting the layers from the encoded file.
-    cd rec
-    ${extractCommand}
+# Runing Enncoder to encode the recorded sample.
+echo "Coding as ${encoderCommand}"
+${encoderCommand}
+
+# Extracting the layers from the encoded file.
+cd rec
+${extractCommand}
 
 
-    count=`ls -1 video* 2>/dev/null | wc -l`
-    if [ $count != 0 ]; then
-        mv video* ${fileBase}
-        mv ${fileBase}/video_${counterPart}.md  ${fileBase}/md_${counterPart}.md
-    fi
-    # remove files older than 4 days - for capture
-    find . -type f -mtime +96 -exec rm {} \;
+count=`ls -1 video* 2>/dev/null | wc -l`
+if [ $count != 0 ]; then
+    mv video* ${fileBase}
+    mv ${fileBase}/video_${counterPart}.md  ${fileBase}/md_${counterPart}.md
+fi
+# remove files older than 4 days - for capture
+find . -type f -mtime +96 -exec rm {} \;
 
-    cd ${fileBase}
+cd ${fileBase}
 
-    # remove files older than 2 days - for transfer
-    find . -type f -mtime +48 -exec rm {} \;
+# remove files older than 2 days - for transfer
+find . -type f -mtime +48 -exec rm {} \;
 
