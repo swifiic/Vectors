@@ -68,7 +68,7 @@ public class MainBGService extends IntentService {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = true;
+    private boolean extraChecks = false;
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor; // TODO - may not need edit
 
@@ -439,7 +439,6 @@ public class MainBGService extends IntentService {
             customLogger("using method2 to send" + payloadFilenameMessage);
             payloadFilenameMessage = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMessage);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
-            SystemClock.sleep(300);
             mConnectionClient.sendPayload(connectedEndpoint, filePayload);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
@@ -464,20 +463,18 @@ public class MainBGService extends IntentService {
         mNotificationManager.notify((int)payload.getId(), notification.build());
         outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
 
-        // now we send the JSON metadata mapped by the payload ID
-        String videoDataJSON = data.toString();
-        videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-        outgoingTransfersMetadata.put(Long.valueOf(payload.getId()), data);
-
         try {
             payloadFilenameMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMsg);
             customLogger("Sending a file - filename is : " + payloadFilenameMsg);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
-            customLogger("Sleeping");
-            SystemClock.sleep(300);
-            customLogger("Waking2send");
             mConnectionClient.sendPayload(connectedEndpoint, payload);
+
+            // now we send the JSON metadata mapped by the payload ID
+            String videoDataJSON = data.toString();
+            videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+            outgoingTransfersMetadata.put(Long.valueOf(payload.getId()), data);
+
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
@@ -504,8 +501,7 @@ public class MainBGService extends IntentService {
     }
 
     private void processJSONMsg(String parseMsg) {
-        VideoData vd = new VideoData();
-        vd = VideoData.fromString(parseMsg);
+        VideoData vd = VideoData.fromString(parseMsg);
         // this list has to be managed, when we start getting files of course
         incomingTransfersMetadata.add(vd);
     }
@@ -567,7 +563,7 @@ public class MainBGService extends IntentService {
             for (VideoData vd : requestedVideoDatas) {
                 if (vd != null) {
                     if (vd.getTickets() > 1) {
-                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
+                        vd.setTickets(vd.getTickets());// / 2); // SNW strategy allows us to only send half
                         vd.addTraversedNode(deviceId);
                         //send JSON and file
                         boolean sendFile = true;
