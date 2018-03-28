@@ -19,11 +19,26 @@
     $row = $result->fetch_assoc();
 
     $currentCopyCount = $row['CopyCount'];
-    $jsonToSend= array('filename' => ${fileArgs},'copycount' => ${currentCopyCount});
+    $remoteCopyCount = floor((${currentCopyCount} + 1) /2);
+
+    # $jsonToSend= array('filename' => ${fileArgs},'copycount' => ${currentCopyCount});
+    # TODO values should come from the DB  or file name - fields missing right now
+    # TODO-Later actual SORT will reduce ttl for higher temporal and SVC layers
+
+    $jsonToSend= array('creationTime' => time(),
+			'maxSvcLayer' => 2,
+			'maxTemporalLayer' => 5,
+			'sequenceNumber' => 0,
+			'svcLayer' => 0,
+			'temporalLayer' => 0,
+			'tickets' => ${remoteCopyCount},
+			'traversal' => array(),
+			'ttl' => 86400);
+
     $jsonEncode = json_encode(${jsonToSend});
 
     // updating the table with the new copy count.
-    $newCopyCount = ${currentCopyCount}/2;
+    $newCopyCount = floor(${currentCopyCount}/2);
     if (${newCopyCount} >= 1) {
         $sql = "UPDATE AvailableFiles SET CopyCount='${newCopyCount}' WHERE FileName='${fileArgs}' ;";
         if ($conn->query($sql) != TRUE) {

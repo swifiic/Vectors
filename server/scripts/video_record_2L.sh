@@ -7,7 +7,7 @@ cd /var/spool/vector
 # use v4l2-ctl --list-formats-ext to find options on framerate etc.
 fileBase=/var/www/video_out
 framerate=5
-num_frames=1600
+num_frames=80
 input=/dev/video0
 
 # resolution based arguments

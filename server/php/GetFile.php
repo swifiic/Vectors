@@ -19,7 +19,7 @@
     // check for new file and insert them into DB if any.
     include 'NewFileCheck.php';
 
-    $sql = "SELECT FileName, CopyCount FROM AvailableFiles ORDER BY FileName DESC, CopyCount DESC;";
+    $sql = "SELECT FileName, CopyCount FROM AvailableFiles ORDER BY CopyCount DESC, FileName DESC;";
 
     $result = $conn->query($sql);
     $fileToSend = "";
@@ -28,6 +28,7 @@
         while($row = $result->fetch_assoc()) {
             if(!(in_array($row["FileName"],$existingFilesList))){
                 $fileToSend = $row["FileName"];
+                break;
             }
         }
     }

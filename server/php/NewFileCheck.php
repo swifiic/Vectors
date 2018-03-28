@@ -16,7 +16,7 @@
         $filesArray=array_values($filesInFolder);
         // adding new files to DB
         for($x = 0; $x < count($filesArray); $x++) {
-            if(in_array($filesInDB, $filesArray[$x])) continue;
+            if(in_array($filesArray[$x], $filesInDB)) continue;
             $toProcess = $filesArray[$x];
             $copyCountAtDelete = 0;
             // $fileNameExtract = explode("_", $toProcess);
