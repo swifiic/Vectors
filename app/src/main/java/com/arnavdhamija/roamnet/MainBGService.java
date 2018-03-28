@@ -23,7 +23,6 @@ import com.arnavdhamija.common.Acknowledgement;
 import com.arnavdhamija.common.Constants;
 import com.arnavdhamija.common.FileModule;
 import com.arnavdhamija.common.VideoData;
-import com.arnavdhamija.roamnet.MessageScheme;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -337,20 +336,9 @@ public class MainBGService extends IntentService {
                 }
             };
 
-    String parsePayloadString(String originalMsg) {
-        return originalMsg.substring(4);
-    }
     String endpointName;
 
     private boolean recentlyVisited(String endpointName) {
-//        for (Pair<String, Long> pair : recentlyVisitedNodes) {
-//            if (pair.first.compareTo(endpointName)==0) {
-//                if ((pair.second + Constants.MIN_CONNECTION_GAP_TIME) < System.currentTimeMillis()/1000) {
-//                    return true;
-//                }
-//                return false;
-//            }
-//        }
         for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
             if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
                 if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) < System.currentTimeMillis()/1000) {
@@ -622,26 +610,11 @@ public class MainBGService extends IntentService {
                 requestFilenames.add(rcvdFilenames.get(i));
             }
         }
-        String requestFilesCSV = convertListToCSV(requestFilenames);
+        String requestFilesCSV = FileModule.convertListToCSV(requestFilenames);
         customLogger("We want the files of " + requestFilesCSV);
         // we send the files we want to get here
         requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
-    }
-
-    private String convertListToCSV(List<String> files) {
-        String fileName;
-        StringBuilder csvFileList = new StringBuilder();
-        for (int i = 0; i < files.size(); i++) {
-            fileName = files.get(i);
-            if (!fileName.contains(".json")) {
-                if (i > 0) {
-                    csvFileList.append(",");
-                }
-                csvFileList.append(fileName);
-            }
-        }
-        return csvFileList.toString();
     }
 
     private boolean goodbyeReceived = false;
@@ -662,7 +635,7 @@ public class MainBGService extends IntentService {
                             String payloadMsg = new String(payload.asBytes(), "UTF-8");
 //                            customLogger("Getting a byte pyalod " + payloadMsg);
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
-                            String parsedMsg = parsePayloadString(payloadMsg);
+                            String parsedMsg = MessageScheme.parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
                                 customLogger("We got a null string?!?!?!");
                             }
@@ -712,6 +685,7 @@ public class MainBGService extends IntentService {
                         }
                         if (incomingPayloads.isEmpty()) {
                             customLogger("Done receiving payloads, can terminate");
+                            checkConnectionTermination();
                             // done receiving
                         }
                     } else if (outgoingPayloads.containsKey(payloadId)) {
@@ -729,6 +703,7 @@ public class MainBGService extends IntentService {
                         if (outgoingPayloads.isEmpty()) {
                             customLogger("Done transferring payloads, can terminate");
                             sendGoodbye();
+                            checkConnectionTermination();
                             // done sending
                         }
                     }
@@ -775,7 +750,6 @@ public class MainBGService extends IntentService {
                     }
                     mNotificationManager.notify((int) payloadId, notification.build());
                 }
-
             };
 }
 

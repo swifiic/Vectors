@@ -2,6 +2,10 @@ package com.arnavdhamija.roamnet;
 
 public class MessageScheme {
 
+    public static String parsePayloadString(String originalMsg) {
+        return originalMsg.substring(4);
+    }
+
     public static enum MessageType {
         WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE;
     }

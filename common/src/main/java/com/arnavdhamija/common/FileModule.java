@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -38,6 +39,21 @@ public class FileModule {
         mContext = context;
 //        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
 //        buildFileLedger();
+    }
+
+    public static String convertListToCSV(List<String> files) {
+        String fileName;
+        StringBuilder csvFileList = new StringBuilder();
+        for (int i = 0; i < files.size(); i++) {
+            fileName = files.get(i);
+            if (!fileName.contains(".json")) {
+                if (i > 0) {
+                    csvFileList.append(",");
+                }
+                csvFileList.append(fileName);
+            }
+        }
+        return csvFileList.toString();
     }
 
     public File getDataDirectory() {

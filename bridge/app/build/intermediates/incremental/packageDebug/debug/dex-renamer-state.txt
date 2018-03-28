@@ -1,4 +1,4 @@
-#Wed Mar 28 10:34:28 IST 2018
+#Wed Mar 28 22:47:35 IST 2018
 base.0=/home/nic/swifiic/Roamnet/bridge/app/build/intermediates/transforms/dexMerger/debug/0
 path.0=classes.dex
 renamed.0=classes.dex
