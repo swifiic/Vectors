@@ -323,7 +323,7 @@ public class MainBGService extends IntentService {
                 }
 
                 @Override
-                public void onEndpointLost(String endpointId) {
+                pubic void onEndpointLost(String endpointId) {
                     customLogger("lost ENDPOINT: " + endpointId);
                 }
             };
