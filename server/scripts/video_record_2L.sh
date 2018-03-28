@@ -4,16 +4,30 @@ set -o xtrace
 
 cd /var/spool/vector
 
+# use v4l2-ctl --list-formats-ext to find options on framerate etc.
 fileBase=/var/www/video_out
-framerate=10
-num_frames=64
+framerate=5
+num_frames=1600
 input=/dev/video0
 
 # resolution based arguments
-resolution=640x480
-dc_res_1="640 480 "
-dc_res_2="320 240 "
-srcWidthStr=" -wdt0 320 -hgt0 240 -wdt1 640 -hgt1 480 "
+# # # # # # high Res
+# resolution=1280x960
+# dc_res_1="1280 960 "
+# dc_res_2="640 480 "
+# srcWidthStr=" -wdt0 640 -hgt0 480 -wdt1 1280 -hgt1 960 "
+
+# # # # # # Medium Res
+# resolution=640x480
+# dc_res_1="640 480 "
+# dc_res_2="320 240 "
+# srcWidthStr=" -wdt0 320 -hgt0 240 -wdt1 640 -hgt1 480 "
+
+# # # # # # Low res
+resolution=320x240
+dc_res_1="320 240 "
+dc_res_2="160 120 "
+srcWidthStr=" -wdt0 160 -hgt0 120 -wdt1 320 -hgt1 240 "
 
 
 video_file_counter=`cat ./counter`
@@ -25,7 +39,7 @@ inputOutputFiles=" -i0 rec/output_${counterPart}_Q.yuv -i1 rec/output_${counterP
 framerateStr=" -fr0 ${framerate} -fr1 ${framerate} "
 encoderCommand="bin/TAppEncoderStaticd -c cfg/encoder_randomaccess_scalable.cfg -c cfg/2L-2X_vector.cfg -c cfg/layers2_final.cfg ${inputOutputFiles} ${srcWidthStr} ${framerateStr} -f ${num_frames}"
 extractCommand="../bin/ExtractAddLS output_${counterPart}.bin video_${counterPart} 5 2"
-downConvertCommand="bin/DownConvertStaticd 640 480 rec/output_${counterPart}.yuv 320 240 rec/output_${counterPart}_Q.yuv"
+downConvertCommand="bin/DownConvertStaticd ${dc_res_1} rec/output_${counterPart}.yuv ${dc_res_2} rec/output_${counterPart}_Q.yuv"
 ffmpegPath=`which ffmpeg`
 
 if [ -z $ffmpegPath ]; then
@@ -47,6 +61,7 @@ ${encoderCommand}
 
 # Extracting the layers from the encoded file.
 cd rec
+echo "Extracting as ${extractCommand} "
 ${extractCommand}
 
 
