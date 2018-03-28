@@ -23,6 +23,7 @@ import com.arnavdhamija.common.Acknowledgement;
 import com.arnavdhamija.common.Constants;
 import com.arnavdhamija.common.FileModule;
 import com.arnavdhamija.common.VideoData;
+import com.arnavdhamija.roamnet.MessageScheme;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -51,6 +52,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import static com.arnavdhamija.roamnet.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /***
@@ -75,9 +77,6 @@ public class MainBGService extends IntentService {
 
     private FileModule mFileModule;
 
-    enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE;
-    }
 
     final String TAG = "RoamnetSvc";
 
@@ -338,52 +337,6 @@ public class MainBGService extends IntentService {
                 }
             };
 
-    String createStringType(MessageType type, String msg) {
-        if (type == MessageType.WELCOME) {
-            return "WLCM" + msg;
-        } else if (type == MessageType.JSON) {
-            return "JSON" + msg;
-        } else if (type == MessageType.FILENAME) {
-            return "FLNM" + msg;
-        } else if (type == MessageType.EXTRA) {
-            return "EXTR" + msg;
-        } else if (type == MessageType.FILELIST) {
-            return "FLST" + msg;
-        } else if (type == MessageType.REQUESTFILES) {
-            return "REQE" + msg;
-        } else if (type == MessageType.DESTINATIONACK) {
-            return "DACK" + msg;
-        } else if (type == MessageType.GOODBYE) {
-            return "GBYE";
-        } else {
-            return null;
-        }
-    }
-
-    MessageType getMessageType(String originalMsg) {
-        String msgHeader = originalMsg.substring(0, 4);
-//        customLogger("Header " + msgHeader);
-        if (msgHeader.compareTo("WLCM") == 0) {
-            return MessageType.WELCOME;
-        } else if (msgHeader.compareTo("JSON") == 0) {
-            return MessageType.JSON;
-        } else if (msgHeader.compareTo("FLNM") == 0) {
-            return MessageType.FILENAME;
-        } else if (msgHeader.compareTo("EXTR") == 0) {
-            return MessageType.EXTRA;
-        } else if (msgHeader.compareTo("FLST") == 0) {
-            return MessageType.FILELIST;
-        } else if (msgHeader.compareTo("REQE") == 0) {
-            return MessageType.REQUESTFILES;
-        } else if (msgHeader.compareTo("DACK") == 0) {
-            return MessageType.DESTINATIONACK;
-        } else if (msgHeader.compareTo("GBYE") == 0) {
-            return MessageType.GOODBYE;
-        } else {
-            return MessageType.ERROR;
-        }
-    }
-
     String parsePayloadString(String originalMsg) {
         return originalMsg.substring(4);
     }
@@ -478,7 +431,7 @@ public class MainBGService extends IntentService {
 
     private void sendWelcomeMessage() {
         String welcome = "welcome2beconnected from  to " + connectedEndpoint;
-        welcome = createStringType(MessageType.WELCOME, welcome);
+        welcome = MessageScheme.createStringType(MessageScheme.MessageType.WELCOME, welcome);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(welcome.getBytes(UTF_8)));
     }
 
@@ -496,7 +449,7 @@ public class MainBGService extends IntentService {
         try {
             String payloadFilenameMessage = filePayload.getId() + ":" + filename;
             customLogger("using method2 to send" + payloadFilenameMessage);
-            payloadFilenameMessage = createStringType(MessageType.FILENAME, payloadFilenameMessage);
+            payloadFilenameMessage = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMessage);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
             SystemClock.sleep(1000);
             mConnectionClient.sendPayload(connectedEndpoint, filePayload);
@@ -525,12 +478,12 @@ public class MainBGService extends IntentService {
 
         // now we send the JSON metadata mapped by the payload ID
         String videoDataJSON = data.toString();
-        videoDataJSON = createStringType(MessageType.JSON, videoDataJSON);
+        videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
         outgoingTransfersMetadata.put(Long.valueOf(payload.getId()), data);
 
         try {
-            payloadFilenameMsg = createStringType(MessageType.FILENAME, payloadFilenameMsg);
+            payloadFilenameMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMsg);
             customLogger("Sending a file - filename is : " + payloadFilenameMsg);
             mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
             customLogger("Sleeping");
@@ -544,12 +497,12 @@ public class MainBGService extends IntentService {
 
     private void sendFileList() {
         String fileList = mFileModule.getFileList();
-        fileList = createStringType(MessageType.FILELIST, fileList);
+        fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
     private void sendGoodbye() {
-        String goodbye = createStringType(MessageType.GOODBYE, null);
+        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, null);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
     }
 
@@ -557,7 +510,7 @@ public class MainBGService extends IntentService {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
             String dackMsg = ack.toString();
-            dackMsg = createStringType(MessageType.DESTINATIONACK, dackMsg);
+            dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, dackMsg);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
         }
     }
@@ -672,7 +625,7 @@ public class MainBGService extends IntentService {
         String requestFilesCSV = convertListToCSV(requestFilenames);
         customLogger("We want the files of " + requestFilesCSV);
         // we send the files we want to get here
-        requestFilesCSV = createStringType(MessageType.REQUESTFILES, requestFilesCSV);
+        requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
     }
 
@@ -708,27 +661,27 @@ public class MainBGService extends IntentService {
                         try {
                             String payloadMsg = new String(payload.asBytes(), "UTF-8");
 //                            customLogger("Getting a byte pyalod " + payloadMsg);
-                            MessageType type = getMessageType(payloadMsg);
+                            MessageScheme.MessageType type = getMessageType(payloadMsg);
                             String parsedMsg = parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
                                 customLogger("We got a null string?!?!?!");
                             }
 //                            customLogger("MSG TYpeVAL" + type);
-                            if (type == MessageType.WELCOME) {
+                            if (type == MessageScheme.MessageType.WELCOME) {
                                 customLogger("Got a welcome MSG! " + parsedMsg);
-                            } else if (type == MessageType.JSON) {
+                            } else if (type == MessageScheme.MessageType.JSON) {
                                 processJSONMsg(parsedMsg);
-                            } else if (type == MessageType.FILENAME) {
+                            } else if (type == MessageScheme.MessageType.FILENAME) {
                                 addPayloadFilename(parsedMsg);
-                            } else if (type == MessageType.EXTRA) {
+                            } else if (type == MessageScheme.MessageType.EXTRA) {
                                 customLogger("Got an extra msg!" + parsedMsg);
-                            } else if (type == MessageType.FILELIST) {
+                            } else if (type == MessageScheme.MessageType.FILELIST) {
                                 processFileList(parsedMsg);
-                            } else if (type == MessageType.REQUESTFILES) {
+                            } else if (type == MessageScheme.MessageType.REQUESTFILES) {
                                 processRequestFiles(parsedMsg);
-                            } else if (type == MessageType.DESTINATIONACK) {
+                            } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
                                 processDackJSON(parsedMsg);
-                            } else if (type == MessageType.GOODBYE) {
+                            } else if (type == MessageScheme.MessageType.GOODBYE) {
                                 goodbyeReceived = true;
                             } else {
                                 customLogger(" got diff type " + parsedMsg);
