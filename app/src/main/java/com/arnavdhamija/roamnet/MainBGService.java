@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
@@ -50,6 +51,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.arnavdhamija.roamnet.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -307,7 +310,7 @@ public class MainBGService extends IntentService {
                 public void onEndpointFound(
                         String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
-                    if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet")) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet") && !recentlyVisited(endpointName)) {
                         stopAdvertising();
                         stopDiscovery();
                         customLogger("Stopping before requesting Conn");
@@ -341,14 +344,17 @@ public class MainBGService extends IntentService {
     private boolean recentlyVisited(String endpointName) {
         for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
             if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
-                if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) < System.currentTimeMillis()/1000) {
+                if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) > System.currentTimeMillis()/1000) {
+                    customLogger("Seen this guy before! Discarding conn");
                     return true;
                 } else {
+                    customLogger("Hello old friend" + recentlyVisitedNodes.get(i) + " curr at " + System.currentTimeMillis()/1000);
                     recentlyVisitedNodes.remove(i);
                     return false;
                 }
             }
         }
+        customLogger("New guy");
         return false;
     }
 
@@ -429,7 +435,7 @@ public class MainBGService extends IntentService {
             customLogger("File not found - lite");
             return;
         }
-        Payload filePayload = Payload.fromFile(pfd);
+        final Payload filePayload = Payload.fromFile(pfd);
         NotificationCompat.Builder notification = buildNotification(filePayload, false);
 
         mNotificationManager.notify((int)filePayload.getId(), notification.build());
@@ -439,7 +445,13 @@ public class MainBGService extends IntentService {
             customLogger("using method2 to send" + payloadFilenameMessage);
             payloadFilenameMessage = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMessage);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
-            mConnectionClient.sendPayload(connectedEndpoint, filePayload);
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    mConnectionClient.sendPayload(connectedEndpoint, filePayload);
+                    customLogger("New woke");
+                }
+            }, 1000);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
@@ -458,7 +470,7 @@ public class MainBGService extends IntentService {
     }
 
     // remove endpoint id from here?!
-    private void sendFile(Payload payload, String payloadFilenameMsg, VideoData data) {
+    private void sendFile(final Payload payload, String payloadFilenameMsg, VideoData data) {
         NotificationCompat.Builder notification = buildNotification(payload, false);
         mNotificationManager.notify((int)payload.getId(), notification.build());
         outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
@@ -467,14 +479,20 @@ public class MainBGService extends IntentService {
             payloadFilenameMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMsg);
             customLogger("Sending a file - filename is : " + payloadFilenameMsg);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
-            mConnectionClient.sendPayload(connectedEndpoint, payload);
 
             // now we send the JSON metadata mapped by the payload ID
             String videoDataJSON = data.toString();
             videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
             outgoingTransfersMetadata.put(Long.valueOf(payload.getId()), data);
-
+            customLogger("New sleep");
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    mConnectionClient.sendPayload(connectedEndpoint, payload);
+                    customLogger("New woke");
+                }
+            }, 1000);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
@@ -488,7 +506,9 @@ public class MainBGService extends IntentService {
 
     private void sendGoodbye() {
         String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, null);
+        customLogger("Sent my goodbyes");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
+        checkConnectionTermination();
     }
 
     private void sendDestinationAck() {
@@ -536,7 +556,7 @@ public class MainBGService extends IntentService {
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         List<String> otherFileTypes = new ArrayList<>();
-        if (requestedFiles.size() > 0) {
+        if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith("video")) {
                     requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
@@ -617,6 +637,7 @@ public class MainBGService extends IntentService {
 
     private void checkConnectionTermination() {
         if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeReceived) {
+            customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis()/1000));
             restartNearby();
         }
@@ -651,7 +672,9 @@ public class MainBGService extends IntentService {
                             } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
                                 processDackJSON(parsedMsg);
                             } else if (type == MessageScheme.MessageType.GOODBYE) {
+                                customLogger("Goodbye recv");
                                 goodbyeReceived = true;
+                                checkConnectionTermination();
                             } else {
                                 customLogger(" got diff type " + parsedMsg);
                             }
@@ -699,7 +722,6 @@ public class MainBGService extends IntentService {
                         if (outgoingPayloads.isEmpty()) {
                             customLogger("Done transferring payloads, can terminate");
                             sendGoodbye();
-                            checkConnectionTermination();
                             // done sending
                         }
                     }
