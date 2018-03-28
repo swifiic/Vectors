@@ -23,6 +23,12 @@
             if ($conn->query($sql) != TRUE) {
                  echo "Error: " . $sql . "<br>" . $conn->error;
             }
+
+            $myObj->filename = ${clientName};
+            $myObj->time = time();
+            $myJSON = json_encode($myObj);
+
+            echo $myJSON;
           }
           else {
               error_log("Failed to copy File to " . ${newFilePath});
