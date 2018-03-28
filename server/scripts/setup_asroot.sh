@@ -11,6 +11,8 @@ fi
 
 $pToRepo=$1
 
+mkdir -p /var/www/video_in/
+mkdir -p /var/www/video_out/
 mkdir -p /var/spool/vector/
 chmod -R 777 /var/spool/vector/
 cp -r ${pToRepo}/php /var/www/
