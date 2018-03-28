@@ -1,5 +1,5 @@
 #Internal package file, do not edit.
-#Wed Mar 28 09:53:02 IST 2018
+#Wed Mar 28 10:34:28 IST 2018
 0.baseType=DIRECTORY
 0.base=/home/nic/swifiic/Roamnet/bridge/app/build/intermediates/transforms/dexMerger/debug/0
 0.path=classes.dex

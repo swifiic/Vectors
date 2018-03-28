@@ -420,7 +420,14 @@ public class MainBGService extends IntentService {
                 public void onDisconnected(String endpointId) {
                     // We've been disconnected from this endpoint. No more data can be
                     // sent or received.
-                    customLogger("connection terminated, find a way to autostart");
+                    customLogger("connection terminated, find a way to autostart, clearing arrays");
+                    incomingPayloads.clear();
+                    outgoingPayloads.clear();
+                    incomingPayloadReferences.clear();
+                    filePayloadFilenames.clear();
+                    incomingTransfersMetadata.clear();
+                    outgoingTransfersMetadata.clear();
+
                     sendConnectionStatus("Disconnected");
                     restartNearby();
                 }
@@ -719,22 +726,24 @@ public class MainBGService extends IntentService {
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
                                 if (filename == null) {
-                                    customLogger("Strange wrong fname!");
+                                    customLogger("Strange wrong fname! aborting rename");
+                                    payloadFile.delete();
                                 } else {
+                                    // remove all refs if we get something null
                                     customLogger("Fname " + filename);
-                                }
-                                payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
+                                    payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
 
-                                // remove it from being tracked by the incomingJSONs and write that to a file
-                                for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
-                                    if (filename != null && incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0 && incomingTransfersMetadata.get(i) != null) {
-                                        mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
-                                        customLogger("Wrote the incoming JSON of " + filename);
-                                        incomingTransfersMetadata.remove(i);
-                                        break;
+                                    // remove it from being tracked by the incomingJSONs and write that to a file
+                                    for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
+                                        if (filename != null && incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0 && incomingTransfersMetadata.get(i) != null) {
+                                            mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
+                                            customLogger("Wrote the incoming JSON of " + filename);
+                                            incomingTransfersMetadata.remove(i);
+                                            break;
+                                        }
                                     }
+                                    customLogger("Wrote the data to a file");
                                 }
-                                customLogger("Wrote the data to a file");
                             }
                             break;
                         case PayloadTransferUpdate.Status.FAILURE:
