@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.Toast;
 
 import com.arnavdhamija.common.AckItem;
@@ -75,7 +76,7 @@ public class MainBGService extends IntentService {
     private FileModule mFileModule;
 
     enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK;
+        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE;
     }
 
     final String TAG = "RoamnetSvc";
@@ -89,6 +90,7 @@ public class MainBGService extends IntentService {
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
     private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
+    private List<Pair<String, Long>> recentlyVisitedNodes;
 
 
     public class LocalBinder extends Binder {
@@ -215,8 +217,15 @@ public class MainBGService extends IntentService {
 
     private void restartNearby() {
         customLogger("RestartingNearby");
+        incomingPayloads.clear();
+        outgoingPayloads.clear();
+        incomingPayloadReferences.clear();
+        filePayloadFilenames.clear();
+        incomingTransfersMetadata.clear();
+        outgoingTransfersMetadata.clear();
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
+        goodbyeReceived = false;
         startAdvertising();
         startDiscovery();
     }
@@ -344,6 +353,8 @@ public class MainBGService extends IntentService {
             return "REQE" + msg;
         } else if (type == MessageType.DESTINATIONACK) {
             return "DACK" + msg;
+        } else if (type == MessageType.GOODBYE) {
+            return "GBYE";
         } else {
             return null;
         }
@@ -366,6 +377,8 @@ public class MainBGService extends IntentService {
             return MessageType.REQUESTFILES;
         } else if (msgHeader.compareTo("DACK") == 0) {
             return MessageType.DESTINATIONACK;
+        } else if (msgHeader.compareTo("GBYE") == 0) {
+            return MessageType.GOODBYE;
         } else {
             return MessageType.ERROR;
         }
@@ -374,16 +387,38 @@ public class MainBGService extends IntentService {
     String parsePayloadString(String originalMsg) {
         return originalMsg.substring(4);
     }
+    String endpointName;
+
+    private boolean recentlyVisited(String endpointName) {
+//        for (Pair<String, Long> pair : recentlyVisitedNodes) {
+//            if (pair.first.compareTo(endpointName)==0) {
+//                if ((pair.second + Constants.MIN_CONNECTION_GAP_TIME) < System.currentTimeMillis()/1000) {
+//                    return true;
+//                }
+//                return false;
+//            }
+//        }
+        for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
+            if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
+                if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) < System.currentTimeMillis()/1000) {
+                    return true;
+                } else {
+                    recentlyVisitedNodes.remove(i);
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
 
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
-                String endpointName;
                 @Override
                 public void onConnectionInitiated(
                         String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     endpointName = connectionInfo.getEndpointName();
-                    if (endpointName.startsWith("Roamnet")) {
+                    if (endpointName.startsWith("Roamnet") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
                     }
@@ -513,6 +548,11 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
+    private void sendGoodbye() {
+        String goodbye = createStringType(MessageType.GOODBYE, null);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
+    }
+
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
@@ -546,6 +586,12 @@ public class MainBGService extends IntentService {
                 deleteFile(item.getFilename());
             }
         }
+    }
+
+
+    boolean readyToTerminate = false;
+    private void initiateConnectionTermination() {
+        readyToTerminate = true;
     }
 
     private void processRequestFiles(String filelist) {
@@ -600,6 +646,8 @@ public class MainBGService extends IntentService {
             for (String filename : otherFileTypes) {
                 sendFile(filename);
             }
+        } else {
+            sendGoodbye();
         }
     }
 
@@ -643,6 +691,15 @@ public class MainBGService extends IntentService {
         return csvFileList.toString();
     }
 
+    private boolean goodbyeReceived = false;
+
+    private void checkConnectionTermination() {
+        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeReceived) {
+            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis()/1000));
+            restartNearby();
+        }
+    }
+
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
                 @Override
@@ -671,6 +728,8 @@ public class MainBGService extends IntentService {
                                 processRequestFiles(parsedMsg);
                             } else if (type == MessageType.DESTINATIONACK) {
                                 processDackJSON(parsedMsg);
+                            } else if (type == MessageType.GOODBYE) {
+                                goodbyeReceived = true;
                             } else {
                                 customLogger(" got diff type " + parsedMsg);
                             }
@@ -698,6 +757,10 @@ public class MainBGService extends IntentService {
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
                             incomingPayloads.remove(payloadId);
                         }
+                        if (incomingPayloads.isEmpty()) {
+                            customLogger("Done receiving payloads, can terminate");
+                            // done receiving
+                        }
                     } else if (outgoingPayloads.containsKey(payloadId)) {
                         notification = outgoingPayloads.get(payloadId);
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
@@ -707,8 +770,13 @@ public class MainBGService extends IntentService {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
                                 customLogger("Updated the outbound JSON");
                             } else {
-                                customLogger("Working with non-vid file, DLed"); //very strange stuff
+                                customLogger("Working with non-vid file, sent"); //very strange stuff
                             }
+                        }
+                        if (outgoingPayloads.isEmpty()) {
+                            customLogger("Done transferring payloads, can terminate");
+                            sendGoodbye();
+                            // done sending
                         }
                     }
                     Payload payload = incomingPayloadReferences.get(update.getPayloadId());
