@@ -117,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
         /* get SharedPreference and upload the server addresses */
         SharedPreferences sp = getSharedPreferences("config", 0);
-        String srcValue = sp.getString("srcUrl","Source");
-        String destValue = sp.getString("destUrl","http://172.20.23.2");
+        String srcValue = sp.getString("srcUrl","http://172.16.2.194/php_server");
+        String destValue = sp.getString("destUrl","Dest");
 
         EditText srcId = findViewById(R.id.idSrcVal);
         EditText destId = findViewById(R.id.idDestVal);

@@ -1,24 +1,22 @@
 package in.swifiic.shmbridge;
 
 import android.app.ProgressDialog;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.arnavdhamija.common.FileModule;
+import com.arnavdhamija.common.VideoData;
 import com.google.gson.Gson;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -63,31 +61,19 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
         try {
             String folderName = Environment.getExternalStorageDirectory().toString() + "/RoamnetData";
 
-            String downloadUrl = f_urlIn[0] + "/GetFile.php";
-
-            Log.d(TAG, "Downloading from:" + downloadUrl);
-            URL url = new URL(downloadUrl);
 
             FileModule fileMod = new FileModule(this.act);
 
             String fileList = fileMod.getFileList();
+            String downloadUrl = f_urlIn[0] + "/GetFile.php?FilesList=" + fileList;
+
+            Log.d(TAG, "Downloading from:" + downloadUrl);
+            URL url = new URL(downloadUrl);
 
             HttpURLConnection httpConn = (HttpURLConnection)url.openConnection();
-            httpConn.setRequestMethod("POST");
-            httpConn.setReadTimeout(10000);
-            httpConn.setConnectTimeout(10000);
-
-            Uri.Builder builder = new Uri.Builder()
-                    .appendQueryParameter("FilesList", fileList);
-            String query = builder.build().getEncodedQuery();
-
-            OutputStream os = httpConn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(os, "UTF-8"));
-            writer.write(query);
-            writer.flush();
-            writer.close();
-            os.close();
+            httpConn.setRequestMethod("GET");
+            httpConn.setReadTimeout(2000);
+            httpConn.setConnectTimeout(2000);
 
             httpConn.connect();
             // getting file length
@@ -98,6 +84,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 int nameOffset = disposition.indexOf("FileName=");
                 String filename= disposition.substring(nameOffset+9);
                 nameOfFile = filename.replaceAll("\"", "");
+                Log.d(TAG, " FileName - given is:" + nameOfFile + " for fileList=" + fileList);
             }
             if(null == nameOfFile){
                 nameOfFile = "download.bin";
@@ -122,7 +109,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
             byte data[] = new byte[1024];
 
             while ((count = input.read(data)) != -1) {
-                output.write(data, offset, count);
+                output.write(data, 0, count);
                 offset += count;
                 publishProgress(offset);
 
@@ -140,19 +127,6 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
             httpConn.setReadTimeout(10000);
             httpConn.setConnectTimeout(10000);
 
-
-//            builder = new Uri.Builder()
-//                    .appendQueryParameter("FileName", nameOfFile);
-//            query = builder.build().getEncodedQuery();
-//
-//            os = httpConn.getOutputStream();
-//            writer = new BufferedWriter(
-//                    new OutputStreamWriter(os, "UTF-8"));
-//            writer.write(query);
-//            writer.flush();
-//            writer.close();
-//            os.close();
-
             httpConn.connect();
             int copyCount =0;
             int httpStatus = httpConn.getResponseCode();
@@ -164,10 +138,18 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                     sb.append(line+"\n");
                 }
                 br.close();
-//                String strJSon = sb.toString();
-//                Gson gson = new Gson();
-//                CopyCount res = gson.fromJson(strJSon, CopyCount.class);
-//                copyCount = Integer.parseInt(res.getCopycount());
+                byte[] dataArr = sb.toString().getBytes();
+                OutputStream outJsonStr = new FileOutputStream(folderName + "/" + nameOfFile + ".json");
+                BufferedOutputStream outputJson = new BufferedOutputStream(outStr, 128 * 1024);
+
+                outputJson.write(dataArr, 0, dataArr.length);
+
+                String strJSon = sb.toString();
+                Log.d(TAG, "Got JSon string as  " + strJSon + " for file " + nameOfFile);
+                Gson gson = new Gson();
+                VideoData res = gson.fromJson(strJSon, VideoData.class);
+                copyCount = res.getTickets();
+                Log.d(TAG, "Got copy count as " + copyCount + " for file " + nameOfFile);
             }
 
             // getting file length
