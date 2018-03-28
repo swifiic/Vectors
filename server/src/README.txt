@@ -1,2 +1,13 @@
 All code for SHM and related tools that are modified to be put here
-TODO - add instructions for download, build of SHM
+
+************************
+Download the source code
+************************
+The following command will download the svn repo into the folder named SHM-12.4.
+svn export https://hevc.hhi.fraunhofer.de/svn/svn_SHVCSoftware/tags/SHM-12.4/ SHM-12.4
+
+************************
+Building source code
+************************
+cd /path/to/SHM-12.4/build/linux
+make
