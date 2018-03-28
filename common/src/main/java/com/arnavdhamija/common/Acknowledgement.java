@@ -52,7 +52,7 @@ public class Acknowledgement {
         for (AckItem item : items) {
             filenames.add(item.getFilename());
         }
-        return getAckedFilenames();
+        return filenames;
     }
 
     public void setItems(List<AckItem> items) {

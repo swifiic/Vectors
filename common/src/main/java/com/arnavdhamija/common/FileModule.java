@@ -188,16 +188,20 @@ public class FileModule {
         File[] files = dataDirectory.listFiles();
         String fileName;
         StringBuilder csvFileList = new StringBuilder();
-        for (int i = 0; i < files.length; i++) {
-            fileName = files[i].getName();
-            if (!fileName.contains(".json")) {
-                if (i > 0) {
-                    csvFileList.append(",");
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                fileName = files[i].getName();
+                if (!fileName.contains(".json")) {
+                    if (i > 0) {
+                        csvFileList.append(",");
+                    }
+                    csvFileList.append(fileName);
                 }
-                csvFileList.append(fileName);
             }
+            return csvFileList.toString();
+        } else {
+            return "";
         }
-        return csvFileList.toString();
     }
 
     public boolean deleteFile(String filename) {

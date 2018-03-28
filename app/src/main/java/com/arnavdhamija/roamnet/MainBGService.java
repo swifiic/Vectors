@@ -88,7 +88,7 @@ public class MainBGService extends IntentService {
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
     private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
-    private List<Pair<String, Long>> recentlyVisitedNodes;
+    private List<Pair<String, Long>> recentlyVisitedNodes = new ArrayList<>();
 
 
     public class LocalBinder extends Binder {
@@ -439,7 +439,7 @@ public class MainBGService extends IntentService {
             customLogger("using method2 to send" + payloadFilenameMessage);
             payloadFilenameMessage = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMessage);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMessage.getBytes("UTF-8")));
-            SystemClock.sleep(1000);
+            SystemClock.sleep(300);
             mConnectionClient.sendPayload(connectedEndpoint, filePayload);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
@@ -455,11 +455,11 @@ public class MainBGService extends IntentService {
         Payload filePayload = Payload.fromFile(pfd);
 
         String payloadFilenameMessage = filePayload.getId() + ":" + data.getFileName();
-        sendFile(connectedEndpoint, filePayload, payloadFilenameMessage, data);
+        sendFile(filePayload, payloadFilenameMessage, data);
     }
 
     // remove endpoint id from here?!
-    private void sendFile(String endpointId, Payload payload, String payloadFilenameMsg, VideoData data) {
+    private void sendFile(Payload payload, String payloadFilenameMsg, VideoData data) {
         NotificationCompat.Builder notification = buildNotification(payload, false);
         mNotificationManager.notify((int)payload.getId(), notification.build());
         outgoingPayloads.put(Long.valueOf(payload.getId()), notification);
@@ -473,11 +473,11 @@ public class MainBGService extends IntentService {
         try {
             payloadFilenameMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILENAME, payloadFilenameMsg);
             customLogger("Sending a file - filename is : " + payloadFilenameMsg);
-            mConnectionClient.sendPayload(endpointId, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(payloadFilenameMsg.getBytes("UTF-8")));
             customLogger("Sleeping");
-            SystemClock.sleep(1000);
+            SystemClock.sleep(300);
             customLogger("Waking2send");
-            mConnectionClient.sendPayload(endpointId, payload);
+            mConnectionClient.sendPayload(connectedEndpoint, payload);
         } catch (UnsupportedEncodingException e) {
             customLogger("encode fail");
         }
@@ -523,7 +523,7 @@ public class MainBGService extends IntentService {
         }
 
         for (AckItem item : mFileModule.getAckFromFile().getItems()) {
-            if (mFileModule.getFileList().contains(item.getFilename())) {
+            if (mFileModule.getFileList().compareTo(item.getFilename())==0) {
                 deleteFile(item.getFilename());
             }
         }
@@ -571,9 +571,9 @@ public class MainBGService extends IntentService {
                         vd.addTraversedNode(deviceId);
                         //send JSON and file
                         boolean sendFile = true;
-                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000
-                                || dack.getAckedFilenames().contains(vd.getFileName()))) {
-                            customLogger("File has been acked/too old to send");
+                        if (extraChecks && (//vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
+                                dack.getAckedFilenames().contains(vd.getFileName()))) {
+                            customLogger("File has been acked/too old to send" + vd.getFileName());
                             sendFile = false;
                         }
                         if (sendFile) {
