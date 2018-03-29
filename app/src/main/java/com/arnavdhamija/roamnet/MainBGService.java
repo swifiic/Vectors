@@ -227,6 +227,7 @@ public class MainBGService extends IntentService {
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
         goodbyeReceived = false;
+        goodbyeSent = false;
         startAdvertising();
         startDiscovery();
     }
@@ -504,10 +505,13 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
+    private boolean goodbyeSent = false;
+
     private void sendGoodbye() {
         String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, null);
-        customLogger("Sent my goodbyes");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
+        customLogger("Sent my goodbyes");
+        goodbyeSent = true;
         checkConnectionTermination();
     }
 
@@ -543,12 +547,6 @@ public class MainBGService extends IntentService {
                 deleteFile(item.getFilename());
             }
         }
-    }
-
-
-    boolean readyToTerminate = false;
-    private void initiateConnectionTermination() {
-        readyToTerminate = true;
     }
 
     private void processRequestFiles(String filelist) {
@@ -603,9 +601,8 @@ public class MainBGService extends IntentService {
             for (String filename : otherFileTypes) {
                 sendFile(filename);
             }
-        } else {
-            sendGoodbye();
         }
+        sendGoodbye();
     }
 
     private void processFileList(String filelist) {
@@ -636,9 +633,9 @@ public class MainBGService extends IntentService {
     private boolean goodbyeReceived = false;
 
     private void checkConnectionTermination() {
-        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeReceived) {
+        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeSent && goodbyeReceived) {
             customLogger("Time to terminate connection!");
-            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis()/1000));
+            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
             restartNearby();
         }
     }
@@ -721,7 +718,7 @@ public class MainBGService extends IntentService {
                         }
                         if (outgoingPayloads.isEmpty()) {
                             customLogger("Done transferring payloads, can terminate");
-                            sendGoodbye();
+                            checkConnectionTermination();
                             // done sending
                         }
                     }
@@ -770,9 +767,3 @@ public class MainBGService extends IntentService {
                 }
             };
 }
-
-//    private enum connectionStates {
-//        ENABLED, DISABLED;
-//    }
-//
-//    private connectionStates mCurrentState = connectionStates.DISABLED;
