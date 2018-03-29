@@ -139,10 +139,12 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 }
                 br.close();
                 byte[] dataArr = sb.toString().getBytes();
-                OutputStream outJsonStr = new FileOutputStream(folderName + "/" + nameOfFile + ".json");
-                BufferedOutputStream outputJson = new BufferedOutputStream(outStr, 128 * 1024);
+                OutputStream outJsonStream = new FileOutputStream(folderName + "/" + nameOfFile + ".json");
+                BufferedOutputStream outputJson = new BufferedOutputStream(outJsonStream, 128 * 1024);
 
                 outputJson.write(dataArr, 0, dataArr.length);
+                outputJson.close();
+                outJsonStream.close();
 
                 String strJSon = sb.toString();
                 Log.d(TAG, "Got JSon string as  " + strJSon + " for file " + nameOfFile);

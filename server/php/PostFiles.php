@@ -16,22 +16,22 @@
 
         //Upload the file into the temp dir
         if(move_uploaded_file($tmpFilePath, $newFilePath)) {
-            error_log("File copies to " . ${newFilePath});
+            error_log("File copies to " . $newFilePath);
             $date = date('Y-m-d H:i:s');
             $clientName = $_FILES['upload']['name'];
-            $sql = "INSERT INTO ReceivedFiles (FileName, ReceivedTime) VALUES ('${clientName}', '${date}'); ";
+            $sql = "INSERT INTO ReceivedFiles (FileName, ReceivedTime) VALUES ('$clientName', '$date'); ";
             if ($conn->query($sql) != TRUE) {
                  echo "Error: " . $sql . "<br>" . $conn->error;
             }
 
-            $myObj->filename = ${clientName};
+            $myObj->filename = $clientName;
             $myObj->time = time();
             $myJSON = json_encode($myObj);
 
             echo $myJSON;
           }
           else {
-              error_log("Failed to copy File to " . ${newFilePath});
+              error_log("Failed to copy File to " . $newFilePath);
           }
 
     }
