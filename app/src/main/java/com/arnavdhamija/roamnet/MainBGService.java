@@ -88,7 +88,6 @@ public class MainBGService extends IntentService {
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
-    private final List<Payload> outgoingPayloadReferences = new ArrayList<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
 
     private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
@@ -629,6 +628,8 @@ public class MainBGService extends IntentService {
 
     private void sendVideoDataList(List<VideoData> requestedVideoDatas) {
         StringBuilder fileMap = new StringBuilder();
+        List<Payload> outgoingPayloadReferences = new ArrayList<>();
+
         for (VideoData vd : requestedVideoDatas) {
             ParcelFileDescriptor pfd = mFileModule.getPfd(vd.getFileName());
             if (pfd == null) {
@@ -640,11 +641,29 @@ public class MainBGService extends IntentService {
             outgoingPayloadReferences.add(filePayload); // release when done
         }
         customLogger("FileMap" + fileMap.toString());
+        // first send filemap
+        try {
+            String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
+        } catch (Exception e) {
+            customLogger("Encoding failed" + e.getMessage());
+        }
 
-//        NotificationCompat.Builder notification = buildNotification(filePayload, false);
-//        mNotificationManager.notify((int)filePayload.getId(), notification.build());
-//        outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+        for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
+            Payload filePayload = outgoingPayloadReferences.get(i);
+            NotificationCompat.Builder notification = buildNotification(filePayload, false);
+            mNotificationManager.notify((int) filePayload.getId(), notification.build());
+            outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+            mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
 
+            VideoData vd = requestedVideoDatas.get(i);
+            if (vd != null) {
+                String videoDataJSON = vd.toString();
+                videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
+                mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+                outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
+            }
+        }
     }
 
     private void sendFile(VideoData data) {
