@@ -223,7 +223,7 @@ public class FileModule {
             String videoDataJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
             return VideoData.fromString(videoDataJSON);
         } catch (IOException e) {
-            Log.d(TAG, "File not found");
+            Log.e(TAG, "File not found");
         }
         return null;
     }

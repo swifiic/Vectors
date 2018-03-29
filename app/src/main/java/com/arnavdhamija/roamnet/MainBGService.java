@@ -508,7 +508,7 @@ public class MainBGService extends IntentService {
     private boolean goodbyeSent = false;
 
     private void sendGoodbye() {
-        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, null);
+        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
         customLogger("Sent my goodbyes");
         goodbyeSent = true;
@@ -557,7 +557,13 @@ public class MainBGService extends IntentService {
         if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith("video")) {
-                    requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
+                    VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
+                    if (vd != null) {
+                        requestedVideoDatas.add(vd);
+                    } else {
+                        customLogger("JSON not decodeable for " + requestedVideoDatas.get(i));
+                    }
                 } else {
                     if (requestedFiles.get(i) != "") {
                         customLogger("OtherFileType! " + requestedFiles.get(i));
@@ -645,10 +651,11 @@ public class MainBGService extends IntentService {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
                     if (payload.getType() == Payload.Type.BYTES) {
-                        try {
-                            String payloadMsg = new String(payload.asBytes(), "UTF-8");
-//                            customLogger("Getting a byte pyalod " + payloadMsg);
+                        String payloadMsg;
+                        try {//                            customLogger("Getting a byte pyalod " + payloadMsg);
+                            payloadMsg = new String(payload.asBytes(), "UTF-8");
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
+
                             String parsedMsg = MessageScheme.parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
                                 customLogger("We got a null string?!?!?!");
@@ -677,7 +684,8 @@ public class MainBGService extends IntentService {
                             }
 
                         } catch (Exception e) {
-                            customLogger("Byte payload fail" + e.getMessage());
+                            customLogger("Byte payload fail " + e.getMessage());
+                            e.printStackTrace();
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file payload " + payload.asFile().getSize());
