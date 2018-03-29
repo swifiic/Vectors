@@ -19,7 +19,7 @@
     $row = $result->fetch_assoc();
 
     $currentCopyCount = $row['CopyCount'];
-    $remoteCopyCount = floor((${currentCopyCount} + 1) /2);
+    $remoteCopyCount = floor(($currentCopyCount + 1) /2);
 
     # $jsonToSend= array('filename' => ${fileArgs},'copycount' => ${currentCopyCount});
     # TODO values should come from the DB  or file name - fields missing right now
@@ -31,16 +31,16 @@
 			'sequenceNumber' => 0,
 			'svcLayer' => 0,
 			'temporalLayer' => 0,
-			'tickets' => ${remoteCopyCount},
+			'tickets' => $remoteCopyCount,
 			'traversal' => array(),
 			'ttl' => 86400);
 
-    $jsonEncode = json_encode(${jsonToSend});
+    $jsonEncode = json_encode($jsonToSend);
 
     // updating the table with the new copy count.
-    $newCopyCount = floor(${currentCopyCount}/2);
-    if (${newCopyCount} >= 1) {
-        $sql = "UPDATE AvailableFiles SET CopyCount='${newCopyCount}' WHERE FileName='${fileArgs}' ;";
+    $newCopyCount = floor($currentCopyCount/2);
+    if ($newCopyCount >= 1) {
+        $sql = "UPDATE AvailableFiles SET CopyCount='$newCopyCount' WHERE FileName='$fileArgs' ;";
         if ($conn->query($sql) != TRUE) {
             echo "Error updating record: " . $conn->error;
         }
@@ -49,7 +49,7 @@
         echo $jsonEncode;
     }else{
 
-        $sql = "UPDATE AvailableFiles SET CopyCount=0 WHERE FileName='${fileArgs}' ;";
+        $sql = "UPDATE AvailableFiles SET CopyCount=0 WHERE FileName='$fileArgs' ;";
         if ($conn->query($sql) != TRUE) {
             echo "Error updating record: " . $conn->error;
         }
@@ -62,7 +62,7 @@
 
             $date = date('Y-m-d H:i:s');
             while($row = $result->fetch_assoc()) {
-                $sql = "INSERT INTO DroppedFiles (FileName, DeleteTime, DeleteReason, CopyCountAtDelete) VALUES ('${row['FileName']}', '${date}', 'Copy Count 0', 0); ";
+                $sql = "INSERT INTO DroppedFiles (FileName, DeleteTime, DeleteReason, CopyCountAtDelete) VALUES ('${row['FileName']}', '$date', 'Copy Count 0', 0); ";
                 if ($conn->query($sql) != TRUE) {
                      echo "Error: " . $sql . "<br>" . $conn->error;
                 }

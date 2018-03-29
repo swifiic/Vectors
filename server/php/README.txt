@@ -37,25 +37,36 @@ README.txt           - This file
 ************************
 Tables in the DB
 ************************
----AvailableFiles---
+create database SVC;
+CREATE USER 'svc'@'localhost' IDENTIFIED WITH mysql_native_password AS '***';
+
+GRANT USAGE ON *.* TO 'svc'@'localhost' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+
+GRANT ALL PRIVILEGES ON `SVC`.* TO 'svc'@'localhost';
+
+use SVC;
+
+-- AvailableFiles---
 CREATE TABLE `AvailableFiles` (
  `FileName` varchar(255) NOT NULL,
  `CopyCount` int(11) NOT NULL,
  PRIMARY KEY (`FileName`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
----DroppedFiles---
+-- DroppedFiles---
 CREATE TABLE `DroppedFiles` (
  `FileName` varchar(255) NOT NULL,
  `DeleteTime` datetime NOT NULL,
  `DeleteReason` varchar(31) NOT NULL,
  `CopyCountAtDelete` int(11) NOT NULL,
  PRIMARY KEY (`FileName`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
----ReceivedFiles---
+-- ReceivedFiles---
 CREATE TABLE `ReceivedFiles` (
  `FileName` varchar(255) NOT NULL,
  `ReceivedTime` datetime NOT NULL,
  PRIMARY KEY (`FileName`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
