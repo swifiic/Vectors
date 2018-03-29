@@ -68,7 +68,6 @@ ${extractCommand}
 count=`ls -1 video* 2>/dev/null | wc -l`
 if [ $count != 0 ]; then
     mv video* ${fileBase}
-    mv ${fileBase}/video_${counterPart}.md  ${fileBase}/md_${counterPart}.md
 fi
 # remove files older than 4 days - for capture
 find . -type f -mtime +96 -exec rm {} \;

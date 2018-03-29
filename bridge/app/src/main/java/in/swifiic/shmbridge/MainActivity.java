@@ -196,9 +196,9 @@ public class MainActivity extends AppCompatActivity {
 
             createVideoAndJSON(burstCount, i+1, fileSize);
         }
-        String dummyMD5 = "This is MD5 file for burst " + burstCount + "\n";
-        int md5Size = ThreadLocalRandom.current().nextInt(800, 1200);
-        createFile("md_" + Constants.BASE_NAME + burstCount + ".md", md5Size, dummyMD5);
+        String dummyMD = "This is MD5 file for burst " + burstCount + "\n";
+        int mdSize = ThreadLocalRandom.current().nextInt(800, 1200);
+        createFile(Constants.BASE_NAME + burstCount + ".md", mdSize, dummyMD);
     }
 
     private void createVideoAndJSON(int burstNum, int temp, int sizeOfFile){
