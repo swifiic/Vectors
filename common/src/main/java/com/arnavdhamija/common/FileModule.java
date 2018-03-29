@@ -129,7 +129,7 @@ public class FileModule {
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
 //                test if this ignores which already have a JSON
-                if (!fileName.contains(".json") && fileName.startsWith("video") && Arrays.asList(files).indexOf(fileName + ".json") == -1) {
+                if (!fileName.contains(".json") && fileName.startsWith(Constants.VIDEO_PREFIX) && Arrays.asList(files).indexOf(fileName + ".json") == -1) {
                     tokens = fileName.split("_");
                     VideoData videoData = new VideoData();
                     if (tokens.length == 5) {
@@ -207,7 +207,7 @@ public class FileModule {
     public boolean deleteFile(String filename) {
         boolean jsonDeleted = true;
         boolean fileDeleted = true;
-        if (filename.startsWith("video")) {
+        if (filename.startsWith(Constants.VIDEO_PREFIX)) {
             File jsonFile = new File(dataDirectory, filename + ".json");
             jsonDeleted = jsonFile.delete();
 

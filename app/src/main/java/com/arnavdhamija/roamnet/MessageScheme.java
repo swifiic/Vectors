@@ -7,7 +7,7 @@ public class MessageScheme {
     }
 
     public static enum MessageType {
-        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE;
+        WELCOME, JSON, FILENAME, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE, FILEMAP;
     }
 
     public static String createStringType(MessageType type, String msg) {
@@ -17,6 +17,8 @@ public class MessageScheme {
             return "JSON" + msg;
         } else if (type == MessageType.FILENAME) {
             return "FLNM" + msg;
+        } else if (type == MessageType.FILEMAP) {
+            return "FMAP" + msg;
         } else if (type == MessageType.EXTRA) {
             return "EXTR" + msg;
         } else if (type == MessageType.FILELIST) {
@@ -45,7 +47,9 @@ public class MessageScheme {
             return MessageType.EXTRA;
         } else if (msgHeader.compareTo("FLST") == 0) {
             return MessageType.FILELIST;
-        } else if (msgHeader.compareTo("REQE") == 0) {
+        } else if (msgHeader.compareTo("FMAP") == 0) {
+            return MessageType.FILEMAP;
+        }else if (msgHeader.compareTo("REQE") == 0) {
             return MessageType.REQUESTFILES;
         } else if (msgHeader.compareTo("DACK") == 0) {
             return MessageType.DESTINATIONACK;

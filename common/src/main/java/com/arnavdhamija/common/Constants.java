@@ -6,6 +6,8 @@ package com.arnavdhamija.common;
 
 public final class Constants {
     // Roamnet Constants
+    public static final String VIDEO_PREFIX =
+            "video";
     public static final String BROADCAST_ACTION =
             "swifiic.roamnet.android.BROADCAST";
     public static final String LOG_STATUS =
