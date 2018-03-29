@@ -227,6 +227,7 @@ public class MainBGService extends IntentService {
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
         goodbyeReceived = false;
+        goodbyeSent = false;
         startAdvertising();
         startDiscovery();
     }
@@ -504,10 +505,13 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
+    private boolean goodbyeSent = false;
+
     private void sendGoodbye() {
-        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, null);
-        customLogger("Sent my goodbyes");
+        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
+        customLogger("Sent my goodbyes");
+        goodbyeSent = true;
         checkConnectionTermination();
     }
 
@@ -545,12 +549,6 @@ public class MainBGService extends IntentService {
         }
     }
 
-
-    boolean readyToTerminate = false;
-    private void initiateConnectionTermination() {
-        readyToTerminate = true;
-    }
-
     private void processRequestFiles(String filelist) {
         Acknowledgement dack = mFileModule.getAckFromFile();
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
@@ -559,7 +557,13 @@ public class MainBGService extends IntentService {
         if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith("video")) {
-                    requestedVideoDatas.add(mFileModule.getVideoDataFromFile(requestedFiles.get(i)));
+                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
+                    VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
+                    if (vd != null) {
+                        requestedVideoDatas.add(vd);
+                    } else {
+                        customLogger("JSON not decodeable for " + requestedVideoDatas.get(i));
+                    }
                 } else {
                     if (requestedFiles.get(i) != "") {
                         customLogger("OtherFileType! " + requestedFiles.get(i));
@@ -603,9 +607,8 @@ public class MainBGService extends IntentService {
             for (String filename : otherFileTypes) {
                 sendFile(filename);
             }
-        } else {
-            sendGoodbye();
         }
+        sendGoodbye();
     }
 
     private void processFileList(String filelist) {
@@ -636,9 +639,9 @@ public class MainBGService extends IntentService {
     private boolean goodbyeReceived = false;
 
     private void checkConnectionTermination() {
-        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeReceived) {
+        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeSent && goodbyeReceived) {
             customLogger("Time to terminate connection!");
-            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis()/1000));
+            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
             restartNearby();
         }
     }
@@ -648,10 +651,11 @@ public class MainBGService extends IntentService {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
                     if (payload.getType() == Payload.Type.BYTES) {
-                        try {
-                            String payloadMsg = new String(payload.asBytes(), "UTF-8");
-//                            customLogger("Getting a byte pyalod " + payloadMsg);
+                        String payloadMsg;
+                        try {//                            customLogger("Getting a byte pyalod " + payloadMsg);
+                            payloadMsg = new String(payload.asBytes(), "UTF-8");
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
+
                             String parsedMsg = MessageScheme.parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
                                 customLogger("We got a null string?!?!?!");
@@ -680,7 +684,8 @@ public class MainBGService extends IntentService {
                             }
 
                         } catch (Exception e) {
-                            customLogger("Byte payload fail" + e.getMessage());
+                            customLogger("Byte payload fail " + e.getMessage());
+                            e.printStackTrace();
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file payload " + payload.asFile().getSize());
@@ -721,7 +726,7 @@ public class MainBGService extends IntentService {
                         }
                         if (outgoingPayloads.isEmpty()) {
                             customLogger("Done transferring payloads, can terminate");
-                            sendGoodbye();
+                            checkConnectionTermination();
                             // done sending
                         }
                     }
@@ -770,9 +775,3 @@ public class MainBGService extends IntentService {
                 }
             };
 }
-
-//    private enum connectionStates {
-//        ENABLED, DISABLED;
-//    }
-//
-//    private connectionStates mCurrentState = connectionStates.DISABLED;
