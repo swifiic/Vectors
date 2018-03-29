@@ -22,7 +22,7 @@ public final class Constants {
             "DEVICE_ID";
     public static final String ANDROID_BOOT_COMPLETION =
             "android.intent.action.BOOT_COMPLETED";
-    public static final int MIN_CONNECTION_GAP_TIME = 300;
+    public static final int MIN_CONNECTION_GAP_TIME = 60;
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
     public static final String FLDR =  "/RoamnetData";

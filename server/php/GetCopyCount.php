@@ -25,8 +25,12 @@
     # TODO values should come from the DB  or file name - fields missing right now
     # TODO-Later actual SORT will reduce ttl for higher temporal and SVC layers
 
+    #     private String fileName; private int sequenceNumber; private int tickets; private int temporalLayer;
+    #     private int maxTemporalLayer; private int svcLayer; private int maxSvcLayer; private long creationTime; // unix time
+    #     private int ttl; // in seconds;     private ArrayList<Pair<Long, String>> traversal;
     $jsonToSend= array('creationTime' => time(),
 			'maxSvcLayer' => 2,
+			'fileName' => $fileArgs,
 			'maxTemporalLayer' => 5,
 			'sequenceNumber' => 0,
 			'svcLayer' => 0,
