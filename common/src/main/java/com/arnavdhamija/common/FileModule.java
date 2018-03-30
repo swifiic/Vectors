@@ -172,7 +172,7 @@ public class FileModule {
         }
     }
 
-    public void writeToJSONFile(Acknowledgement destinationAck) {
+    public void writeAckToJSONFile(Acknowledgement destinationAck) {
         String data = destinationAck.toString();
         try {
             FileWriter writer = new FileWriter( new File(dataDirectory, Constants.ACK_FILENAME + ".json"), false);

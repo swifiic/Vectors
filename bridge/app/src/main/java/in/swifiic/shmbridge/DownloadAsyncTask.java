@@ -1,10 +1,7 @@
 package in.swifiic.shmbridge;
 
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.arnavdhamija.common.FileModule;
 import com.arnavdhamija.common.VideoData;
@@ -29,10 +26,9 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
 
     private static final String TAG = "DownloadTsk";
     private static final String SEPARATOR = ",";
-    ProgressDialog pDialog;
-    AppCompatActivity act;
+    MainActivity act;
 
-    DownloadAsyncTask(AppCompatActivity baseAct){
+    DownloadAsyncTask(MainActivity baseAct){
         this.act = baseAct;
     }
 
@@ -42,13 +38,8 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        System.out.println("Starting download");
+        act.customLogger(TAG + "Starting download");
 
-        pDialog = new ProgressDialog(this.act);
-        pDialog.setMessage("Loading... Please wait...");
-        pDialog.setIndeterminate(false);
-        pDialog.setCancelable(false);
-        pDialog.show();
     }
 
     /**
@@ -67,7 +58,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
             String fileList = fileMod.getFileList();
             String downloadUrl = f_urlIn[0] + "/GetFile.php?FilesList=" + fileList;
 
-            Log.d(TAG, "Downloading from:" + downloadUrl);
+            act.customLogger(TAG + "Downloading from:" + downloadUrl);
             URL url = new URL(downloadUrl);
 
             HttpURLConnection httpConn = (HttpURLConnection)url.openConnection();
@@ -84,7 +75,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 int nameOffset = disposition.indexOf("FileName=");
                 String filename= disposition.substring(nameOffset+9);
                 nameOfFile = filename.replaceAll("\"", "");
-                Log.d(TAG, " FileName - given is:" + nameOfFile + " for fileList=" + fileList);
+                act.customLogger(TAG + " FileName - given is:" + nameOfFile + " for fileList=" + fileList);
             }
             if(null == nameOfFile){
                 nameOfFile = "download.bin";
@@ -96,7 +87,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 }
                 String keySet = csvBuilder.toString();
 
-                Log.e(TAG, "missing FileName - fields are:" + keySet);
+                act.customLogger(TAG + " missing FileName - fields are:" + keySet);
             }
 
             // 128 KB buffered input stream to read
@@ -117,10 +108,10 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
             output.close();
             input.close();
 
-            // now get the copy count to create json - for now only the copy count
+            // now get the copy count to create json
             String countUrl = f_urlIn[0] + "/GetCopyCount.php?FileName=" + nameOfFile;
 
-            Log.d(TAG, "Getting count from:" + countUrl);
+            act.customLogger(TAG + "Getting count from:" + countUrl);
             url = new URL(countUrl);
             httpConn = (HttpURLConnection) url.openConnection();
             httpConn.setRequestMethod("GET");
@@ -147,11 +138,11 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 outJsonStream.close();
 
                 String strJSon = sb.toString();
-                Log.d(TAG, "Got JSon string as  " + strJSon + " for file " + nameOfFile);
+                act.customLogger(TAG + "Got JSon string as  " + strJSon + " for file " + nameOfFile);
                 Gson gson = new Gson();
                 VideoData res = gson.fromJson(strJSon, VideoData.class);
                 copyCount = res.getTickets();
-                Log.d(TAG, "Got copy count as " + copyCount + " for file " + nameOfFile);
+                act.customLogger(TAG + "Got copy count as " + copyCount + " for file " + nameOfFile);
             }
 
             // getting file length
@@ -159,14 +150,14 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
 //            Log.d(TAG, "CopyCount for filename:" + nameOfFile + " is " + copyCount);
 
         } catch (Exception e) {
-            Log.e("Error: ", e.getMessage());
+            act.customLogger(TAG + " SEVERE Error: " +  e.getMessage());
         }
 
         return offset;
     }
 
     protected void onProgressUpdate(Integer... progress) {
-        pDialog.setMessage("Progress at:" + progress[0]);
+        act.customLogger(TAG + "Progress at:" + progress[0]);
     }
 
     /**
@@ -174,9 +165,8 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
      **/
     @Override
     protected void onPostExecute(Integer size) {
-        Log.d(TAG,"Downloaded:" + size);
+        act.customLogger(TAG +"Downloaded:" + size);
 
-        pDialog.dismiss();
     }
 
 }

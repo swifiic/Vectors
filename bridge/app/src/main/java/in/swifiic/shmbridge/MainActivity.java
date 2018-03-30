@@ -2,6 +2,10 @@ package in.swifiic.shmbridge;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -10,6 +14,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.util.Log;
@@ -30,7 +35,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -175,7 +182,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        IntentFilter statusIntentFilter = new IntentFilter(
+                Constants.BROADCAST_ACTION);
+        AsyncTaskUpdateReceiver atUIUpdateReceiver =  new AsyncTaskUpdateReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                atUIUpdateReceiver,
+                statusIntentFilter);
+
+
     }
+
+    /*** Get the updates from Service to the UI ***/
+    private class AsyncTaskUpdateReceiver extends BroadcastReceiver
+    {
+        private AsyncTaskUpdateReceiver() {}         // Prevents instantiation
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.hasExtra(Constants.LOG_STATUS)){
+                TextView logView = findViewById(R.id.logView);
+                logView.append(intent.getStringExtra(Constants.LOG_STATUS));
+            }
+        }
+    }
+
 
 
 
@@ -293,5 +322,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     /*** END SOAK ***/
+
+    void customLogger(String msg) {
+        Log.d("", msg);
+        String timeStamp = new SimpleDateFormat("HH.mm.ss.SS").format(new Date());
+        String logMsg = timeStamp+' '+msg+"\n";
+        Intent localIntent =  new Intent(Constants.BROADCAST_ACTION)
+                .putExtra(Constants.LOG_STATUS, logMsg);
+
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(BridgeApp.getContext()).sendBroadcast(localIntent);
+    }
 
 }

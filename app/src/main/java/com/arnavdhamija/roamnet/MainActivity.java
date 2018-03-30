@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
     private void customLogger(String msg) {
         Log.d(TAG, msg);
         TextView logView = findViewById(R.id.logView);
-        String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
+        String timeStamp = new SimpleDateFormat("kk.mm.ss.SS").format(new Date());
         logView.append(timeStamp+' '+msg+"\n");
     }
 

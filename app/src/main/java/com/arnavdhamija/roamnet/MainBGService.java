@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
@@ -44,7 +43,6 @@ import com.google.android.gms.tasks.Task;
 import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,8 +50,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static com.arnavdhamija.roamnet.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -434,11 +430,11 @@ public class MainBGService extends IntentService {
         Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
         Acknowledgement currentAck = mFileModule.getAckFromFile();
         if (currentAck == null) {
-            mFileModule.writeToJSONFile(incomingAck);
+            mFileModule.writeAckToJSONFile(incomingAck);
         } else {
             if (incomingAck.getAckTime() > currentAck.getAckTime()) {
                 customLogger("Newer ack received, writing back to file");
-                mFileModule.writeToJSONFile(incomingAck);
+                mFileModule.writeAckToJSONFile(incomingAck);
             }
         }
 
