@@ -12,7 +12,8 @@
     $filesListArgs = $_GET['FilesList'];
 
     $filesList = explode(',',$filesListArgs);
-    for ($i=0; $i <= count($filesList); $i++) {
+    $len = count($filesList);
+    for ($i=0; $i < $len; $i++) {
         $sql = "SELECT FileName FROM ReceivedFiles WHERE FileName = '${filesList[$i]}';";
         if ($conn->query($sql) != TRUE) {
             echo "Error selecting record: " . $sql . " " . $conn->error;
