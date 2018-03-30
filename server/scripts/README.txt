@@ -1,5 +1,19 @@
 The source and destination scripts to generate the video bursts and compute / decode received videos.
 
+**************
+Initial Setup
+**************
+
+Download JSVM and SHM code and unzip to appropriate folder
+
+First runs setup_asroot.sh with sudo ; e.g.
+aperture@aperture:~/roamnet/server/scripts$ sudo bash setup_asroot.sh /home/aperture/roamnet/server
+
+Then run setup.sh ; e.g.
+aperture@aperture:~/roamnet/server/scripts$ bash setup.sh /home/aperture/roamnet/server /home/aperture/Downloads/SHM-12.4 /home/aperture/Downloads/JSVM-master/JSVM
+
+
+
 ************************
 Running cron job.
 ************************

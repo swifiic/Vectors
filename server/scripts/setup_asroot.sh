@@ -9,10 +9,10 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-$pToRepo=$1
+pToRepo=$1
 
 mkdir -p /var/www/video_in/
 mkdir -p /var/www/video_out/
 mkdir -p /var/spool/vector/
-chmod -R 777 /var/spool/vector/
 cp -r ${pToRepo}/php /var/www/
+chmod -R 777 /var/spool/vector/ /var/www/video_*  /var/www/php
