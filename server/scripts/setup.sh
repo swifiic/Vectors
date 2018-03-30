@@ -10,23 +10,25 @@ pToJSVM=$3
 
 filesBase=/var/spool/vector
 
-mkdir ${filesBase}/bin ${filesBase}/scripts ${filesBase}/rec ${filesBase}/php
+path=${pToRepo}
+
+mkdir -p ${filesBase}/bin ${filesBase}/scripts ${filesBase}/rec ${filesBase}/php
 
 cp -r ${path}/cfg ${path}/scripts ${path}/php ${filesBase}/
 cd ${path}/src
-make
+make -j`nproc`
 cp ${path}/src/CombineLS ${path}/src/ExtractAddLS ${filesBase}/bin
 cd -
 
 echo 0 > ${filesBase}/counter
 
 cd ${pToSHM}/build/linux
-make
+make -j`nproc`
 cp ${pToSHM}/bin/*Static* ${filesBase}/bin
 cd -
 
 cd ${pToJSVM}/H264Extension/build/linux
-make
+make -j`nproc`
 cp ${pToJSVM}/../bin/DownConvertStatic* ${filesBase}/bin
 cd -
 
