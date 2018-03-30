@@ -7,7 +7,7 @@
         die("Connection failed: " . $conn->connect_error);
     }
 
-    $sql = "SELECT FileName, ReceivedTime FROM ReceivedFiles ORDER BY ReceivedTime DESC;";
+    $sql = "SELECT FileName, ReceivedTime FROM ReceivedFiles ORDER BY ReceivedTime DESC LIMIT 100;";
 
     $result = $conn->query($sql);
     $ack_json->type = "Acknowledgment";
