@@ -1,12 +1,12 @@
 package in.swifiic.shmbridge;
 
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
+import com.arnavdhamija.common.AckItem;
+import com.arnavdhamija.common.Acknowledgement;
 import com.arnavdhamija.common.FileModule;
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -26,10 +26,9 @@ import java.util.ArrayList;
 public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
 
     String TAG = "UploadTsk";
-    ProgressDialog pDialog;
-    AppCompatActivity act;
+    MainActivity act;
 
-    UploadAsyncTask(AppCompatActivity baseAct){
+    UploadAsyncTask(MainActivity baseAct){
         this.act = baseAct;
     }
 
@@ -39,13 +38,8 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        System.out.println("Starting upload query");
+        act.customLogger(TAG + "Starting upload query");
 
-        pDialog = new ProgressDialog(this.act);
-        pDialog.setMessage("Loading... Please wait...");
-        pDialog.setIndeterminate(false);
-        pDialog.setCancelable(false);
-        pDialog.show();
     }
 
     /**
@@ -62,7 +56,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
             String fileList = fileMod.getFileList();
 
             String checkUrl = f_urlIn[0] + "/FilterUploadList.php?FilesList="+fileList;
-            Log.d(TAG, "Filter Upload checking:" + checkUrl);
+            act.customLogger(TAG + "Filter Upload checking:" + checkUrl);
             URL url = new URL(checkUrl);
 
 
@@ -91,17 +85,16 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
 
             // getting file length
 
-            Log.d(TAG, "Filenames to upload:" + uploadListCsv);
+            act.customLogger(TAG +"Filenames to upload:" + uploadListCsv);
             ArrayList<String> uploadFileList = new ArrayList<String>();
             String[] listSent = fileList.split(",");
             for(int i=0; i < listSent.length; i++){
                 if(listSent[i].isEmpty()) continue;
                 if(uploadListCsv.contains(listSent[i])) {
-                    Log.i(TAG, "To try to deliver:" + listSent[i]);
+                    act.customLogger(TAG + "To try to deliver:" + listSent[i]);
                     uploadFileList.add(listSent[i]);
                 } else {
-                    // TODO actually create the Ack
-                    Log.e(TAG, "To mark as delivered:" + listSent[i]);
+                    act.customLogger(TAG + "To mark as delivered (maybe TBD):" + listSent[i]);
                 }
             }
 
@@ -109,7 +102,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 String uploadUrl = f_urlIn[0] + "/PostFiles.php";
                 url = new URL(uploadUrl);
                 String nameOfFile = uploadFileList.get(i);
-                Log.d(TAG, "Uploading:" + nameOfFile + " at url " + checkUrl);
+                act.customLogger(TAG + "Uploading:" + nameOfFile + " at url " + checkUrl);
 
 
                 int serverResponseCode = 0;
@@ -174,7 +167,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 serverResponseCode = connection.getResponseCode();
                 String serverResponseMessage = connection.getResponseMessage();
 
-                Log.i(TAG, "Server Response is: " + serverResponseMessage + ": " + serverResponseCode);
+                act.customLogger(TAG + "Server Response is: " + serverResponseMessage + ": " + serverResponseCode);
 
 
                 //closing the input and output streams
@@ -183,15 +176,65 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 dataOutputStream.close();
             }
 
+            // Now pull the Ack
+            // now get the copy count to create json
+            String ackUrl = f_urlIn[0] + "/GetAck.php";
+
+            act.customLogger(TAG + "Getting ack from:" + ackUrl);
+            url = new URL(ackUrl);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setRequestMethod("GET");
+            httpConn.setReadTimeout(10000);
+            httpConn.setConnectTimeout(10000);
+
+            httpConn.connect();
+            long ackTime =0;
+            httpStatus = httpConn.getResponseCode();
+            if(200 == httpStatus || 201 == httpStatus){
+                BufferedReader br = new BufferedReader(new InputStreamReader(httpConn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line+"\n");
+                }
+                br.close();
+
+
+                String strJSon = sb.toString();
+
+                Acknowledgement incomingAck = Acknowledgement.fromString(strJSon);
+                Acknowledgement currentAck = fileMod.getAckFromFile();
+                if (currentAck == null) {
+                    fileMod.writeAckToJSONFile(incomingAck);
+                } else {
+                    if (incomingAck.getAckTime() > currentAck.getAckTime()) {
+                        act.customLogger("Newer ack received, writing back to file");
+                        fileMod.writeAckToJSONFile(incomingAck);
+                    }
+                }
+
+                for (AckItem item : fileMod.getAckFromFile().getItems()) {
+                    if (fileMod.getFileList().compareTo(item.getFilename())==0) {
+                        act.deleteFile(item.getFilename());
+                        act.customLogger(TAG +  " Deleted on Ack " + item.getFilename() );
+                    }
+                }
+
+                Gson gson = new Gson();
+                Acknowledgement res = gson.fromJson(strJSon, Acknowledgement.class);
+                ackTime = res.getAckTime();
+                act.customLogger(TAG +  " Got AckTime as " + ackTime );
+            }
+
         } catch (Exception e) {
-            Log.e("Error: ", e.getMessage());
+            act.customLogger(TAG +  " SEVERE Exception " + e.getMessage() );
         }
 
         return offset;
     }
 
     protected void onProgressUpdate(Integer... progress) {
-        pDialog.setMessage("Progress at:" + progress[0]);
+        act.customLogger(TAG + "Progress at:" + progress[0]);
     }
 
     /**
@@ -199,9 +242,8 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
      **/
     @Override
     protected void onPostExecute(Integer size) {
-        Log.d(TAG,"Downloaded:" + size);
+        act.customLogger(TAG +"Downloaded:" + size);
 
-        pDialog.dismiss();
     }
 
 }
