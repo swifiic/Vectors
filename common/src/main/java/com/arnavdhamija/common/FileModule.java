@@ -34,8 +34,8 @@ public class FileModule {
         dataDirectory = new File(Environment.getExternalStorageDirectory()+"/RoamnetData");
         if (!dataDirectory.exists()) {
             if (dataDirectory.mkdir());
+            Log.d(TAG, "Created dir");
         }
-        Log.d(TAG, "Created dir");
         mContext = context;
 //        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
 //        buildFileLedger();

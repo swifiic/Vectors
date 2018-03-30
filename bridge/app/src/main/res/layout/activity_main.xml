@@ -21,22 +21,14 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/title_home"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="22dp"
-                android:text="  Source URL:" />
+                android:text="  Source:" />
 
             <EditText
                 android:id="@+id/idSrcVal"
-                android:layout_width="wrap_content"
+                android:layout_width="285dp"
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="URL of Source"
@@ -48,25 +40,44 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2"
+            android:layout_weight="1"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textView"
-                android:layout_width="wrap_content"
+                android:layout_width="53dp"
                 android:layout_height="28dp"
-                android:text="         Dest URL:"
-                />
+                android:text="         Dest:" />
 
             <EditText
                 android:id="@+id/idDestVal"
-                android:layout_width="wrap_content"
+                android:layout_width="288dp"
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="URL of Destination"
                 android:inputType="textUri"
-                android:text="Destination"
-                 />
+                android:text="Destination" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView2Del"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:text="Continious Check" />
+
+            <CheckBox
+                android:id="@+id/contCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Enable" />
 
         </LinearLayout>
 
@@ -86,13 +97,20 @@
                 android:id="@+id/InjectNow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Inject Burst" />
+                android:text="Inject" />
 
             <Button
                 android:id="@+id/SoakNow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Soak Content" />
+                android:text="Soak" />
+
+            <Button
+                android:id="@+id/clearLog"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Clr Log" />
 
 
         </LinearLayout>

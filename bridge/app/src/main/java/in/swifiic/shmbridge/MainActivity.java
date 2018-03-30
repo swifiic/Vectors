@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -20,6 +21,7 @@ import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -115,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    boolean backGroundCheckRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                CheckBox cb = findViewById(R.id.contCheck);
                 EditText srcId = findViewById(R.id.idSrcVal);
                 EditText destId = findViewById(R.id.idDestVal);
                 Editable valueSrc = srcId.getText();
@@ -148,21 +151,24 @@ public class MainActivity extends AppCompatActivity {
                 String srcUrl = valueSrc.toString();
                 String destUrl = valueDest.toString();
 
-                if(srcUrl.contains("http")) {
-                    DownloadAsyncTask downloadBg = new DownloadAsyncTask(MainActivity.this);
-                    downloadBg.execute(srcUrl);
-                }
-                if(destUrl.contains("http")) {
-                    UploadAsyncTask uploadBg = new UploadAsyncTask(MainActivity.this);
-                    uploadBg.execute(destUrl);
-
-                }
                 SharedPreferences sp = getSharedPreferences("config", 0);
                 SharedPreferences.Editor sedt = sp.edit();
                 sedt.putString("srcUrl", srcUrl);
                 sedt.putString("destUrl", destUrl);
                 sedt.commit();
 
+                if(backGroundCheckRunning && cb.isChecked()){
+                    checkButton.setText("CheckCont.");
+                    backGroundCheckRunning = false;
+                    return;
+                }
+                if(cb.isChecked()) {
+                    backGroundCheckRunning = true;
+                } else {
+                    checkButton.setText("Check");
+
+                }
+                executeBridgeFunctionality();
             }
         });
 
@@ -182,6 +188,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        final Button clearLogButtom = findViewById(R.id.clearLog);
+        clearLogButtom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TextView logView = findViewById(R.id.logView);
+                logView.setText("");
+            }
+        });
+
         IntentFilter statusIntentFilter = new IntentFilter(
                 Constants.BROADCAST_ACTION);
         AsyncTaskUpdateReceiver atUIUpdateReceiver =  new AsyncTaskUpdateReceiver();
@@ -190,6 +205,36 @@ public class MainActivity extends AppCompatActivity {
                 statusIntentFilter);
 
 
+    }
+
+    void executeBridgeFunctionality() {
+
+        EditText srcId = findViewById(R.id.idSrcVal);
+        EditText destId = findViewById(R.id.idDestVal);
+        Editable valueSrc = srcId.getText();
+        Editable valueDest = destId.getText();
+        String srcUrl = valueSrc.toString();
+        String destUrl = valueDest.toString();
+
+        if(srcUrl.contains("http")) {
+            DownloadAsyncTask downloadBg = new DownloadAsyncTask(MainActivity.this);
+            downloadBg.execute(srcUrl);
+        }
+        if(destUrl.contains("http")) {
+            UploadAsyncTask uploadBg = new UploadAsyncTask(MainActivity.this);
+            uploadBg.execute(destUrl);
+        }
+
+        // schedule after 15 seconds
+        if(backGroundCheckRunning){
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    executeBridgeFunctionality();
+                }
+            }, 15000);
+        }
     }
 
     /*** Get the updates from Service to the UI ***/
