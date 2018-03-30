@@ -27,7 +27,7 @@ cd -
 
 cd ${pToJSVM}/H264Extension/build/linux
 make
-cp ${pToJSVM}/bin/DownConvertStatic* ${filesBase}/bin
+cp ${pToJSVM}/../bin/DownConvertStatic* ${filesBase}/bin
 cd -
 
 chmod a+x ${filesBase}/scripts/*
