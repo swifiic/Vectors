@@ -214,9 +214,9 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
                 }
 
                 for (AckItem item : fileMod.getAckFromFile().getItems()) {
-                    if (fileMod.getFileList().compareTo(item.getFilename())==0) {
-                        act.deleteFile(item.getFilename());
-                        act.customLogger(TAG +  " Deleted on Ack " + item.getFilename() );
+                    String fileName = item.getFilename();
+                    if (fileMod.getFileList().contains(fileName)) {
+                        fileMod.deleteFile(fileName);
                     }
                 }
 
