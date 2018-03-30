@@ -69,27 +69,24 @@ public class MainBGService extends IntentService {
     private String connectedEndpoint;
     private String startTime;
     private boolean extraChecks = false;
-    SharedPreferences mSharedPreferences;
-    SharedPreferences.Editor mEditor; // TODO - may not need edit
-
-    static MainBGService ourRef = null;
-
+    private boolean goodbyeSent = false;
     private FileModule mFileModule;
-
-
-    final String TAG = "RoamnetSvc";
-
-
-    String deviceId = "NOT-INITIALIZED";
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-
-    private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
     private List<Pair<String, Long>> recentlyVisitedNodes = new ArrayList<>();
+
+    SharedPreferences mSharedPreferences;
+    SharedPreferences.Editor mEditor; // TODO - may not need edit
+
+    static MainBGService ourRef = null;
+
+    final String TAG = "RoamnetSvc";
+
+    String deviceId = "NOT-INITIALIZED";
 
 
     public class LocalBinder extends Binder {
@@ -148,19 +145,13 @@ public class MainBGService extends IntentService {
 
     @Override
     public int onStartCommand(Intent startIntent, int flags, int startId) {
-//        super.onStartCommand(startIntent, flags, startId);
-//        initConnectionAndNotif();
         return START_STICKY;
     }
 
     @Override
     protected void onHandleIntent(Intent workIntent) {
         initConnectionAndNotif();
-        // Gets data from the incoming Intent
         String dataString = workIntent.getDataString();
-
-        // Do work here, Nothing for now
-
     }
 
     void initBGService() {
@@ -175,15 +166,12 @@ public class MainBGService extends IntentService {
         mEditor.apply();
         if (enableBackgroundService()) {
             customLogger( "BgserviceEnable");
-//            startAdvertising();
-//            startDiscovery();
         } else {
             customLogger( "Bgservicedisable");
         }
     }
 
     public MainBGService() {
-    // default Constructor
         super("DemoWorkerName");
         initBGService();
     }
@@ -220,10 +208,14 @@ public class MainBGService extends IntentService {
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
         filePayloadFilenames.clear();
-        incomingTransfersMetadata.clear();
         outgoingTransfersMetadata.clear();
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
+        if (connectedEndpoint != null) {
+            mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
+            connectedEndpoint = null;
+        }
+//        mConnectionClient.stopAllEndpoints();
         goodbyeReceived = false;
         goodbyeSent = false;
         startAdvertising();
@@ -235,7 +227,6 @@ public class MainBGService extends IntentService {
         long size = payload.asFile().getSize();
         boolean indeterminate = false;
         if (size == -1) {
-            // This is a stream payload, so we don't know the size ahead of time.
             size = 100;
             indeterminate = true;
         }
@@ -263,7 +254,6 @@ public class MainBGService extends IntentService {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 customLogger("Advert fail");
-                                // We were unable to start advertising.
                             }
                         });
     }
@@ -335,6 +325,7 @@ public class MainBGService extends IntentService {
                 @Override
                 public void onEndpointLost(String endpointId) {
                     customLogger("lost ENDPOINT: " + endpointId);
+                    restartNearby();
                 }
             };
 
@@ -401,14 +392,7 @@ public class MainBGService extends IntentService {
                 public void onDisconnected(String endpointId) {
                     // We've been disconnected from this endpoint. No more data can be
                     // sent or received.
-                    customLogger("connection terminated, find a way to autostart, clearing arrays");
-                    incomingPayloads.clear();
-                    outgoingPayloads.clear();
-                    incomingPayloadReferences.clear();
-                    filePayloadFilenames.clear();
-                    incomingTransfersMetadata.clear();
-                    outgoingTransfersMetadata.clear();
-
+                    customLogger("connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
                     restartNearby();
                 }
@@ -419,8 +403,6 @@ public class MainBGService extends IntentService {
         fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
-
-    private boolean goodbyeSent = false;
 
     private void sendGoodbye() {
         String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
@@ -441,7 +423,7 @@ public class MainBGService extends IntentService {
 
     private void processJSONMsg(String parseMsg) {
         VideoData vd = VideoData.fromString(parseMsg);
-        incomingTransfersMetadata.add(vd);
+        mFileModule.writeToJSONFile(vd);
     }
 
     private void processDackJSON(String parseMsg) {
@@ -473,9 +455,11 @@ public class MainBGService extends IntentService {
     }
 
     private void processFileMap(String fileMap) {
-        List<String> payloadFilenames = Arrays.asList(fileMap.split(","));
-        for (String s : payloadFilenames) {
-            addPayloadFilename(s);
+        if (fileMap.length() > 1) {
+            List<String> payloadFilenames = Arrays.asList(fileMap.split(","));
+            for (String s : payloadFilenames) {
+                addPayloadFilename(s);
+            }
         }
     }
 
@@ -525,6 +509,7 @@ public class MainBGService extends IntentService {
             }
             sendVideoDataList(requestedVideoDatas);
         }
+        sendGoodbye();
     }
 
     private void sendVideoDataList(List<VideoData> requestedVideoDatas) {
@@ -611,10 +596,36 @@ public class MainBGService extends IntentService {
     private boolean goodbyeReceived = false;
 
     private void checkConnectionTermination() {
-        if (outgoingPayloads.isEmpty() && incomingPayloads.isEmpty() && goodbyeSent && goodbyeReceived) {
+//        return;
+        if (outgoingPayloads.isEmpty() && filePayloadFilenames.isEmpty() && goodbyeSent && goodbyeReceived) {
             customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
+            sendConnectionStatus("Disconnect Initiated");
             restartNearby();
+        }
+    }
+
+    private void handleBytePayload(MessageScheme.MessageType type, String parsedMsg) {
+        if (type == MessageScheme.MessageType.WELCOME) {
+            customLogger("Got a welcome MSG! " + parsedMsg);
+        } else if (type == MessageScheme.MessageType.JSON) {
+            processJSONMsg(parsedMsg);
+        } else if (type == MessageScheme.MessageType.EXTRA) {
+            customLogger("Got an extra msg!" + parsedMsg);
+        } else if (type == MessageScheme.MessageType.FILELIST) {
+            processFileList(parsedMsg);
+        } else if (type == MessageScheme.MessageType.FILEMAP) {
+            processFileMap(parsedMsg);
+        } else if (type == MessageScheme.MessageType.REQUESTFILES) {
+            processRequestFiles2(parsedMsg);
+        } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
+            processDackJSON(parsedMsg);
+        } else if (type == MessageScheme.MessageType.GOODBYE) {
+            customLogger("Goodbye recv");
+            goodbyeReceived = true;
+            checkConnectionTermination();
+        } else {
+            customLogger(" got diff type " + parsedMsg);
         }
     }
 
@@ -630,31 +641,9 @@ public class MainBGService extends IntentService {
 
                             String parsedMsg = MessageScheme.parsePayloadString(payloadMsg);
                             if (parsedMsg == null) {
-                                customLogger("We got a null string?!?!?!");
+                                customLogger("Null payload MSG");
                             }
-//                            customLogger("MSG TYpeVAL" + type);
-                            if (type == MessageScheme.MessageType.WELCOME) {
-                                customLogger("Got a welcome MSG! " + parsedMsg);
-                            } else if (type == MessageScheme.MessageType.JSON) {
-                                processJSONMsg(parsedMsg);
-                            } else if (type == MessageScheme.MessageType.EXTRA) {
-                                customLogger("Got an extra msg!" + parsedMsg);
-                            } else if (type == MessageScheme.MessageType.FILELIST) {
-                                processFileList(parsedMsg);
-                            } else if (type == MessageScheme.MessageType.FILEMAP) {
-                                processFileMap(parsedMsg);
-                            } else if (type == MessageScheme.MessageType.REQUESTFILES) {
-                                processRequestFiles2(parsedMsg);
-                            } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
-                                processDackJSON(parsedMsg);
-                            } else if (type == MessageScheme.MessageType.GOODBYE) {
-                                customLogger("Goodbye recv");
-                                goodbyeReceived = true;
-                                checkConnectionTermination();
-                            } else {
-                                customLogger(" got diff type " + parsedMsg);
-                            }
-
+                            handleBytePayload(type, parsedMsg);
                         } catch (Exception e) {
                             customLogger("Byte payload fail " + e.getMessage());
                             e.printStackTrace();
@@ -697,7 +686,7 @@ public class MainBGService extends IntentService {
                             }
                         }
                         if (outgoingPayloads.isEmpty()) {
-                            customLogger("Done transferring payloads, can terminate");
+                            customLogger("No more outbound payloads (For now)");
                             checkConnectionTermination();
                             // done sending
                         }
@@ -706,36 +695,23 @@ public class MainBGService extends IntentService {
                     switch(update.getStatus()) {
                         case PayloadTransferUpdate.Status.IN_PROGRESS:
                             int size = (int)update.getTotalBytes();
-                            notification.setProgress(size, (int)update.getBytesTransferred(), false /* indeterminate */);
+                            notification.
+                                    setProgress(size, (int)update.getBytesTransferred(),
+                                            false /* indeterminate */);
                             break;
                         case PayloadTransferUpdate.Status.SUCCESS:
                             notification
                                     .setProgress(100, 100, false /* indeterminate */)
                                     .setContentText("Transfer complete!");
                             String filename = filePayloadFilenames.remove(update.getPayloadId());
-//                            customLogger("Renaming" + filename);
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
                                 if (filename == null) {
                                     customLogger("Strange wrong fname! aborting rename");
                                     payloadFile.delete();
                                 } else {
-                                    // remove all refs if we get something null
                                     customLogger("Fname " + filename);
                                     payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
-
-                                    // remove it from being tracked by the incomingJSONs and write that to a file
-                                    for (int i = 0; i < incomingTransfersMetadata.size(); i++) {
-                                        if (filename != null && incomingTransfersMetadata.get(i).getFileName().compareTo(filename) == 0 && incomingTransfersMetadata.get(i) != null) {
-                                            mFileModule.writeToJSONFile(incomingTransfersMetadata.get(i));
-                                            customLogger("Wrote the incoming JSON of " + filename);
-                                            incomingTransfersMetadata.remove(i);
-                                            break;
-                                        } else {
-                                            customLogger("JSON not received in time");
-                                        }
-                                    }
-                                    customLogger("Wrote the data to a file");
                                 }
                             }
                             break;

@@ -37,13 +37,10 @@ README.txt           - This file
 ************************
 Tables in the DB
 ************************
+
+GRANT ALL PRIVILEGES ON *.* TO 'svc'@'localhost' IDENTIFIED BY 'svc123';
+
 create database SVC;
-CREATE USER 'svc'@'localhost' IDENTIFIED WITH mysql_native_password AS '***';
-
-GRANT USAGE ON *.* TO 'svc'@'localhost' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
-
-GRANT ALL PRIVILEGES ON `SVC`.* TO 'svc'@'localhost';
-
 use SVC;
 
 -- AvailableFiles---
