@@ -25,6 +25,7 @@ import java.util.Scanner;
 
 public class FileModule {
     private File dataDirectory;
+    private File logDirectory;
     private File fileLedger;
     private File destinationStrategy;
     private final String TAG = "FileModule";
@@ -34,10 +35,17 @@ public class FileModule {
     boolean useDb = false;
 
     public FileModule(Context context) {
-        dataDirectory = new File(Environment.getExternalStorageDirectory()+"/RoamnetData");
+        dataDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FLDR);
+        logDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FOLDER_LOG);
         if (!dataDirectory.exists()) {
-            if (dataDirectory.mkdir());
-            Log.d(TAG, "Created dir");
+            if (dataDirectory.mkdir()) {
+                Log.d(TAG, "Created dir");
+            }
+        }
+        if (!logDirectory.exists()) {
+            if (logDirectory.mkdir()) {
+                Log.d(TAG, "Created log dir");
+            }
         }
         mContext = context;
 //        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
@@ -159,31 +167,41 @@ public class FileModule {
         }
     }
 
+    public void writeFile(File file, String data) {
+        try {
+            FileWriter writer = new FileWriter(file, false);
+            writer.write(data);
+            writer.close();
+            Log.d(TAG, "generic file written");
+        } catch (Exception e) {
+        }
+    }
+
+
+    public void writeConnectionLog(ConnectionLog connectionLog) {
+        if (connectionLog != null) {
+            String data = connectionLog.toString();
+            writeFile(new File(logDirectory, connectionLog.getConnectionStartedTime()+".json"), data);
+        } else {
+            Log.d(TAG, "Null Log");
+        }
+    }
+
     public void writeToJSONFile(VideoData videoData) {
         if (videoData != null) {
             String data = videoData.toString();
-            try {
-                FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
-                writer.write(data);
-                writer.close();
-                Log.d(TAG, "File written" + videoData.getFileName());
-            } catch (IOException e) {
-                Log.d(TAG, "File write failed");
-            }
+            writeFile(new File(dataDirectory, videoData.getFileName() + ".json"), data);
         } else {
             Log.d(TAG, "null???");
         }
     }
 
     public void writeAckToJSONFile(Acknowledgement destinationAck) {
-        String data = destinationAck.toString();
-        try {
-            FileWriter writer = new FileWriter( new File(dataDirectory, Constants.ACK_FILENAME + ".json"), false);
-            writer.write(data);
-            writer.close();
-            Log.d(TAG, "File written");
-        } catch (IOException e) {
-            Log.d(TAG, "File write failed");
+        if (destinationAck != null) {
+            String data = destinationAck.toString();
+            writeFile(new File(dataDirectory, Constants.ACK_FILENAME + ".json"), data);
+        } else {
+            Log.d(TAG, "Null");
         }
     }
 
