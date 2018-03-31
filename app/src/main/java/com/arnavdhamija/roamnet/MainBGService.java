@@ -439,10 +439,13 @@ public class MainBGService extends IntentService {
             }
         }
 
+        String localFileList = mFileModule.getFileList();
+
         for (AckItem item : mFileModule.getAckFromFile().getItems()) {
-            if (mFileModule.getFileList().contains(item.getFilename())) {
-                deleteFile(item.getFilename());
-                customLogger("Deleting on Ack "+ item.getFilename());
+            String fileToCheck = item.getFilename();
+            if (localFileList.contains(fileToCheck)) {
+                mFileModule.deleteFile(fileToCheck);
+                customLogger("Deleting on Ack "+ fileToCheck);
             }
         }
     }

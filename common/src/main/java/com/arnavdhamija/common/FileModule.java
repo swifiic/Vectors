@@ -196,6 +196,7 @@ public class FileModule {
         StringBuilder csvFileList = new StringBuilder();
         if (files != null) {
             ArrayList<String> pathList = new ArrayList<String>();
+            ArrayList<String> jsonList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
                 if (!fileName.contains(".json")) {
@@ -204,6 +205,22 @@ public class FileModule {
                         csvFileList.append(",");
                     }
                     csvFileList.append(fileName);
+                } else {
+                    jsonList.add(fileName);
+                }
+            }
+            String retVal = csvFileList.toString();
+            if(!jsonList.isEmpty()){
+                for(int i =0; i < jsonList.size(); i++){
+                    String fName = jsonList.get(i);
+                    if(fName.contains(Constants.ACK_FILENAME))
+                        continue;
+                    String name = fName.substring(0, fName.indexOf(".json"));
+                    if(retVal.contains(name))
+                        continue;
+                    File file = new File(dataDirectory, fName);
+                    file.delete();
+                    Log.w(TAG, "Deleted unmatched JSON file with name " + fName);
                 }
             }
             if(!pathList.isEmpty()){
@@ -214,7 +231,7 @@ public class FileModule {
                     Log.d(TAG, "scanning for count=" + pathArr.length);
                 }
             }
-            return csvFileList.toString();
+            return retVal;
         } else {
             return "";
         }
