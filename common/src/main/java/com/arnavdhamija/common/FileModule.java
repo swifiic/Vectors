@@ -2,6 +2,7 @@ package com.arnavdhamija.common;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -184,19 +186,26 @@ public class FileModule {
         }
     }
 
+    /** overriding this function for MTP as well **/
     public String getFileList() {
         File[] files = dataDirectory.listFiles();
         String fileName;
         StringBuilder csvFileList = new StringBuilder();
         if (files != null) {
+            ArrayList<String> pathList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
                 if (!fileName.contains(".json")) {
+                    pathList.add(files[i].getAbsolutePath());
                     if (i > 0) {
                         csvFileList.append(",");
                     }
                     csvFileList.append(fileName);
                 }
+            }
+            if(!pathList.isEmpty()){
+                String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
+                MediaScannerConnection.scanFile(mContext, pathArr , null, null);
             }
             return csvFileList.toString();
         } else {

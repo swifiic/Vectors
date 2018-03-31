@@ -12,5 +12,5 @@ date >> /var/spool/vector/run_out
 bash ${MY_PATH}/video_record_2L.sh >> /var/spool/vector/run_out_${counterPart} 2>&1
 
 echo "Generating the JSON and moving files to MTP of connected device"
-bash ${MY_PATH}/file_usb_push.sh ${counterPart} >> /var/spool/vector/run_out_${counterPart} 2>&1
+bash ${MY_PATH}/file_usb_push.sh ${video_file_counter} >> /var/spool/vector/run_out_${counterPart} 2>&1
 
