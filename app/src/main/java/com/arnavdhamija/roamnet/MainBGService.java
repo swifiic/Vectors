@@ -275,7 +275,7 @@ public class MainBGService extends IntentService {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                // We were unable to start discovering.
+                                customLogger("Discovery FAILED!");
                             }
                         });
     }
@@ -315,8 +315,7 @@ public class MainBGService extends IntentService {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 customLogger("fail conn t_t" + e.getMessage());
-                                startAdvertising();
-                                startDiscovery();
+                                restartNearby();
                             }
                         });
                     }
@@ -380,10 +379,12 @@ public class MainBGService extends IntentService {
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
                             customLogger("fail D:");
+                            restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
                             customLogger("bigfail");
                             // The connection broke before it was able to be accepted.
+                            restartNearby();
                             break;
                     }
                 }
@@ -439,8 +440,9 @@ public class MainBGService extends IntentService {
         }
 
         for (AckItem item : mFileModule.getAckFromFile().getItems()) {
-            if (mFileModule.getFileList().compareTo(item.getFilename())==0) {
+            if (mFileModule.getFileList().contains(item.getFilename())) {
                 deleteFile(item.getFilename());
+                customLogger("Deleting on Ack "+ item.getFilename());
             }
         }
     }
@@ -487,7 +489,10 @@ public class MainBGService extends IntentService {
                     if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
                         return -1;
                     } else {
-                        return 1;
+                        if(o1.getTickets() == o2.getTickets())
+                            return 0;
+                        else
+                            return 1;
                     }
                 }
             });
