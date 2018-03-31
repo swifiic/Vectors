@@ -6,6 +6,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.util.Log;
 
@@ -186,6 +187,8 @@ public class FileModule {
         }
     }
 
+    long lastScanTime = 0;
+
     /** overriding this function for MTP as well **/
     public String getFileList() {
         File[] files = dataDirectory.listFiles();
@@ -204,14 +207,27 @@ public class FileModule {
                 }
             }
             if(!pathList.isEmpty()){
-                String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
-                MediaScannerConnection.scanFile(mContext, pathArr , null, null);
+                if(lastScanTime + 2000 < SystemClock.uptimeMillis()){
+                    lastScanTime = SystemClock.uptimeMillis();
+                    String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
+                    MediaScannerConnection.scanFile(mContext, pathArr , null, scanCompletedListener);
+                    Log.d(TAG, "scanning for count=" + pathArr.length);
+                }
             }
             return csvFileList.toString();
         } else {
             return "";
         }
     }
+
+    MediaScannerConnection.OnScanCompletedListener scanCompletedListener =
+            new MediaScannerConnection.OnScanCompletedListener()  {
+
+                @Override
+                public void onScanCompleted(String path, Uri uri) {
+                    Log.d(TAG, "Scan Completed for: " + path + " with uri " + uri.toString());
+                }
+            };
 
     public boolean deleteFile(String filename) {
         boolean jsonDeleted = true;
