@@ -2,6 +2,7 @@
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: setup.sh /path/to/gitrepo"
+    exit
 fi
 
 if [ "$EUID" -ne 0 ]
