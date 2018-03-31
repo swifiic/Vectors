@@ -167,44 +167,41 @@ public class FileModule {
         }
     }
 
+    public void writeFile(File file, String data) {
+        try {
+            FileWriter writer = new FileWriter(file, false);
+            writer.write(data);
+            writer.close();
+            Log.d(TAG, "generic file written");
+        } catch (Exception e) {
+        }
+    }
+
+
     public void writeConnectionLog(ConnectionLog connectionLog) {
         if (connectionLog != null) {
             String data = connectionLog.toString();
-            try {
-                FileWriter writer = new FileWriter(new File(logDirectory, connectionLog.getConnectionStartedTime()+".json"));
-                writer.write(data);
-                writer.close();
-                Log.d(TAG, "Log file written");
-            } catch (Exception e) {
-            }
+            writeFile(new File(logDirectory, connectionLog.getConnectionStartedTime()+".json"), data);
+        } else {
+            Log.d(TAG, "Null Log");
         }
     }
 
     public void writeToJSONFile(VideoData videoData) {
         if (videoData != null) {
             String data = videoData.toString();
-            try {
-                FileWriter writer = new FileWriter(new File(dataDirectory, videoData.getFileName() + ".json"), false);
-                writer.write(data);
-                writer.close();
-                Log.d(TAG, "File written" + videoData.getFileName());
-            } catch (IOException e) {
-                Log.d(TAG, "File write failed");
-            }
+            writeFile(new File(dataDirectory, videoData.getFileName() + ".json"), data);
         } else {
             Log.d(TAG, "null???");
         }
     }
 
     public void writeAckToJSONFile(Acknowledgement destinationAck) {
-        String data = destinationAck.toString();
-        try {
-            FileWriter writer = new FileWriter( new File(dataDirectory, Constants.ACK_FILENAME + ".json"), false);
-            writer.write(data);
-            writer.close();
-            Log.d(TAG, "File written");
-        } catch (IOException e) {
-            Log.d(TAG, "File write failed");
+        if (destinationAck != null) {
+            String data = destinationAck.toString();
+            writeFile(new File(dataDirectory, Constants.ACK_FILENAME + ".json"), data);
+        } else {
+            Log.d(TAG, "Null");
         }
     }
 

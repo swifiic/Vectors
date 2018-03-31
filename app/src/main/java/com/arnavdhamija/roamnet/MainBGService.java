@@ -73,6 +73,7 @@ public class MainBGService extends IntentService {
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
+    private StringBuilder logBuffer;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -159,7 +160,6 @@ public class MainBGService extends IntentService {
     void initBGService() {
         mFileModule = new FileModule(this);
         deviceId = "Roamnet_" + DeviceName.getDeviceName();
-        customLogger("From bgservice" + deviceId);
         initConnectionAndNotif();
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
@@ -189,6 +189,9 @@ public class MainBGService extends IntentService {
         String logMsg = timeStamp+' '+msg+"\n";
         Intent localIntent =  new Intent(Constants.BROADCAST_ACTION)
                         .putExtra(Constants.LOG_STATUS, logMsg);
+        if (logBuffer == null) {
+            logBuffer = new StringBuilder();
+        }
 
         // Broadcasts the Intent to receivers in this app.
         LocalBroadcastManager.getInstance(RoamNetApp.getContext()).sendBroadcast(localIntent);
@@ -381,11 +384,11 @@ public class MainBGService extends IntentService {
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
-                            customLogger("fail D:");
+                            customLogger("Rejection Fail");
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
-                            customLogger("bigfail");
+                            customLogger("Unknown STATUS_ERROR");
                             // The connection broke before it was able to be accepted.
                             restartNearby();
                             break;
@@ -396,10 +399,11 @@ public class MainBGService extends IntentService {
                 public void onDisconnected(String endpointId) {
                     // We've been disconnected from this endpoint. No more data can be
                     // sent or received.
-                    customLogger("connection terminated, clearing arrays");
+                    customLogger("Connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
                     mConnectionLog.connectionTerminated();
                     mFileModule.writeConnectionLog(mConnectionLog);
+                    mConnectionLog = null;
                     restartNearby();
                 }
             };
@@ -616,6 +620,7 @@ public class MainBGService extends IntentService {
             sendConnectionStatus("Disconnect Initiated");
             mConnectionLog.connectionTerminated();
             mFileModule.writeConnectionLog(mConnectionLog);
+            mConnectionLog = null;
             restartNearby();
         }
     }
