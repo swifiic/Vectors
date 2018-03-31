@@ -4,7 +4,7 @@ binDir=/var/spool/vector/bin
 cfgDir=/var/spool/vector/cfg
 recDir=/var/spool/vector/rec
 
-video_inDir=/var/www/video_in
+video_inDir=/var/www/video_in/import
 video_outDir=/var/www/video_out
 
 counterFile=/var/spool/vector/counter

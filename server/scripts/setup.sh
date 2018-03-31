@@ -32,4 +32,6 @@ make -j`nproc`
 cp ${pToJSVM}/../bin/DownConvertStatic* ${filesBase}/bin
 cd -
 
+touch /var/www/video_in/rcvdlist.txt
+
 chmod a+x ${filesBase}/scripts/*
