@@ -17,7 +17,7 @@ public class ConnectionLog {
     ArrayList<String> filesSent;
     ArrayList<String> filesReceived;
 
-    ConnectionLog(String source, String destination) {
+    public ConnectionLog(String source, String destination) {
         this.source = source;
         this.destination = destination;
         filesSent = new ArrayList<>();
@@ -25,7 +25,19 @@ public class ConnectionLog {
         connectionStartedTime = System.currentTimeMillis()/1000;
     }
 
-    void connectionTerminated() {
+    public String getConnectionStartedTime() {
+        return Long.toString(connectionStartedTime);
+    }
+
+    public void addSentFile(String filename) {
+        filesSent.add(filename);
+    }
+
+    public void addReceivedFile(String filename) {
+        filesReceived.add(filename);
+    }
+
+    public void connectionTerminated() {
         connectionTerminatedTime = System.currentTimeMillis()/1000;
     }
 

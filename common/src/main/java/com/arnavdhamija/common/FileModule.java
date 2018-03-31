@@ -25,6 +25,7 @@ import java.util.Scanner;
 
 public class FileModule {
     private File dataDirectory;
+    private File logDirectory;
     private File fileLedger;
     private File destinationStrategy;
     private final String TAG = "FileModule";
@@ -34,10 +35,17 @@ public class FileModule {
     boolean useDb = false;
 
     public FileModule(Context context) {
-        dataDirectory = new File(Environment.getExternalStorageDirectory()+"/RoamnetData");
+        dataDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FLDR);
+        logDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FOLDER_LOG);
         if (!dataDirectory.exists()) {
-            if (dataDirectory.mkdir());
-            Log.d(TAG, "Created dir");
+            if (dataDirectory.mkdir()) {
+                Log.d(TAG, "Created dir");
+            }
+        }
+        if (!logDirectory.exists()) {
+            if (logDirectory.mkdir()) {
+                Log.d(TAG, "Created log dir");
+            }
         }
         mContext = context;
 //        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
@@ -155,6 +163,19 @@ public class FileModule {
                     }
                     Log.d(TAG, fileName);
                 }
+            }
+        }
+    }
+
+    public void writeConnectionLog(ConnectionLog connectionLog) {
+        if (connectionLog != null) {
+            String data = connectionLog.toString();
+            try {
+                FileWriter writer = new FileWriter(new File(logDirectory, connectionLog.getConnectionStartedTime()+".json"));
+                writer.write(data);
+                writer.close();
+                Log.d(TAG, "Log file written");
+            } catch (Exception e) {
             }
         }
     }

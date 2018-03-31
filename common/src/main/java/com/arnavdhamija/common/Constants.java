@@ -28,6 +28,7 @@ public final class Constants {
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
     public static final String FLDR =  "/RoamnetData";
+    public static final String FOLDER_LOG = "/RoamnetLogs";
     public static final String ACK_PREFIX = "ack_";
     public static final String BASE_NAME =  "video_00";
     public static final String ACK_FILENAME = ACK_PREFIX + BASE_NAME;

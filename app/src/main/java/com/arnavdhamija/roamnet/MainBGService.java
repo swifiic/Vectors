@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.arnavdhamija.common.AckItem;
 import com.arnavdhamija.common.Acknowledgement;
+import com.arnavdhamija.common.ConnectionLog;
 import com.arnavdhamija.common.Constants;
 import com.arnavdhamija.common.FileModule;
 import com.arnavdhamija.common.VideoData;
@@ -71,6 +72,7 @@ public class MainBGService extends IntentService {
     private boolean extraChecks = false;
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
+    private ConnectionLog mConnectionLog;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -369,6 +371,7 @@ public class MainBGService extends IntentService {
                             connectedEndpoint = endpointId;
                             sendFileList();
                             sendDestinationAck();
+                            mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
                             break;
@@ -395,6 +398,8 @@ public class MainBGService extends IntentService {
                     // sent or received.
                     customLogger("connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
+                    mConnectionLog.connectionTerminated();
+                    mFileModule.writeConnectionLog(mConnectionLog);
                     restartNearby();
                 }
             };
@@ -609,6 +614,8 @@ public class MainBGService extends IntentService {
             customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
             sendConnectionStatus("Disconnect Initiated");
+            mConnectionLog.connectionTerminated();
+            mFileModule.writeConnectionLog(mConnectionLog);
             restartNearby();
         }
     }
@@ -720,6 +727,7 @@ public class MainBGService extends IntentService {
                                 } else {
                                     customLogger("Fname " + filename);
                                     payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
+                                    mConnectionLog.addReceivedFile(filename);
                                 }
                             }
                             break;
