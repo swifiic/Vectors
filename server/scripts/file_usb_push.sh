@@ -39,8 +39,8 @@ for (( k=0 ; k < 11 ; k++ )) ; do
     fi
 done
 
-mv ${src_fldr}/video_${counterPart}* "${DestDir}"
-ls ${src_fldr}/video_${counterPart}* "${DestDir}"/video_${counterPart}*
+mv ${src_fldr}/video_* "${DestDir}"
+ls ${src_fldr}/video_* "${DestDir}"
 
 # date >> /var/spool/vector/run_out
 
