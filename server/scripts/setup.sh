@@ -2,6 +2,7 @@
 
 if [ "$#" -ne 3 ]; then
     echo "Usage: setup.sh /path/to/gitrepo /path/to/SHMFolder /path/to/JSVMFolder"
+    exit
 fi
 
 pToRepo=$1
