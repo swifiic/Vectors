@@ -173,7 +173,7 @@ public class FileModule {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), 1024*16);
             writer.write(data);
             writer.close();
-            Log.d(TAG, "generic file written");
+            Log.d(TAG, "generic file written" + file.getName());
         } catch (Exception e) {
         }
     }
