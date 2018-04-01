@@ -25,6 +25,9 @@ public final class Constants {
     public static final String ANDROID_BOOT_COMPLETION =
             "android.intent.action.BOOT_COMPLETED";
     public static final int MIN_CONNECTION_GAP_TIME = 60;
+    public static final int LOG_BUFFER_SIZE = 200; // number of lines buffered before writing to file
+    public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
+    public static final String LOGGER_FILENAME = "LogFile";
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
     public static final String FLDR =  "/RoamnetData";

@@ -73,7 +73,8 @@ public class MainBGService extends IntentService {
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
-    private StringBuilder logBuffer;
+    private StringBuilder logBuffer = new StringBuilder();
+    private int bufferLines = 0;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -187,14 +188,21 @@ public class MainBGService extends IntentService {
         Log.d(TAG, msg);
         String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
         String logMsg = timeStamp+' '+msg+"\n";
-        Intent localIntent =  new Intent(Constants.BROADCAST_ACTION)
-                        .putExtra(Constants.LOG_STATUS, logMsg);
-        if (logBuffer == null) {
-            logBuffer = new StringBuilder();
-        }
+        addToLogBuffer(logMsg);
 
         // Broadcasts the Intent to receivers in this app.
+        Intent localIntent =  new Intent(Constants.BROADCAST_ACTION).putExtra(Constants.LOG_STATUS, logMsg);
         LocalBroadcastManager.getInstance(RoamNetApp.getContext()).sendBroadcast(localIntent);
+    }
+
+    private void addToLogBuffer(String logMsg) {
+        if (bufferLines >= Constants.LOG_BUFFER_SIZE) {
+            mFileModule.writeLogBuffer(logBuffer);
+            logBuffer.setLength(0); // hack to clear the buffer
+            bufferLines = 0;
+        }
+        logBuffer.append(logMsg);
+        bufferLines++;
     }
 
     private void sendConnectionStatus(String msg){

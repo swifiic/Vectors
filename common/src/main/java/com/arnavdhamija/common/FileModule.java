@@ -177,11 +177,22 @@ public class FileModule {
         }
     }
 
+    public void writeLogBuffer(StringBuilder logBuffer) {
+        if (logBuffer != null) {
+            String data = logBuffer.toString();
+            Long currTime = System.currentTimeMillis()/1000;
+            writeFile(new File(logDirectory,
+                    Constants.LOGGER_FILENAME + "_" + Long.toString(currTime)), data);
+        } else {
+            Log.d(TAG, "Null logger File");
+        }
+    }
 
     public void writeConnectionLog(ConnectionLog connectionLog) {
         if (connectionLog != null) {
             String data = connectionLog.toString();
-            writeFile(new File(logDirectory, connectionLog.getConnectionStartedTime()+".json"), data);
+            writeFile(new File(logDirectory, Constants.CONNECTION_LOG_FILENAME + "_" +
+                                connectionLog.getConnectionStartedTime()+".json"), data);
         } else {
             Log.d(TAG, "Null Log");
         }
