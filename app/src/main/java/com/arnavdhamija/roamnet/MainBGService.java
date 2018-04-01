@@ -536,12 +536,12 @@ public class MainBGService extends IntentService {
                 VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
                 if (vd != null) {
                     if (vd.getTickets() > 1) {
-                        vd.setTickets(vd.getTickets());// / 2); // SNW strategy allows us to only send half
+                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
                         vd.addTraversedNode(deviceId);
                         //send JSON and file
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 dack.getAckedFilenames().contains(vd.getFileName()))) {
-                            customLogger("File has been acked/too old to send - Deleting" + vd.getFileName());
+                            customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
                             mFileModule.deleteFile(vd.getFileName());
                             requestedVideoDatas.remove(i);
                         }
