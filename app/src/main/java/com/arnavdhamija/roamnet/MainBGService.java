@@ -312,7 +312,7 @@ public class MainBGService extends IntentService {
                 public void onEndpointFound(
                         String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
-                    if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet") && !recentlyVisited(endpointName)) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet") && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
                         customLogger("Stopping before requesting Conn");
@@ -366,6 +366,7 @@ public class MainBGService extends IntentService {
                 public void onConnectionInitiated(
                         String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
+                    customLogger("Pending connection From " + endpointName);
                     endpointName = connectionInfo.getEndpointName();
                     if (endpointName.startsWith("Roamnet") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
