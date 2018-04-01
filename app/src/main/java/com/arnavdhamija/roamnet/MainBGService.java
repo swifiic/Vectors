@@ -506,7 +506,6 @@ public class MainBGService extends IntentService {
 
 
     private void addPayloadFilename(String payloadFilenameMessage) {
-        customLogger("adding2fnamerefs" + payloadFilenameMessage);
         int colonIndex = payloadFilenameMessage.indexOf(':');
         String payloadId = payloadFilenameMessage.substring(0, colonIndex);
         String filename = payloadFilenameMessage.substring(colonIndex + 1);
@@ -734,7 +733,6 @@ public class MainBGService extends IntentService {
                             incomingPayloads.remove(payloadId);
                         }
                         if (incomingPayloads.isEmpty()) {
-                            customLogger("Done receiving payloads, can terminate");
                             checkConnectionTermination();
                             // done receiving
                         }
@@ -745,13 +743,13 @@ public class MainBGService extends IntentService {
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
-                                customLogger("Updated the outbound JSON");
+                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
-                                customLogger("Working with non-vid file, sent"); //very strange stuff
+                                customLogger("Working with non-vid file, sent");
                             }
                         }
                         if (outgoingPayloads.isEmpty()) {
-                            customLogger("No more outbound payloads (For now)");
+//                            customLogger("No more outbound payloads (For now)");
                             checkConnectionTermination();
                             // done sending
                         }
