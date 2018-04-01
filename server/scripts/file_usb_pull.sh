@@ -7,20 +7,23 @@ TgtDir=$(printf %q "$tgtdir")
 
 dest_fldr="/var/www/video_in"
 import="${dest_fldr}/import"
-
+newLine="
+"
 ls -l "${tgtdir}"
 timeAtDest=`date +%s`
 mv "${tgtdir}"/video* "${import}"
 rcvdFiles=`ls ${import}/video*| grep -v json`
 outStr=""
 for file in ${rcvdFiles} ; do
-   mv "${file}" ${dest_fldr}
+   mv ${file} ${dest_fldr}
+   mv ${file}.json ${dest_fldr}
+   echo "Moved ${file}"
    fileName=$(basename ${file})
-   outStr=$"${outStr}{\"filename\":\"${fileName}\",\"time\":${timeAtDest}},"
+   outStr=$"${outStr}${newLine}{\"filename\":\"${fileName}\",\"time\":${timeAtDest}},"
 done
 
 echo "${outStr}" | cat - ${dest_fldr}/rcvdlist.txt > /tmp//rcvdlist.txt.temp && mv /tmp//rcvdlist.txt.temp ${dest_fldr}/rcvdlist.txt
-subStr=`head -n 20 ${dest_fldr}/rcvdlist.txt`
+subStr=`head -n 500 ${dest_fldr}/rcvdlist.txt | grep -v "^$"`
 str2=${subStr::-1} ; # remove the last ","
 
 echo "{\"ack_time\":${timeAtDest},"items":[${str2}]}" > "${tgtdir}"/ack_video_00.json
