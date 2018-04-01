@@ -19,7 +19,11 @@ for file in ${rcvdFiles} ; do
    mv ${file}.json ${dest_fldr}
    echo "Moved ${file}"
    fileName=$(basename ${file})
-   outStr=$"${outStr}${newLine}{\"filename\":\"${fileName}\",\"time\":${timeAtDest}},"
+   if [ -f "${dest_fldr}/${fileName}" ] ; then
+       outStr=$"${outStr}${newLine}{\"filename\":\"${fileName}\",\"time\":${timeAtDest}},"
+   else
+       echo "Failed to move file ${fileName} - not generating an ack"
+   fi
 done
 
 echo "${outStr}" | cat - ${dest_fldr}/rcvdlist.txt > /tmp//rcvdlist.txt.temp && mv /tmp//rcvdlist.txt.temp ${dest_fldr}/rcvdlist.txt
