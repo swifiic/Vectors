@@ -240,11 +240,19 @@ public class MainBGService extends IntentService {
         outgoingTransfersMetadata.clear();
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
+//        mConnectionClient.stopAllEndpoints();
+
         if (connectedEndpoint != null) {
             mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
             connectedEndpoint = null;
         }
-//        mConnectionClient.stopAllEndpoints();
+
+        if (mConnectionLog != null) {
+            mConnectionLog.connectionTerminated();
+            mFileModule.writeConnectionLog(mConnectionLog);
+        }
+        mConnectionLog = null;
+        
         goodbyeReceived = false;
         goodbyeSent = false;
         startAdvertising();
@@ -394,12 +402,14 @@ public class MainBGService extends IntentService {
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
-                            Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
+                            if (enableNotifications || true) {
+                                Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
+                            }
                             sendConnectionStatus("Connected To: " + endpointName);
                             connectedEndpoint = endpointId;
+                            mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             sendDestinationAck();
                             sendFileList();
-                            mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
                             break;
@@ -426,9 +436,6 @@ public class MainBGService extends IntentService {
                     // sent or received.
                     customLogger("Connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
-                    mConnectionLog.connectionTerminated();
-                    mFileModule.writeConnectionLog(mConnectionLog);
-                    mConnectionLog = null;
                     restartNearby();
                 }
             };
@@ -646,9 +653,6 @@ public class MainBGService extends IntentService {
             customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
             sendConnectionStatus("Disconnect Initiated");
-            mConnectionLog.connectionTerminated();
-            mFileModule.writeConnectionLog(mConnectionLog);
-            mConnectionLog = null;
             restartNearby();
         }
     }
