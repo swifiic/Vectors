@@ -595,11 +595,9 @@ public class MainBGService extends IntentService {
         try {
             String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
             Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
-            customLogger("Task started");
             while (!task.isComplete()) {
                 SystemClock.sleep(50);
             }
-            customLogger("Task complete");
         } catch (Exception e) {
             customLogger("FileMap transfer fail" + e.getMessage());
         }
@@ -617,20 +615,16 @@ public class MainBGService extends IntentService {
                 String videoDataJSON = vd.toString();
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
                 Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-                customLogger("json started");
                 while (!task.isComplete()) {
                     SystemClock.sleep(50);
                 }
-                customLogger("json complete");
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }
 
             Task task = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
-            customLogger("file started");
             while (!task.isComplete()) {
                 SystemClock.sleep(50);
             }
-            customLogger("file complete");
         }
     }
 
