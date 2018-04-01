@@ -349,7 +349,7 @@ public class MainBGService extends IntentService {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 customLogger("fail conn t_t" + e.getMessage());
-                                restartNearby();
+//                                restartNearby();
                             }
                         });
                     }
@@ -419,11 +419,17 @@ public class MainBGService extends IntentService {
                             customLogger("Rejection Fail");
                             restartNearby();
                             break;
+                        case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
+                            customLogger("Already connected");
+                            break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
                             customLogger("Unknown STATUS_ERROR");
                             // The connection broke before it was able to be accepted.
                             restartNearby();
                             break;
+                        default:
+                            customLogger("Different error");
+                            restartNearby();
                     }
                 }
 
