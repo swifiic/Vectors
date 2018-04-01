@@ -10,6 +10,7 @@ import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -167,9 +168,9 @@ public class FileModule {
         }
     }
 
-    public void writeFile(File file, String data) {
+    private void writeFile(File file, String data) {
         try {
-            FileWriter writer = new FileWriter(file, false);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), 1024*16);
             writer.write(data);
             writer.close();
             Log.d(TAG, "generic file written");
@@ -179,6 +180,7 @@ public class FileModule {
 
     public void writeLogBuffer(StringBuilder logBuffer) {
         if (logBuffer != null) {
+            Log.d(TAG, "Writing log buffer");
             String data = logBuffer.toString();
             Long currTime = System.currentTimeMillis()/1000;
             writeFile(new File(logDirectory,
