@@ -5,7 +5,7 @@ video_file_counter=$1
 layerLast=`cat /var/spool/vector/lastLayer`
 counterPart=`printf "%05d" ${video_file_counter}`
 
-DestDir=`ls -d /run/user/*/gvfs/mtp*/Inter*/RoamnetData | head -n 1`
+DestDir=`ls -d /run/user/*/gvfs/mtp*/*/RoamnetData | head -n 1`
 
 # if bridge device is not connected we generate only one layer
 # but do not change the layerLast value
@@ -50,7 +50,7 @@ ls -l "${DestDir}"
 
 
 timeAtOrigin=`date +%s`
-for (( k=0 ; k <= ${video_file_layerLast} ; k++ )) ; do 
+for (( k=0 ; k <= ${layerLast} ; k++ )) ; do 
     baseFileEnd=${fileNames[k]}
     count=${copyCounts[k]}
     
@@ -68,9 +68,15 @@ for (( k=0 ; k <= ${video_file_layerLast} ; k++ )) ; do
         echo ${outStr}
         echo ${outStr} > ${src_fldr}/video_${counterPart}${baseFileEnd}.json
     else
+        # for overlapping runs
         echo "file not found ${src_fldr}/video_${counterPart}${baseFileEnd}"
     fi
 done
+
+# now remove old files for layer 1 before pushing
+echo "Removing older files for layer 1 and higher temporal ids"
+find . -name "vide*L1*" -mmin +120 -exec rm {} \; -print
+find . -name "vide*L0T[23456]*" -mmin +240 -exec rm {} \; -print
 
 mv ${src_fldr}/video_* "${DestDir}"
 ls ${src_fldr}/video_* "${DestDir}"
