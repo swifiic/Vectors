@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean getRoamnetStatus() {
-        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
     }
 
     private void setUIText() {
@@ -178,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 bgServiceUIUpdateReceiver,
                 statusIntentFilter);
+
     }
 
     @Override

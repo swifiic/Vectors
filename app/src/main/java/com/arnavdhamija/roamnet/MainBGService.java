@@ -112,7 +112,7 @@ public class MainBGService extends IntentService {
     }
 
     public boolean enableBackgroundService() {
-        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
+        return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
     }
 
 
@@ -471,6 +471,11 @@ public class MainBGService extends IntentService {
     private void processDackJSON(String parseMsg) {
         Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
         customLogger("Received ack with timestamp as " + incomingAck.getAckTime());
+        long currentTimeInSec = System.currentTimeMillis() / 1000;
+        if(incomingAck.getAckTime() > currentTimeInSec + 3600){
+            customLogger("Discarding the ack with possibly skewed clock");
+            return;
+        }
         Acknowledgement currentAck = mFileModule.getAckFromFile();
         if (currentAck == null) {
             mFileModule.writeAckToJSONFile(incomingAck);
@@ -513,6 +518,7 @@ public class MainBGService extends IntentService {
 
     private void processRequestFiles2(String filelist) {
         Acknowledgement dack = mFileModule.getAckFromFile();
+
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         if (filelist.length() > 1) {
@@ -551,7 +557,7 @@ public class MainBGService extends IntentService {
                         vd.addTraversedNode(deviceId);
                         //send JSON and file
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
-                                dack.getAckedFilenames().contains(vd.getFileName()))) {
+                                (dack != null && dack.getAckedFilenames().contains(vd.getFileName())))) {
                             customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
                             mFileModule.deleteFile(vd.getFileName());
                             requestedVideoDatas.remove(i);
@@ -688,7 +694,7 @@ public class MainBGService extends IntentService {
                 @Override
                 public void onPayloadReceived(String endpointId, Payload payload) {
                     if (payload.getType() == Payload.Type.BYTES) {
-                        String payloadMsg;
+                        String payloadMsg = "";
                         try {//                            customLogger("Getting a byte pyalod " + payloadMsg);
                             payloadMsg = new String(payload.asBytes(), "UTF-8");
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
@@ -700,6 +706,9 @@ public class MainBGService extends IntentService {
                             handleBytePayload(type, parsedMsg);
                         } catch (Exception e) {
                             customLogger("Byte payload fail " + e.getMessage());
+                            if(payloadMsg != null){
+                                customLogger("Attempted to decode #" + payloadMsg + "#");
+                            }
                             e.printStackTrace();
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
