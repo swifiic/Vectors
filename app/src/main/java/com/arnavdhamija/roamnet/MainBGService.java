@@ -79,6 +79,7 @@ public class MainBGService extends IntentService {
     private ConnectionLog mConnectionLog;
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
+    private boolean enableNotifications = false;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -584,7 +585,9 @@ public class MainBGService extends IntentService {
         for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
             Payload filePayload = outgoingPayloadReferences.get(i);
             NotificationCompat.Builder notification = buildNotification(filePayload, false);
-            mNotificationManager.notify((int) filePayload.getId(), notification.build());
+            if (enableNotifications) {
+                mNotificationManager.notify((int) filePayload.getId(), notification.build());
+            }
             outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
 
             VideoData vd = requestedVideoDatas.get(i);
@@ -695,7 +698,9 @@ public class MainBGService extends IntentService {
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file payload " + payload.asFile().getSize());
                         NotificationCompat.Builder notification = buildNotification(payload, true /*isIncoming*/);
-                        mNotificationManager.notify((int) payload.getId(), notification.build());
+                        if (enableNotifications) {
+                            mNotificationManager.notify((int) payload.getId(), notification.build());
+                        }
                         incomingPayloads.put(Long.valueOf(payload.getId()), notification);
                         incomingPayloadReferences.put(payload.getId(), payload);
                     } else {
@@ -766,7 +771,9 @@ public class MainBGService extends IntentService {
                                     .setContentText("Transfer failed");
                             break;
                     }
-                    mNotificationManager.notify((int) payloadId, notification.build());
+                    if (enableNotifications) {
+                        mNotificationManager.notify((int) payloadId, notification.build());
+                    }
                 }
             };
 }
