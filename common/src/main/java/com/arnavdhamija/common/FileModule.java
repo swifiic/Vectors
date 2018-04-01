@@ -219,6 +219,7 @@ public class FileModule {
     }
 
     long lastScanTime = 0;
+    int lastScanCount=0;
 
     public String getQuickFileList() {
         File[] files = dataDirectory.listFiles();
@@ -295,7 +296,8 @@ public class FileModule {
                     lastScanTime = SystemClock.uptimeMillis();
                     String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
                     MediaScannerConnection.scanFile(mContext, pathArr , null, scanCompletedListener);
-                    Log.d(TAG, "scanning for count=" + pathArr.length);
+                    lastScanCount = pathArr.length;
+                    Log.d(TAG, "scanning for count=" + lastScanCount);
                 }
             }
         }
@@ -307,7 +309,12 @@ public class FileModule {
                 @Override
                 public void onScanCompleted(String path, Uri uri) {
                     if (uri != null) {
-                        Log.d(TAG, "Scan Completed for: " + path + " with uri " + uri.toString());
+                        lastScanCount--;
+                        if(lastScanCount > 10)
+                            if(lastScanCount % 20 !=0)
+                                return;
+                        Log.d(TAG, "Scan Completed for: " + path + " with uri " +
+                                uri.toString() + "remaining count=" + lastScanCount);
                     }
                 }
             };
