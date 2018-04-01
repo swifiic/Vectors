@@ -230,8 +230,8 @@ public class FileModule {
             ArrayList<String> jsonList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
+                pathList.add(files[i].getAbsolutePath()); // adds all JSON as a media file
                 if (!fileName.contains(".json")) {
-                    pathList.add(files[i].getAbsolutePath());
                     if (i > 0) {
                         csvFileList.append(",");
                     }
