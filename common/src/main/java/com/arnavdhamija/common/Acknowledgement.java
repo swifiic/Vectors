@@ -55,6 +55,16 @@ public class Acknowledgement {
         return filenames;
     }
 
+    public boolean containsFilename(String filename) {
+        for (String s : getAckedFilenames()) {
+            if (s.compareTo(filename) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public void setItems(List<AckItem> items) {
         this.items = items;
     }
