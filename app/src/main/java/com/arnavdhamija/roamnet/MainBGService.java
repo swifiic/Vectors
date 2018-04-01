@@ -5,11 +5,14 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -44,6 +47,7 @@ import com.google.android.gms.tasks.Task;
 import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
+import java.net.NetworkInterface;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +73,7 @@ public class MainBGService extends IntentService {
     private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = false;
+    private boolean extraChecks = true;
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
@@ -78,6 +82,10 @@ public class MainBGService extends IntentService {
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
+
+//    private final NotificationCompat.Builder sendingNotification;
+//    private final NotificationCompat.Builder receivingNotification;
+
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
     private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
@@ -158,9 +166,15 @@ public class MainBGService extends IntentService {
         String dataString = workIntent.getDataString();
     }
 
+    private String createDeviceId() {
+        String androidId = Settings.Secure.getString(RoamNetApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        deviceId = "Roamnet_" + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length()-4); //get last 4 chars
+        return deviceId;
+    }
+
     void initBGService() {
         mFileModule = new FileModule(this);
-        deviceId = "Roamnet_" + DeviceName.getDeviceName();
+        deviceId = createDeviceId();
         initConnectionAndNotif();
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
@@ -525,7 +539,7 @@ public class MainBGService extends IntentService {
                         vd.setTickets(vd.getTickets());// / 2); // SNW strategy allows us to only send half
                         vd.addTraversedNode(deviceId);
                         //send JSON and file
-                        if (extraChecks && (//vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
+                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 dack.getAckedFilenames().contains(vd.getFileName()))) {
                             customLogger("File has been acked/too old to send" + vd.getFileName());
                             requestedVideoDatas.remove(i);
