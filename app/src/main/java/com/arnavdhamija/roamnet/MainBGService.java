@@ -349,7 +349,7 @@ public class MainBGService extends IntentService {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 customLogger("fail conn t_t" + e.getMessage());
-                                restartNearby();
+//                                restartNearby();
                             }
                         });
                     }
@@ -419,11 +419,17 @@ public class MainBGService extends IntentService {
                             customLogger("Rejection Fail");
                             restartNearby();
                             break;
+                        case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
+                            customLogger("Already connected");
+                            break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
                             customLogger("Unknown STATUS_ERROR");
                             // The connection broke before it was able to be accepted.
                             restartNearby();
                             break;
+                        default:
+                            customLogger("Different error");
+                            restartNearby();
                     }
                 }
 
@@ -500,7 +506,6 @@ public class MainBGService extends IntentService {
 
 
     private void addPayloadFilename(String payloadFilenameMessage) {
-        customLogger("adding2fnamerefs" + payloadFilenameMessage);
         int colonIndex = payloadFilenameMessage.indexOf(':');
         String payloadId = payloadFilenameMessage.substring(0, colonIndex);
         String filename = payloadFilenameMessage.substring(colonIndex + 1);
@@ -589,11 +594,9 @@ public class MainBGService extends IntentService {
         try {
             String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
             Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
-            customLogger("Task started");
             while (!task.isComplete()) {
                 SystemClock.sleep(50);
             }
-            customLogger("Task complete");
         } catch (Exception e) {
             customLogger("FileMap transfer fail" + e.getMessage());
         }
@@ -611,20 +614,16 @@ public class MainBGService extends IntentService {
                 String videoDataJSON = vd.toString();
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
                 Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-                customLogger("json started");
                 while (!task.isComplete()) {
                     SystemClock.sleep(50);
                 }
-                customLogger("json complete");
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }
 
             Task task = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
-            customLogger("file started");
             while (!task.isComplete()) {
                 SystemClock.sleep(50);
             }
-            customLogger("file complete");
         }
     }
 
@@ -734,7 +733,6 @@ public class MainBGService extends IntentService {
                             incomingPayloads.remove(payloadId);
                         }
                         if (incomingPayloads.isEmpty()) {
-                            customLogger("Done receiving payloads, can terminate");
                             checkConnectionTermination();
                             // done receiving
                         }
@@ -745,13 +743,13 @@ public class MainBGService extends IntentService {
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
-                                customLogger("Updated the outbound JSON");
+                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
-                                customLogger("Working with non-vid file, sent"); //very strange stuff
+                                customLogger("Working with non-vid file, sent");
                             }
                         }
                         if (outgoingPayloads.isEmpty()) {
-                            customLogger("No more outbound payloads (For now)");
+//                            customLogger("No more outbound payloads (For now)");
                             checkConnectionTermination();
                             // done sending
                         }
