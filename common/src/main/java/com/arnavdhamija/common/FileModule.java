@@ -260,39 +260,15 @@ public class FileModule {
     /** overriding this function for MTP as well **/
     public void exportFiles() {
         File[] files = dataDirectory.listFiles();
-        String fileName;
-        StringBuilder csvFileList = new StringBuilder();
         if (files != null) {
             ArrayList<String> pathList = new ArrayList<String>();
-            ArrayList<String> jsonList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
-                fileName = files[i].getName();
                 pathList.add(files[i].getAbsolutePath()); // adds all JSON as a media file
-                if (!fileName.contains(".json")) {
-                    if (i > 0) {
-                        csvFileList.append(",");
-                    }
-                    csvFileList.append(fileName);
-                } else {
-                    jsonList.add(fileName);
-                }
-            }
-            String retVal = csvFileList.toString();
-            if(!jsonList.isEmpty()){
-                for(int i =0; i < jsonList.size(); i++){
-                    String fName = jsonList.get(i);
-                    if(fName.contains(Constants.ACK_FILENAME))
-                        continue;
-                    String name = fName.substring(0, fName.indexOf(".json"));
-                    if(retVal.contains(name))
-                        continue;
-                    File file = new File(dataDirectory, fName);
-                    file.delete();
-                    Log.w(TAG, "Deleted unmatched JSON file with name " + fName);
-                }
             }
             if(!pathList.isEmpty()){
-                if(lastScanTime + 10000 < SystemClock.uptimeMillis()){
+                int delayBetweenScans = 10 * pathList.size() ; // 10 msec per file
+                if(delayBetweenScans < 10000) delayBetweenScans = 10000;
+                if(lastScanTime + delayBetweenScans < SystemClock.uptimeMillis()){
                     lastScanTime = SystemClock.uptimeMillis();
                     String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
                     MediaScannerConnection.scanFile(mContext, pathArr , null, scanCompletedListener);
