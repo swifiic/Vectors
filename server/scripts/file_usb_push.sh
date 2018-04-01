@@ -75,8 +75,9 @@ done
 
 # now remove old files for layer 1 before pushing
 echo "Removing older files for layer 1 and higher temporal ids"
-find . -name "vide*L1*" -mmin +120 -exec rm {} \; -print
-find . -name "vide*L0T[23456]*" -mmin +240 -exec rm {} \; -print
+find ${src_fldr} -name "vide*L1*" -mmin +30 -exec rm {} \; -print
+find ${src_fldr} -name "vide*L0T[23456]*" -mmin +60 -exec rm {} \; -print
+find ${src_fldr} -name "vide*md" -mmin +240 -exec rm {} \; -print
 
 mv ${src_fldr}/video_* "${DestDir}"
 ls ${src_fldr}/video_* "${DestDir}"
