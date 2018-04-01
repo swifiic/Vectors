@@ -541,7 +541,8 @@ public class MainBGService extends IntentService {
                         //send JSON and file
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 dack.getAckedFilenames().contains(vd.getFileName()))) {
-                            customLogger("File has been acked/too old to send" + vd.getFileName());
+                            customLogger("File has been acked/too old to send - Deleting" + vd.getFileName());
+                            mFileModule.deleteFile(vd.getFileName());
                             requestedVideoDatas.remove(i);
                         }
                     }
