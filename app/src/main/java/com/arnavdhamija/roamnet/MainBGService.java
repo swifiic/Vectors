@@ -420,7 +420,8 @@ public class MainBGService extends IntentService {
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
-                            customLogger("Already connected");
+                            customLogger("Other EP might be connected connected");
+                            restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
                             customLogger("Unknown STATUS_ERROR");
