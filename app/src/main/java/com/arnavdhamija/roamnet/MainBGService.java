@@ -124,6 +124,7 @@ public class MainBGService extends IntentService {
                 nearbyEnabled = true;
             }
         } else {
+            customLogger("Stopping RoamnetBG");
             stopAllEndpoints();
             stopDiscovery();
             stopAdvertising();

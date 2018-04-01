@@ -6,9 +6,11 @@
 package com.arnavdhamija.roamnet;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -28,6 +30,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.arnavdhamija.common.Constants;
 import com.arnavdhamija.common.VideoData;
@@ -158,7 +161,23 @@ public class MainActivity extends AppCompatActivity {
                 if (!getRoamnetStatus()) {
                     enableRoamnet();
                 } else {
-                    disableRoamnet();
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("")
+                            .setMessage("Are you sure you want to disable Roamnet?")
+                            .setIcon(android.R.drawable.stat_sys_warning)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    customLogger("Disabling Roamnet");
+                                    disableRoamnet();
+                                    setUIText();
+                                }})
+                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    customLogger("No action taken.");
+                                }
+                            }).show();
+                    customLogger("exited");
                 }
                 setUIText();
             }
