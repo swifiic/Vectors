@@ -397,8 +397,8 @@ public class MainBGService extends IntentService {
                             Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             sendConnectionStatus("Connected To: " + endpointName);
                             connectedEndpoint = endpointId;
-                            sendFileList();
                             sendDestinationAck();
+                            sendFileList();
                             mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             mConnectionClient.stopAdvertising();
                             mConnectionClient.stopDiscovery();
@@ -514,7 +514,7 @@ public class MainBGService extends IntentService {
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
                     } else {
-                        customLogger("JSON not decodeable for " + requestedVideoDatas.get(i));
+                        customLogger("JSON not decodeable for " + requestedFiles.get(i));
                     }
                 }
             }

@@ -306,7 +306,9 @@ public class FileModule {
 
                 @Override
                 public void onScanCompleted(String path, Uri uri) {
-                    Log.d(TAG, "Scan Completed for: " + path + " with uri " + uri.toString());
+                    if (uri != null) {
+                        Log.d(TAG, "Scan Completed for: " + path + " with uri " + uri.toString());
+                    }
                 }
             };
 
