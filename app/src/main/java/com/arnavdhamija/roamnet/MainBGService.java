@@ -483,7 +483,8 @@ public class MainBGService extends IntentService {
 
         String localFileList = mFileModule.getQuickFileList();
 
-        for (AckItem item : mFileModule.getAckFromFile().getItems()) {
+        List<AckItem> itemsInAck = mFileModule.getAckFromFile().getItems();
+        for (AckItem item : itemsInAck) {
             String fileToCheck = item.getFilename();
             if (localFileList.contains(fileToCheck)) {
                 mFileModule.deleteFile(fileToCheck);
