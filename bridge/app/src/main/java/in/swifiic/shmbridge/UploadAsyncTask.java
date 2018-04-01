@@ -53,7 +53,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
             String folderName = Environment.getExternalStorageDirectory().toString() + "/RoamnetData";
             FileModule fileMod = new FileModule(this.act);
 
-            String fileList = fileMod.getFileList();
+            String fileList = fileMod.getQuickFileList();
 
             String checkUrl = f_urlIn[0] + "/FilterUploadList.php?FilesList="+fileList;
             act.customLogger(TAG + "Filter Upload checking:" + checkUrl);
@@ -215,7 +215,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
 
                 for (AckItem item : fileMod.getAckFromFile().getItems()) {
                     String fileName = item.getFilename();
-                    if (fileMod.getFileList().contains(fileName)) {
+                    if (fileMod.getQuickFileList().contains(fileName)) {
                         fileMod.deleteFile(fileName);
                     }
                 }

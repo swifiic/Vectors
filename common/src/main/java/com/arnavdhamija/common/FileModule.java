@@ -136,7 +136,7 @@ public class FileModule {
         String fileName;
         String tokens[];
         File[] files = dataDirectory.listFiles();
-        Log.d(TAG, "FILELIST" + getFileList());
+        Log.d(TAG, "FILELIST" + getQuickFileList());
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 fileName = files[i].getName();
@@ -220,8 +220,44 @@ public class FileModule {
 
     long lastScanTime = 0;
 
+    public String getQuickFileList() {
+        File[] files = dataDirectory.listFiles();
+        String fileName;
+        StringBuilder csvFileList = new StringBuilder();
+        if (files != null) {
+            ArrayList<String> jsonList = new ArrayList<String>();
+            for (int i = 0; i < files.length; i++) {
+                fileName = files[i].getName();
+                if (!fileName.contains(".json")) {
+                    if (i > 0) {
+                        csvFileList.append(",");
+                    }
+                    csvFileList.append(fileName);
+                } else {
+                    jsonList.add(fileName);
+                }
+            }
+            String retVal = csvFileList.toString();
+            if (!jsonList.isEmpty()) {
+                for (int i = 0; i < jsonList.size(); i++) {
+                    String fName = jsonList.get(i);
+                    if (fName.contains(Constants.ACK_FILENAME))
+                        continue;
+                    String name = fName.substring(0, fName.indexOf(".json"));
+                    if (retVal.contains(name))
+                        continue;
+                    File file = new File(dataDirectory, fName);
+                    file.delete();
+                    Log.w(TAG, "Deleted unmatched JSON file with name " + fName);
+                }
+            }
+            return retVal;
+        }
+        return null;
+    }
+
     /** overriding this function for MTP as well **/
-    public String getFileList() {
+    public void exportFiles() {
         File[] files = dataDirectory.listFiles();
         String fileName;
         StringBuilder csvFileList = new StringBuilder();
@@ -255,16 +291,13 @@ public class FileModule {
                 }
             }
             if(!pathList.isEmpty()){
-                if(lastScanTime + 2000 < SystemClock.uptimeMillis()){
+                if(lastScanTime + 10000 < SystemClock.uptimeMillis()){
                     lastScanTime = SystemClock.uptimeMillis();
                     String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
                     MediaScannerConnection.scanFile(mContext, pathArr , null, scanCompletedListener);
                     Log.d(TAG, "scanning for count=" + pathArr.length);
                 }
             }
-            return retVal;
-        } else {
-            return "";
         }
     }
 

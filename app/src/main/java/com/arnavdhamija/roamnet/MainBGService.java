@@ -232,6 +232,7 @@ public class MainBGService extends IntentService {
 
     private void restartNearby() {
         customLogger("RestartingNearby");
+        mFileModule.exportFiles();
         incomingPayloads.clear();
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
@@ -433,7 +434,7 @@ public class MainBGService extends IntentService {
             };
 
     private void sendFileList() {
-        String fileList = mFileModule.getFileList();
+        String fileList = mFileModule.getQuickFileList();
         fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
@@ -472,7 +473,7 @@ public class MainBGService extends IntentService {
             }
         }
 
-        String localFileList = mFileModule.getFileList();
+        String localFileList = mFileModule.getQuickFileList();
 
         for (AckItem item : mFileModule.getAckFromFile().getItems()) {
             String fileToCheck = item.getFilename();
@@ -615,7 +616,7 @@ public class MainBGService extends IntentService {
     private void processFileList(String filelist) {
         customLogger("Rcvd a filelist of " + filelist);
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
-        List<String> currFilenames = Arrays.asList(mFileModule.getFileList().split(","));
+        List<String> currFilenames = Arrays.asList(mFileModule.getQuickFileList().split(","));
         List<String> requestFilenames = new ArrayList<>();
 
         // This code is very bad, but it's the only way not to get a NPE :P

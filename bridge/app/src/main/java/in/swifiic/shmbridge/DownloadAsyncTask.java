@@ -55,7 +55,7 @@ public class DownloadAsyncTask extends AsyncTask<String, Integer, Integer> {
 
             FileModule fileMod = new FileModule(this.act);
 
-            String fileList = fileMod.getFileList();
+            String fileList = fileMod.getQuickFileList();
             String downloadUrl = f_urlIn[0] + "/GetFile.php?FilesList=" + fileList;
 
             act.customLogger(TAG + "Downloading from:" + downloadUrl);

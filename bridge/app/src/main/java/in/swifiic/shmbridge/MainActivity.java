@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
     /*** START SOAK ***/
     void soakDataAndCreateAck(){
         FileModule fM = new FileModule(BridgeApp.getContext());
-        String[] fileNames = fM.getFileList().split(",");
+        String[] fileNames = fM.getQuickFileList().split(",");
         List <String> ackedFiles = new ArrayList<String>();
         String folderBase =  Environment.getExternalStorageDirectory().toString() + Constants.FLDR;
         String folderOther = Environment.getExternalStorageDirectory().toString() + Constants.FLDR + "_Other";
