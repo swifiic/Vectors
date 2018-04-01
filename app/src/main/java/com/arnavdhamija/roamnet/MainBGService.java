@@ -394,7 +394,7 @@ public class MainBGService extends IntentService {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
                             Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
-                            sendConnectionStatus("Connected To: " + endpointId);
+                            sendConnectionStatus("Connected To: " + endpointName);
                             connectedEndpoint = endpointId;
                             sendFileList();
                             sendDestinationAck();
