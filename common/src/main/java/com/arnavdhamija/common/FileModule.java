@@ -84,10 +84,6 @@ public class FileModule {
         return null;
     }
 
-    public String getFileName(String filename) {
-        return getFileName(Uri.fromFile(new File(dataDirectory, filename)));
-    }
-
     public String getFileName(Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
