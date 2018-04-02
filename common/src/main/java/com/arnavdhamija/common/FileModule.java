@@ -27,13 +27,8 @@ import java.util.Scanner;
 public class FileModule {
     private File dataDirectory;
     private File logDirectory;
-    private File fileLedger;
-    private File destinationStrategy;
     private final String TAG = "FileModule";
-    private final int ticketCount = 128;
-    private DatabaseModule mDatabaseModule;
     private Context mContext;
-    boolean useDb = false;
 
     public FileModule(Context context) {
         dataDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FLDR);
