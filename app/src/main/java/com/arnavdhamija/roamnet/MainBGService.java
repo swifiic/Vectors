@@ -230,7 +230,7 @@ public class MainBGService extends IntentService {
 
     private void restartNearby() {
         customLogger("RestartingNearby");
-        mFileModule.exportFiles();
+//        mFileModule.exportFiles(); // probably not required for now?
         incomingPayloads.clear();
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
@@ -269,8 +269,6 @@ public class MainBGService extends IntentService {
         return notification;
     }
 
-
-    /******** wrappers for mConnection based on UI trigger *******/
     private void startAdvertising() {
         mConnectionClient.startAdvertising(
                 deviceId,

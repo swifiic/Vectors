@@ -6,29 +6,20 @@ package com.arnavdhamija.common;
 
 public final class Constants {
     // Roamnet Constants
-    public static final String VIDEO_PREFIX =
-            "video";
-    public static final String BROADCAST_ACTION =
-            "swifiic.roamnet.android.BROADCAST";
-    public static final String LOG_STATUS =
-            "swifiic.roamnet.android.LOG_STATUS";
-    public static final String CONNECTION_STATUS =
-            "swifiic.roamnet.android.CONNECTION_STATUS";
-    public static final String STATUS_ENABLE_BG_SERVICE =
-            "connectionStatus";
-//    public static final String ACK_FILENAME =
-//            "ack";
-    public static final String APP_KEY =
-            "RoamnetSharedPrefs";
-    public static final String DEVICE_ID =
-            "DEVICE_ID";
-    public static final String ANDROID_BOOT_COMPLETION =
-            "android.intent.action.BOOT_COMPLETED";
+    public static final String VIDEO_PREFIX = "video";
+    public static final String BROADCAST_ACTION = "swifiic.roamnet.android.BROADCAST";
+    public static final String LOG_STATUS = "swifiic.roamnet.android.LOG_STATUS";
+    public static final String CONNECTION_STATUS = "swifiic.roamnet.android.CONNECTION_STATUS";
+    public static final String STATUS_ENABLE_BG_SERVICE = "connectionStatus";
+    public static final String APP_KEY = "RoamnetSharedPrefs";
+    public static final String DEVICE_ID = "DEVICE_ID";
+    public static final String ANDROID_BOOT_COMPLETION = "android.intent.action.BOOT_COMPLETED";
     public static final int MIN_CONNECTION_GAP_TIME = 60;
     public static final int LOG_BUFFER_SIZE = 200; // number of lines buffered before writing to file
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
     public static final int DELAY_TIME_MS = 10;
+
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
     public static final String FLDR =  "/RoamnetData";
