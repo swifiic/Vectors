@@ -6,7 +6,7 @@ public class MessageScheme {
         return originalMsg.substring(4);
     }
 
-    public static enum MessageType {
+    public enum MessageType {
         WELCOME, JSON, EXTRA, FILELIST, REQUESTFILES, ERROR, DESTINATIONACK, GOODBYE, FILEMAP;
     }
 
@@ -34,7 +34,6 @@ public class MessageScheme {
 
     public static MessageType getMessageType(String originalMsg) {
         String msgHeader = originalMsg.substring(0, 4);
-//        customLogger("Header " + msgHeader);
         if (msgHeader.compareTo("WLCM") == 0) {
             return MessageType.WELCOME;
         } else if (msgHeader.compareTo("JSON") == 0) {

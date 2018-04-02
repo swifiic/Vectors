@@ -1,8 +1,3 @@
-//2do: test bgservice
-//remove notifs
-//nodes traversed
-//del on ACK
-
 package com.arnavdhamija.roamnet;
 
 import android.Manifest;
@@ -49,13 +44,6 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences.Editor mEditor;
 
     final String TAG = "RoamnetUI";
-
-    private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
-    private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
-    private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
-    private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-    private List<VideoData> incomingTransfersMetadata = new ArrayList<>();
-    private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
 
     void getPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
@@ -214,26 +202,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void rebindBGService() {
-        Intent intent = new Intent(this, MainBGService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-//    @Override
-//    protected void onStart() {
-//        customLogger("StartTime");
-//        super.onStart();
-//        rebindBGService();
-//    }
-//
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        unbindService(mConnection);
-//        customLogger("Stop!");
-//        mBound = false;
-//    }
-
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
@@ -264,21 +232,6 @@ public class MainActivity extends AppCompatActivity {
         logView.append(timeStamp+' '+msg+"\n");
     }
 
-
-    private NotificationCompat.Builder buildNotification(Payload payload, boolean isIncoming) {
-        long size = payload.asFile().getSize();
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(this).setContentTitle((isIncoming ? "Receiving..." : "Sending...") + size).setSmallIcon(R.drawable.common_full_open_on_phone);
-        boolean indeterminate = false;
-        if (size == -1) {
-            // This is a stream payload, so we don't know the size ahead of time.
-            size = 100;
-            indeterminate = true;
-        }
-        notification.setProgress((int)size, 0, indeterminate);
-        return notification;
-    }
-
-
     /*** Get the updates from Service to the UI ***/
     private class BGServiceUIUpdateReceiver extends BroadcastReceiver
     {
@@ -296,31 +249,3 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
-
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-////        rebindBGService();
-//     }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        setButtonText();
-//        // populate content from the Service
-//        if(mBound){
-//            customLogger("Started at: " + mService.getStartTime());
-//            TextView deviceIdView = findViewById(R.id.deviceIdView);
-//            deviceIdView.setText("Device ID: " + mService.getDeviceId());
-//
-//            TextView availableFilesView = findViewById(R.id.availableFilesView);
-//            availableFilesView.setText("Available Files Count: " + mService.getFileListSize());
-//
-//
-//        } else {
-//            Toast.makeText(getApplicationContext(), "Resume Without Bound", Toast.LENGTH_LONG).show();
-////            rebindBGService();
-//        }
-//    }
-
-
