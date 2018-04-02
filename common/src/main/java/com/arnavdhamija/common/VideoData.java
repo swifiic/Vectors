@@ -6,6 +6,9 @@ import android.util.Pair;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by nic on 23/2/18.
@@ -117,6 +120,22 @@ public class VideoData {
     public static VideoData fromString(String jsonEncodedVideoData) {
         Gson gson = new Gson();
         return gson.fromJson(jsonEncodedVideoData, VideoData.class);
+    }
+
+    public static void sortListCopyCount(List<VideoData> videoDataList) {
+        Collections.sort(videoDataList, new Comparator<VideoData>() {
+            @Override
+            public int compare(VideoData o1, VideoData o2) {
+                if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
+                    return -1;
+                } else {
+                    if(o1.getTickets() == o2.getTickets())
+                        return 0;
+                    else
+                        return 1;
+                }
+            }
+        });
     }
 
     @Override

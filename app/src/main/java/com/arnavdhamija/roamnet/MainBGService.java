@@ -523,7 +523,7 @@ public class MainBGService extends IntentService {
         }
     }
 
-    private void processRequestFiles2(String filelist) {
+    private void    processRequestFiles2(String filelist) {
         Acknowledgement dack = mFileModule.getAckFromFile();
 
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
@@ -542,19 +542,7 @@ public class MainBGService extends IntentService {
             }
 
             // sort by tickets and send in that order
-            Collections.sort(requestedVideoDatas, new Comparator<VideoData>() {
-                @Override
-                public int compare(VideoData o1, VideoData o2) {
-                    if (o1.getTickets() > o2.getTickets()) { // test if this is descending order
-                        return -1;
-                    } else {
-                        if(o1.getTickets() == o2.getTickets())
-                            return 0;
-                        else
-                            return 1;
-                    }
-                }
-            });
+            VideoData.sortListCopyCount(requestedVideoDatas);
 
             for (int i = 0; i < requestedVideoDatas.size(); i++) {
                 VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
