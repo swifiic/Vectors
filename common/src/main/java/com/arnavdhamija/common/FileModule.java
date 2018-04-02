@@ -49,8 +49,6 @@ public class FileModule {
             }
         }
         mContext = context;
-//        mDatabaseModule = new DatabaseModule(mContext, null, null, 1);
-//        buildFileLedger();
     }
 
     public static String convertListToCSV(List<String> files) {
@@ -84,86 +82,6 @@ public class FileModule {
         return null;
     }
 
-    public String getFileName(Uri uri) {
-        String result = null;
-        if (uri.getScheme().equals("content")) {
-            Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                }
-            } finally {
-                cursor.close();
-            }
-        }
-        if (result == null) {
-            result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
-            }
-        }
-        return result;
-    }
-
-    private int getRequiredTickets(int svcLayer) {
-        switch (svcLayer) {
-            case 0:
-                return 32;
-            case 1:
-                return 16;
-            case 2:
-                return 12;
-            case 3:
-                return 10;
-            case 4:
-                return 8;
-            case 5:
-                return 7;
-            case 6:
-                return 6;
-            default:
-                return -1;
-        }
-    }
-
-// filename structure video0_1_0_10_100
-    public void buildFileLedger() {
-        String fileName;
-        String tokens[];
-        File[] files = dataDirectory.listFiles();
-        Log.d(TAG, "FILELIST" + getQuickFileList());
-        if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                fileName = files[i].getName();
-//                test if this ignores which already have a JSON
-                if (!fileName.contains(".json") && fileName.startsWith(Constants.VIDEO_PREFIX) && Arrays.asList(files).indexOf(fileName + ".json") == -1) {
-                    tokens = fileName.split("_");
-                    VideoData videoData = new VideoData();
-                    if (tokens.length == 5) {
-                        videoData.setFileName(fileName);
-                        videoData.setSequenceNumber(Integer.parseInt(tokens[1]));
-                        videoData.setTemporalLayer(Integer.parseInt(tokens[2]));
-                        videoData.setMaxTemporalLayer(Integer.parseInt(tokens[3]));
-                        videoData.setCreationTime(Integer.parseInt(tokens[4]));
-                        videoData.setTickets(getRequiredTickets(videoData.getTemporalLayer()));
-                    } else {
-                        Log.d(TAG, "Invalid file");
-                    }
-                    if (useDb) {
-//                        mDatabaseModule.addVideoData(videoData);
-                    } else {
-                        File file = new File(dataDirectory, videoData.getFileName() + ".json");
-                        if (!file.exists()) {
-                            writeToJSONFile(videoData);
-                        }
-                    }
-                    Log.d(TAG, fileName);
-                }
-            }
-        }
-    }
-
     private void writeFile(File file, String data) {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), 1024*16);
@@ -176,7 +94,6 @@ public class FileModule {
 
     public void writeLogBuffer(StringBuilder logBuffer) {
         if (logBuffer != null) {
-            Log.d(TAG, "Writing log buffer");
             String data = logBuffer.toString();
             Long currTime = System.currentTimeMillis()/1000;
             writeFile(new File(logDirectory,
@@ -214,9 +131,6 @@ public class FileModule {
         }
     }
 
-    long lastScanTime = 0;
-    int lastScanCount=0;
-
     public String getQuickFileList() {
         File[] files = dataDirectory.listFiles();
         String fileName;
@@ -252,44 +166,6 @@ public class FileModule {
         }
         return null;
     }
-
-    /** overriding this function for MTP as well **/
-    public void exportFiles() {
-        File[] files = dataDirectory.listFiles();
-        if (files != null) {
-            ArrayList<String> pathList = new ArrayList<String>();
-            for (int i = 0; i < files.length; i++) {
-                pathList.add(files[i].getAbsolutePath()); // adds all JSON as a media file
-            }
-            if(!pathList.isEmpty()){
-                int delayBetweenScans = 10 * pathList.size() ; // 10 msec per file
-                if(delayBetweenScans < 10000) delayBetweenScans = 10000;
-                if(lastScanTime + delayBetweenScans < SystemClock.uptimeMillis()){
-                    lastScanTime = SystemClock.uptimeMillis();
-                    String [] pathArr = (String[])pathList.toArray(new String[pathList.size()]);
-                    MediaScannerConnection.scanFile(mContext, pathArr , null, scanCompletedListener);
-                    lastScanCount = pathArr.length;
-                    Log.d(TAG, "scanning for count=" + lastScanCount);
-                }
-            }
-        }
-    }
-
-    MediaScannerConnection.OnScanCompletedListener scanCompletedListener =
-            new MediaScannerConnection.OnScanCompletedListener()  {
-
-                @Override
-                public void onScanCompleted(String path, Uri uri) {
-                    if (uri != null) {
-                        lastScanCount--;
-                        if(lastScanCount > 10)
-                            if(lastScanCount % 20 !=0)
-                                return;
-                        Log.d(TAG, "Scan Completed for: " + path + " with uri " +
-                                uri.toString() + "remaining count=" + lastScanCount);
-                    }
-                }
-            };
 
     public boolean deleteFile(String filename) {
         boolean jsonDeleted = true;
