@@ -1,11 +1,9 @@
-package com.arnavdhamija.common;
+package in.swifiic.common;
 
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
-import java.time.Clock;
 import java.util.ArrayList;
 
 public class ConnectionLog {

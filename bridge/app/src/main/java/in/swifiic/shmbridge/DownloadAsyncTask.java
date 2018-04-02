@@ -3,8 +3,8 @@ package in.swifiic.shmbridge;
 import android.os.AsyncTask;
 import android.os.Environment;
 
-import com.arnavdhamija.common.FileModule;
-import com.arnavdhamija.common.VideoData;
+import in.swifiic.common.FileModule;
+import in.swifiic.common.VideoData;
 import com.google.gson.Gson;
 
 import java.io.BufferedInputStream;

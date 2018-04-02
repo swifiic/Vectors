@@ -1,4 +1,4 @@
-package com.arnavdhamija.common;
+package in.swifiic.common;
 
 /**
  * Created by abhishek on 27/3/18.

@@ -1,4 +1,4 @@
-package com.arnavdhamija.roamnet;
+package in.swifiic.vectors;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -19,12 +19,13 @@ import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
 
-import com.arnavdhamija.common.AckItem;
-import com.arnavdhamija.common.Acknowledgement;
-import com.arnavdhamija.common.ConnectionLog;
-import com.arnavdhamija.common.Constants;
-import com.arnavdhamija.common.FileModule;
-import com.arnavdhamija.common.VideoData;
+import in.swifiic.common.AckItem;
+import in.swifiic.common.Acknowledgement;
+import in.swifiic.common.ConnectionLog;
+import in.swifiic.common.Constants;
+import in.swifiic.common.FileModule;
+import in.swifiic.common.VideoData;
+
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -48,12 +49,10 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import static com.arnavdhamija.roamnet.MessageScheme.getMessageType;
+import static in.swifiic.vectors.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /***

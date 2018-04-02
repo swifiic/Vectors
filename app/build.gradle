@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "com.arnavdhamija.roamnet"
+        applicationId "in.swifiic.vectors"
         minSdkVersion 23
         targetSdkVersion 26
         versionCode 1

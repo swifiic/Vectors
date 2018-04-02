@@ -25,11 +25,11 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.arnavdhamija.common.AckItem;
-import com.arnavdhamija.common.Acknowledgement;
-import com.arnavdhamija.common.Constants;
-import com.arnavdhamija.common.FileModule;
-import com.arnavdhamija.common.VideoData;
+import in.swifiic.common.AckItem;
+import in.swifiic.common.Acknowledgement;
+import in.swifiic.common.Constants;
+import in.swifiic.common.FileModule;
+import in.swifiic.common.VideoData;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

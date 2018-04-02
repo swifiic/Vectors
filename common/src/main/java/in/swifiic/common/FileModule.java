@@ -1,13 +1,9 @@
-package com.arnavdhamija.common;
+package in.swifiic.common;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.os.SystemClock;
-import android.provider.OpenableColumns;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -16,7 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 

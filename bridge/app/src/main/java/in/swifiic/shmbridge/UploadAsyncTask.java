@@ -3,9 +3,9 @@ package in.swifiic.shmbridge;
 import android.os.AsyncTask;
 import android.os.Environment;
 
-import com.arnavdhamija.common.AckItem;
-import com.arnavdhamija.common.Acknowledgement;
-import com.arnavdhamija.common.FileModule;
+import in.swifiic.common.AckItem;
+import in.swifiic.common.Acknowledgement;
+import in.swifiic.common.FileModule;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;

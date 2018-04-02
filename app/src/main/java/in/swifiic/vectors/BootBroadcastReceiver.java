@@ -1,11 +1,11 @@
-package com.arnavdhamija.roamnet;
+package in.swifiic.vectors;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.arnavdhamija.common.Constants;
+import in.swifiic.common.Constants;
 
 public class BootBroadcastReceiver extends BroadcastReceiver {
 
