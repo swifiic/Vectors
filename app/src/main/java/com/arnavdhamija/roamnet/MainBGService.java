@@ -77,12 +77,11 @@ public class MainBGService extends IntentService {
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
     private boolean enableNotifications = false;
+    private String endpointName;
+    private boolean goodbyeReceived = false;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
-
-//    private final NotificationCompat.Builder sendingNotification;
-//    private final NotificationCompat.Builder receivingNotification;
 
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
@@ -97,7 +96,6 @@ public class MainBGService extends IntentService {
     final String TAG = "RoamnetSvc";
 
     String deviceId = "NOT-INITIALIZED";
-
 
     public class LocalBinder extends Binder {
         MainBGService getService() {
@@ -167,7 +165,7 @@ public class MainBGService extends IntentService {
 
     private String createDeviceId() {
         String androidId = Settings.Secure.getString(RoamNetApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-        deviceId = "Roamnet_" + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length()-4); //get last 4 chars
+        deviceId = "Roamnet_" + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length() - 4); //get last 4 chars
         return deviceId;
     }
 
@@ -230,7 +228,6 @@ public class MainBGService extends IntentService {
 
     private void restartNearby() {
         customLogger("RestartingNearby");
-//        mFileModule.exportFiles(); // probably not required for now?
         incomingPayloads.clear();
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
@@ -255,18 +252,6 @@ public class MainBGService extends IntentService {
         goodbyeSent = false;
         startAdvertising();
         startDiscovery();
-    }
-
-    private NotificationCompat.Builder buildNotification(Payload payload, boolean isIncoming) {
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(this).setContentTitle(isIncoming ? "Receiving..." : "Sending...").setSmallIcon(R.drawable.common_full_open_on_phone);
-        long size = payload.asFile().getSize();
-        boolean indeterminate = false;
-        if (size == -1) {
-            size = 100;
-            indeterminate = true;
-        }
-        notification.setProgress((int)size, 0, indeterminate);
-        return notification;
     }
 
     private void startAdvertising() {
@@ -361,25 +346,6 @@ public class MainBGService extends IntentService {
                 }
             };
 
-    String endpointName;
-
-    private boolean recentlyVisited(String endpointName) {
-        for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
-            if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
-                if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) > System.currentTimeMillis()/1000) {
-                    customLogger("Seen this guy before! Discarding conn");
-                    return true;
-                } else {
-                    customLogger("Hello old friend" + recentlyVisitedNodes.get(i) + " curr at " + System.currentTimeMillis()/1000);
-                    recentlyVisitedNodes.remove(i);
-                    return false;
-                }
-            }
-        }
-        customLogger("New guy");
-        return false;
-    }
-
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
                 @Override
@@ -442,239 +408,6 @@ public class MainBGService extends IntentService {
                     restartNearby();
                 }
             };
-
-    private void sendFileList() {
-        String fileList = mFileModule.getQuickFileList();
-        fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
-    }
-
-    private void sendGoodbye() {
-        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
-        customLogger("Sent my goodbyes");
-        goodbyeSent = true;
-        checkConnectionTermination();
-    }
-
-    private void sendDestinationAck() {
-        Acknowledgement ack = mFileModule.getAckFromFile();
-        if (ack != null) {
-            String dackMsg = ack.toString();
-            dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, dackMsg);
-            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
-            customLogger("Sending ack with timestamp as " + ack.getAckTime());
-        } else  {
-            customLogger("Skipping ack as it decodes to null ");
-        }
-    }
-
-    private void processJSONMsg(String parseMsg) {
-        VideoData vd = VideoData.fromString(parseMsg);
-        mFileModule.writeToJSONFile(vd);
-    }
-
-    private void processDackJSON(String parseMsg) {
-        Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
-        customLogger("Received ack with timestamp as " + incomingAck.getAckTime());
-        long currentTimeInSec = System.currentTimeMillis() / 1000;
-        if(incomingAck.getAckTime() > currentTimeInSec + 3600){
-            customLogger("Discarding the ack with possibly skewed clock");
-            return;
-        }
-        Acknowledgement currentAck = mFileModule.getAckFromFile();
-        if (currentAck == null) {
-            mFileModule.writeAckToJSONFile(incomingAck);
-        } else {
-            if (incomingAck.getAckTime() > currentAck.getAckTime()) {
-                customLogger("Newer ack " + currentAck.getAckTime() + "  received, writing back to file");
-                mFileModule.writeAckToJSONFile(incomingAck);
-            }
-        }
-
-        String localFileList = mFileModule.getQuickFileList();
-
-        List<AckItem> itemsInAck = mFileModule.getAckFromFile().getItems();
-        for (AckItem item : itemsInAck) {
-            String fileToCheck = item.getFilename();
-            if (localFileList.contains(fileToCheck)) {
-                mFileModule.deleteFile(fileToCheck);
-                customLogger("Deleting on Ack "+ fileToCheck);
-            }
-        }
-    }
-
-
-    private void addPayloadFilename(String payloadFilenameMessage) {
-        int colonIndex = payloadFilenameMessage.indexOf(':');
-        String payloadId = payloadFilenameMessage.substring(0, colonIndex);
-        String filename = payloadFilenameMessage.substring(colonIndex + 1);
-        filePayloadFilenames.put(Long.valueOf(payloadId), filename);
-    }
-
-    private void processFileMap(String fileMap) {
-        if (fileMap.length() > 1) {
-            List<String> payloadFilenames = Arrays.asList(fileMap.split(","));
-            for (String s : payloadFilenames) {
-                addPayloadFilename(s);
-            }
-        }
-    }
-
-    private void    processRequestFiles2(String filelist) {
-        Acknowledgement dack = mFileModule.getAckFromFile();
-
-        List<String> requestedFiles = Arrays.asList(filelist.split(","));
-        List<VideoData> requestedVideoDatas = new ArrayList<>();
-        if (filelist.length() > 1) {
-            for (int i = 0; i < requestedFiles.size(); i++) {
-                if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
-                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
-                    VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
-                    if (vd != null) {
-                        requestedVideoDatas.add(vd);
-                    } else {
-                        customLogger("JSON not decodeable for " + requestedFiles.get(i));
-                    }
-                }
-            }
-
-            // sort by tickets and send in that order
-            VideoData.sortListCopyCount(requestedVideoDatas);
-
-            for (int i = 0; i < requestedVideoDatas.size(); i++) {
-                VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
-                if (vd != null) {
-                    if (vd.getTickets() > 1) {
-                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
-                        vd.addTraversedNode(deviceId);
-                        //send JSON and file
-                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
-                                (dack != null && dack.containsFilename(vd.getFileName())))) {
-                            customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
-                            mFileModule.deleteFile(vd.getFileName());
-                            requestedVideoDatas.remove(i);
-                        }
-                    }
-                }
-            }
-            sendVideoDataList(requestedVideoDatas);
-        }
-        sendGoodbye();
-    }
-
-    private void sendVideoDataList(List<VideoData> requestedVideoDatas) {
-        StringBuilder fileMap = new StringBuilder();
-        List<Payload> outgoingPayloadReferences = new ArrayList<>();
-
-        for (VideoData vd : requestedVideoDatas) {
-            ParcelFileDescriptor pfd = mFileModule.getPfd(vd.getFileName());
-            if (pfd == null) {
-                customLogger("File missing");
-                continue;
-            }
-            Payload filePayload = Payload.fromFile(pfd);
-            fileMap.append(filePayload.getId() + ":" + vd.getFileName() + ",");
-            outgoingPayloadReferences.add(filePayload); // release when done
-        }
-        customLogger("FileMap" + fileMap.toString());
-        // first send filemap
-        try {
-            String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
-            Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
-            while (!task.isComplete()) {
-                SystemClock.sleep(Constants.DELAY_TIME_MS);
-            }
-        } catch (Exception e) {
-            customLogger("FileMap transfer fail" + e.getMessage());
-        }
-
-        for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
-            Payload filePayload = outgoingPayloadReferences.get(i);
-            NotificationCompat.Builder notification = buildNotification(filePayload, false);
-            if (enableNotifications) {
-                mNotificationManager.notify((int) filePayload.getId(), notification.build());
-            }
-            outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
-
-            VideoData vd = requestedVideoDatas.get(i);
-            if (vd != null) {
-                String videoDataJSON = vd.toString();
-                videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-                Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-                while (!task.isComplete()) {
-                    SystemClock.sleep(Constants.DELAY_TIME_MS);
-                }
-                outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
-            }
-
-            Task task = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
-            while (!task.isComplete()) {
-                SystemClock.sleep(Constants.DELAY_TIME_MS );
-            }
-        }
-    }
-
-    private void processFileList(String filelist) {
-        customLogger("Rcvd a filelist of " + filelist);
-        List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
-        List<String> currFilenames = Arrays.asList(mFileModule.getQuickFileList().split(","));
-        List<String> requestFilenames = new ArrayList<>();
-
-        // This code is very bad, but it's the only way not to get a NPE :P
-        for (int i = 0; i < rcvdFilenames.size(); i++) {
-            boolean includeFile = true;
-            for (int j = 0; j < currFilenames.size(); j++) {
-                if (rcvdFilenames.get(i).compareTo(currFilenames.get(j)) == 0) {
-                    includeFile = false;
-                }
-            }
-            if (includeFile) {
-                requestFilenames.add(rcvdFilenames.get(i));
-            }
-        }
-        String requestFilesCSV = FileModule.convertListToCSV(requestFilenames);
-        customLogger("We want the files of " + requestFilesCSV);
-        // we send the files we want to get here
-        requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
-        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
-    }
-
-    private boolean goodbyeReceived = false;
-
-    private void checkConnectionTermination() {
-//        return;
-        if (outgoingPayloads.isEmpty() && filePayloadFilenames.isEmpty() && goodbyeSent && goodbyeReceived) {
-            customLogger("Time to terminate connection!");
-            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
-            sendConnectionStatus("Disconnect Initiated");
-            restartNearby();
-        }
-    }
-
-    private void handleBytePayload(MessageScheme.MessageType type, String parsedMsg) {
-        if (type == MessageScheme.MessageType.WELCOME) {
-            customLogger("Got a welcome MSG! " + parsedMsg);
-        } else if (type == MessageScheme.MessageType.JSON) {
-            processJSONMsg(parsedMsg);
-        } else if (type == MessageScheme.MessageType.EXTRA) {
-            customLogger("Got an extra msg!" + parsedMsg);
-        } else if (type == MessageScheme.MessageType.FILELIST) {
-            processFileList(parsedMsg);
-        } else if (type == MessageScheme.MessageType.FILEMAP) {
-            processFileMap(parsedMsg);
-        } else if (type == MessageScheme.MessageType.REQUESTFILES) {
-            processRequestFiles2(parsedMsg);
-        } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
-            processDackJSON(parsedMsg);
-        } else if (type == MessageScheme.MessageType.GOODBYE) {
-            customLogger("Goodbye recv");
-            goodbyeReceived = true;
-            checkConnectionTermination();
-        } else {
-            customLogger(" got diff type " + parsedMsg);
-        }
-    }
 
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
@@ -778,4 +511,265 @@ public class MainBGService extends IntentService {
                     }
                 }
             };
+
+
+    private void handleBytePayload(MessageScheme.MessageType type, String parsedMsg) {
+        if (type == MessageScheme.MessageType.WELCOME) {
+            customLogger("Got a welcome MSG! " + parsedMsg);
+        } else if (type == MessageScheme.MessageType.JSON) {
+            processJSONMsg(parsedMsg);
+        } else if (type == MessageScheme.MessageType.EXTRA) {
+            customLogger("Got an extra msg!" + parsedMsg);
+        } else if (type == MessageScheme.MessageType.FILELIST) {
+            processFileList(parsedMsg);
+        } else if (type == MessageScheme.MessageType.FILEMAP) {
+            processFileMap(parsedMsg);
+        } else if (type == MessageScheme.MessageType.REQUESTFILES) {
+            processRequestFiles2(parsedMsg);
+        } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
+            processDackJSON(parsedMsg);
+        } else if (type == MessageScheme.MessageType.GOODBYE) {
+            customLogger("Goodbye recv");
+            goodbyeReceived = true;
+            checkConnectionTermination();
+        } else {
+            customLogger(" got diff type " + parsedMsg);
+        }
+    }
+
+    private void sendFileList() {
+        String fileList = mFileModule.getQuickFileList();
+        fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
+    }
+
+    private void sendGoodbye() {
+        String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
+        customLogger("Sent my goodbyes");
+        goodbyeSent = true;
+        checkConnectionTermination();
+    }
+
+    private void sendDestinationAck() {
+        Acknowledgement ack = mFileModule.getAckFromFile();
+        if (ack != null) {
+            String dackMsg = ack.toString();
+            dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, dackMsg);
+            mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
+            customLogger("Sending ack with timestamp as " + ack.getAckTime());
+        } else  {
+            customLogger("Skipping ack as it decodes to null ");
+        }
+    }
+
+
+    private void sendVideoDataList(List<VideoData> requestedVideoDatas) {
+        StringBuilder fileMap = new StringBuilder();
+        List<Payload> outgoingPayloadReferences = new ArrayList<>();
+
+        for (VideoData vd : requestedVideoDatas) {
+            ParcelFileDescriptor pfd = mFileModule.getPfd(vd.getFileName());
+            if (pfd == null) {
+                customLogger("File missing");
+                continue;
+            }
+            Payload filePayload = Payload.fromFile(pfd);
+            fileMap.append(filePayload.getId() + ":" + vd.getFileName() + ",");
+            outgoingPayloadReferences.add(filePayload); // release when done
+        }
+        customLogger("FileMap" + fileMap.toString());
+        // first send filemap
+        try {
+            String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
+            Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
+            while (!task.isComplete()) {
+                SystemClock.sleep(Constants.DELAY_TIME_MS);
+            }
+        } catch (Exception e) {
+            customLogger("FileMap transfer fail" + e.getMessage());
+        }
+
+        for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
+            Payload filePayload = outgoingPayloadReferences.get(i);
+            NotificationCompat.Builder notification = buildNotification(filePayload, false);
+            if (enableNotifications) {
+                mNotificationManager.notify((int) filePayload.getId(), notification.build());
+            }
+            outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+
+            VideoData vd = requestedVideoDatas.get(i);
+            if (vd != null) {
+                String videoDataJSON = vd.toString();
+                videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
+                Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+                while (!task.isComplete()) {
+                    SystemClock.sleep(Constants.DELAY_TIME_MS);
+                }
+                outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
+            }
+
+            Task task = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
+            while (!task.isComplete()) {
+                SystemClock.sleep(Constants.DELAY_TIME_MS );
+            }
+        }
+    }
+
+    private void processFileList(String filelist) {
+        customLogger("Rcvd a filelist of " + filelist);
+        List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
+        List<String> currFilenames = Arrays.asList(mFileModule.getQuickFileList().split(","));
+        List<String> requestFilenames = new ArrayList<>();
+
+        // This code is very bad, but it's the only way not to get a NPE :P
+        for (int i = 0; i < rcvdFilenames.size(); i++) {
+            boolean includeFile = true;
+            for (int j = 0; j < currFilenames.size(); j++) {
+                if (rcvdFilenames.get(i).compareTo(currFilenames.get(j)) == 0) {
+                    includeFile = false;
+                }
+            }
+            if (includeFile) {
+                requestFilenames.add(rcvdFilenames.get(i));
+            }
+        }
+        String requestFilesCSV = FileModule.convertListToCSV(requestFilenames);
+        customLogger("We want the files of " + requestFilesCSV);
+        // we send the files we want to get here
+        requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
+        mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
+    }
+
+
+    private void processJSONMsg(String parseMsg) {
+        VideoData vd = VideoData.fromString(parseMsg);
+        mFileModule.writeToJSONFile(vd);
+    }
+
+    private void processDackJSON(String parseMsg) {
+        Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
+        customLogger("Received ack with timestamp as " + incomingAck.getAckTime());
+        long currentTimeInSec = System.currentTimeMillis() / 1000;
+        if(incomingAck.getAckTime() > currentTimeInSec + 3600){
+            customLogger("Discarding the ack with possibly skewed clock");
+            return;
+        }
+        Acknowledgement currentAck = mFileModule.getAckFromFile();
+        if (currentAck == null) {
+            mFileModule.writeAckToJSONFile(incomingAck);
+        } else {
+            if (incomingAck.getAckTime() > currentAck.getAckTime()) {
+                customLogger("Newer ack " + currentAck.getAckTime() + "  received, writing back to file");
+                mFileModule.writeAckToJSONFile(incomingAck);
+            }
+        }
+
+        String localFileList = mFileModule.getQuickFileList();
+
+        List<AckItem> itemsInAck = mFileModule.getAckFromFile().getItems();
+        for (AckItem item : itemsInAck) {
+            String fileToCheck = item.getFilename();
+            if (localFileList.contains(fileToCheck)) {
+                mFileModule.deleteFile(fileToCheck);
+                customLogger("Deleting on Ack "+ fileToCheck);
+            }
+        }
+    }
+
+    private void processFileMap(String fileMap) {
+        if (fileMap.length() > 1) {
+            List<String> payloadFilenames = Arrays.asList(fileMap.split(","));
+            for (String s : payloadFilenames) {
+                addPayloadFilename(s);
+            }
+        }
+    }
+
+    private void processRequestFiles2(String filelist) {
+        Acknowledgement dack = mFileModule.getAckFromFile();
+
+        List<String> requestedFiles = Arrays.asList(filelist.split(","));
+        List<VideoData> requestedVideoDatas = new ArrayList<>();
+        if (filelist.length() > 1) {
+            for (int i = 0; i < requestedFiles.size(); i++) {
+                if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
+                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
+                    VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
+                    if (vd != null) {
+                        requestedVideoDatas.add(vd);
+                    } else {
+                        customLogger("JSON not decodeable for " + requestedFiles.get(i));
+                    }
+                }
+            }
+
+            // sort by tickets and send in that order
+            VideoData.sortListCopyCount(requestedVideoDatas);
+
+            for (int i = 0; i < requestedVideoDatas.size(); i++) {
+                VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
+                if (vd != null) {
+                    if (vd.getTickets() > 1) {
+                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
+                        vd.addTraversedNode(deviceId);
+                        //send JSON and file
+                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
+                                (dack != null && dack.containsFilename(vd.getFileName())))) {
+                            customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
+                            mFileModule.deleteFile(vd.getFileName());
+                            requestedVideoDatas.remove(i);
+                        }
+                    }
+                }
+            }
+            sendVideoDataList(requestedVideoDatas);
+        }
+        sendGoodbye();
+    }
+
+    private boolean recentlyVisited(String endpointName) {
+        for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
+            if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
+                if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) > System.currentTimeMillis()/1000) {
+                    customLogger("Seen this guy before! Discarding conn");
+                    return true;
+                } else {
+                    customLogger("Hello old friend" + recentlyVisitedNodes.get(i) + " curr at " + System.currentTimeMillis()/1000);
+                    recentlyVisitedNodes.remove(i);
+                    return false;
+                }
+            }
+        }
+        customLogger("New guy");
+        return false;
+    }
+
+    private void addPayloadFilename(String payloadFilenameMessage) {
+        int colonIndex = payloadFilenameMessage.indexOf(':');
+        String payloadId = payloadFilenameMessage.substring(0, colonIndex);
+        String filename = payloadFilenameMessage.substring(colonIndex + 1);
+        filePayloadFilenames.put(Long.valueOf(payloadId), filename);
+    }
+
+    private void checkConnectionTermination() {
+        if (outgoingPayloads.isEmpty() && filePayloadFilenames.isEmpty() && goodbyeSent && goodbyeReceived) {
+            customLogger("Time to terminate connection!");
+            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
+            sendConnectionStatus("Disconnect Initiated");
+            restartNearby();
+        }
+    }
+
+    private NotificationCompat.Builder buildNotification(Payload payload, boolean isIncoming) {
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(this).setContentTitle(isIncoming ? "Receiving..." : "Sending...").setSmallIcon(R.drawable.common_full_open_on_phone);
+        long size = payload.asFile().getSize();
+        boolean indeterminate = false;
+        if (size == -1) {
+            size = 100;
+            indeterminate = true;
+        }
+        notification.setProgress((int)size, 0, indeterminate);
+        return notification;
+    }
 }

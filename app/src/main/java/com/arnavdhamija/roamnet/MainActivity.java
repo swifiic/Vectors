@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
-        customLogger("OncReate");
+        customLogger("On Create");
         mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {
             getPermissions();
