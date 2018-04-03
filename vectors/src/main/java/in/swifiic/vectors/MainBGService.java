@@ -92,7 +92,7 @@ public class MainBGService extends IntentService {
 
     static MainBGService ourRef = null;
 
-    final String TAG = "RoamnetSvc";
+    final String TAG = "VectorsSvc";
 
     String deviceId = "NOT-INITIALIZED";
 
@@ -121,7 +121,7 @@ public class MainBGService extends IntentService {
                 nearbyEnabled = true;
             }
         } else {
-            customLogger("Stopping RoamnetBG");
+            customLogger("Stopping VectorsBG");
             stopAllEndpoints();
             stopDiscovery();
             stopAdvertising();
@@ -144,10 +144,10 @@ public class MainBGService extends IntentService {
 
     void initConnectionAndNotif(){
         if(null == mConnectionClient) {
-            mConnectionClient = Nearby.getConnectionsClient(RoamNetApp.getContext());
+            mConnectionClient = Nearby.getConnectionsClient(VectorsApp.getContext());
         }
         if(null == mNotificationManager) {
-            mNotificationManager = (NotificationManager) RoamNetApp.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager = (NotificationManager) VectorsApp.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         }
     }
 
@@ -163,7 +163,7 @@ public class MainBGService extends IntentService {
     }
 
     private String createDeviceId() {
-        String androidId = Settings.Secure.getString(RoamNetApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        String androidId = Settings.Secure.getString(VectorsApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
         deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length() - 4); //get last 4 chars
         return deviceId;
     }
@@ -173,7 +173,7 @@ public class MainBGService extends IntentService {
         deviceId = createDeviceId();
         initConnectionAndNotif();
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         mEditor = mSharedPreferences.edit();
         mEditor.putString(Constants.DEVICE_ID, deviceId);
         mEditor.apply();
@@ -202,7 +202,7 @@ public class MainBGService extends IntentService {
 
         // Broadcasts the Intent to receivers in this app.
         Intent localIntent =  new Intent(Constants.BROADCAST_ACTION).putExtra(Constants.LOG_STATUS, logMsg);
-        LocalBroadcastManager.getInstance(RoamNetApp.getContext()).sendBroadcast(localIntent);
+        LocalBroadcastManager.getInstance(VectorsApp.getContext()).sendBroadcast(localIntent);
     }
 
     private void addToLogBuffer(String logMsg) {
@@ -353,7 +353,7 @@ public class MainBGService extends IntentService {
                     // Automatically accept the connection on both sides.
                     customLogger("Pending connection From " + endpointName);
                     endpointName = connectionInfo.getEndpointName();
-                    if (endpointName.startsWith("Roamnet") && !recentlyVisited(endpointName)) {
+                    if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
                     }

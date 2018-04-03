@@ -15,10 +15,10 @@
         tools:layout_editor_absoluteY="20dp">
 
         <Button
-            android:id="@+id/toggleRoamnet"
+            android:id="@+id/toggleVectors"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start Roamnet" />
+            android:text="Start Vectors" />
 
         <TextView
             android:id="@+id/deviceIdView"

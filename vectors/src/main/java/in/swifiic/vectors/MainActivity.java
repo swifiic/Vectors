@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
 
-    final String TAG = "RoamnetUI";
+    final String TAG = "VectorsUI";
 
     void getPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
@@ -98,29 +98,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void enableRoamnet() {
+    private void enableVectors() {
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
         mEditor.apply();
         mService.setBackgroundService();
     }
 
-    private void disableRoamnet() {
+    private void disableVectors() {
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
         mEditor.apply();
         mService.setBackgroundService();
     }
 
-    private boolean getRoamnetStatus() {
+    private boolean getVectorsStatus() {
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
     }
 
     private void setUIText() {
-        final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
+        final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
         if (mBound) {
-            if (getRoamnetStatus()) {
-                toggleRoamnetButton.setText("Stop Roamnet");
+            if (getVectorsStatus()) {
+                toggleVectorsButton.setText("Stop Vectors");
             } else {
-                toggleRoamnetButton.setText("Start Roamnet");
+                toggleVectorsButton.setText("Start Vectors");
             }
             customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
@@ -137,21 +137,21 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
         bindService(intent, mConnection, BIND_AUTO_CREATE);
 
-        final Button toggleRoamnetButton = findViewById(R.id.toggleRoamnet);
-        toggleRoamnetButton.setOnClickListener(new View.OnClickListener() {
+        final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
+        toggleVectorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!getRoamnetStatus()) {
-                    enableRoamnet();
+                if (!getVectorsStatus()) {
+                    enableVectors();
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
                             .setTitle("")
-                            .setMessage("Are you sure you want to disable Roamnet?")
+                            .setMessage("Are you sure you want to disable Vectors?")
                             .setIcon(android.R.drawable.stat_sys_warning)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
-                                    customLogger("Disabling Roamnet");
-                                    disableRoamnet();
+                                    customLogger("Disabling Vectors");
+                                    disableVectors();
                                     setUIText();
                                 }})
                             .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(RoamNetApp.getContext());
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         customLogger("On Create");
         mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {

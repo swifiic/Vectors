@@ -8,10 +8,10 @@ import android.content.Context;
  */
 
 
-public class RoamNetApp extends Application {
-    private static RoamNetApp instance;
+public class VectorsApp extends Application {
+    private static VectorsApp instance;
 
-    public static RoamNetApp getInstance() {
+    public static VectorsApp getInstance() {
         return instance;
     }
 

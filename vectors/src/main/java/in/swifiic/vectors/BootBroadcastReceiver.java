@@ -14,7 +14,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
         // BOOT_COMPLETED” start Service
         if (intent.getAction().equals(Constants.ANDROID_BOOT_COMPLETION)) {
             //Service
-            Log.d("bCast", "RoamnetBGService started");
+            Log.d("bCast", "VectorsBGService started");
             Intent serviceIntent = new Intent(context, MainBGService.class);
             context.startService(serviceIntent);
         }

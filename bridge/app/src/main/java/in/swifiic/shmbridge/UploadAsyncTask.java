@@ -50,7 +50,7 @@ public class UploadAsyncTask extends AsyncTask<String, Integer, Integer> {
         int count;
         int offset = 0;
         try {
-            String folderName = Environment.getExternalStorageDirectory().toString() + "/RoamnetData";
+            String folderName = Environment.getExternalStorageDirectory().toString() + "/VectorsData";
             FileModule fileMod = new FileModule(this.act);
 
             String fileList = fileMod.getQuickFileList();
