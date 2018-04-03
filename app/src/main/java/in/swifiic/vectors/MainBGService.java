@@ -164,7 +164,7 @@ public class MainBGService extends IntentService {
 
     private String createDeviceId() {
         String androidId = Settings.Secure.getString(RoamNetApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-        deviceId = "Roamnet_" + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length() - 4); //get last 4 chars
+        deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length() - 4); //get last 4 chars
         return deviceId;
     }
 
@@ -316,7 +316,7 @@ public class MainBGService extends IntentService {
                 public void onEndpointFound(
                         String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
-                    if (discoveredEndpointInfo.getEndpointName().startsWith("Roamnet") && !recentlyVisited(endpointName) && connectedEndpoint == null) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
                         customLogger("Stopping before requesting Conn");

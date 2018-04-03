@@ -19,6 +19,7 @@ public final class Constants {
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
     public static final int DELAY_TIME_MS = 10;
+    public static final String ENDPOINT_PREFIX = "Roamnet_";
 
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
