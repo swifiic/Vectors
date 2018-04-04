@@ -1,18 +1,20 @@
 #!/bin/bash
 # this file is called by cron wrapper called after layer files are generated
 
+set -o xtrace
 video_file_counter=$1
 layerLast=`cat /var/spool/vector/lastLayer`
 counterPart=`printf "%05d" ${video_file_counter}`
 
-DestDir=`ls -d /run/user/*/gvfs/mtp*/*/RoamnetData | head -n 1`
+#DestDir=`ls -d /run/user/*/gvfs/mtp*/*/RoamnetData | head -n 1`
+DestDir=`/usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0" | head -n 1`
 
 # if bridge device is not connected we generate only one layer
 # but do not change the layerLast value
 if [ -z "${DestDir}" ]; then
    layerLast=1;
 else
-    # find if the base layer of last two layer has been delivered 
+    # find if the base layer of last two layer has been delivered
     #  if last layer delivered and  layerLast < 10, increment it
     #  if last two layers not delivered and layerLast > 1, decrement it
     if [ -z ${layerLast} ]; then
@@ -20,7 +22,8 @@ else
     else
         indexLast=$(( ${video_file_counter} - 1 ));
         indexSecondLast=$(( ${indexLast} - 1 ));
-        ls -l "${DestDir}" > /tmp/tempList
+        /usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0" > /tmp/tempList
+        #ls -l "${DestDir}" > /tmp/tempList
         count=`grep -c -E "${indexLast}_L0T1.out\$|${indexSecondLast}_L0T1.out\$" /tmp/tempList`
         if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "10" ] ; then
             layerLast=$(( ${layerLast} + 1 ));
@@ -28,7 +31,7 @@ else
         if [ "${count}" -eq "2" ] && [  "${layerLast}" -gt "1" ] ; then
             layerLast=$(( ${layerLast} - 1 ));
         fi
-        
+
     fi
     echo ${layerLast} > /var/spool/vector/lastLayer
 fi
@@ -43,20 +46,18 @@ src_fldr="/var/www/video_out"
 fileNames=( ".md" "_L0T1.out" "_L0T2.out" "_L0T3.out" "_L0T4.out" "_L0T5.out" "_L1T1.out" "_L1T2.out" "_L1T3.out" "_L1T4.out" "_L1T5.out" )
 copyCounts=( 32   32         16          16           8           8              6           6         6           6           6         )
 
-
-
 echo "Listing the target folder - may have errors or can be blank"
-ls -l "${DestDir}"
-
+#ls -l "${DestDir}"
+/usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0"
 
 timeAtOrigin=`date +%s`
-for (( k=0 ; k <= ${layerLast} ; k++ )) ; do 
+for (( k=0 ; k <= ${layerLast} ; k++ )) ; do
     baseFileEnd=${fileNames[k]}
     count=${copyCounts[k]}
-    
+
     layer=$(( ($k-1) / 5 ));
     tempId=$(( ($k-1) % 5 ));
-    if [ "$k" -eq "0" ] ; then 
+    if [ "$k" -eq "0" ] ; then
         layer=0;
         tempId=0;
     fi
@@ -79,8 +80,7 @@ find ${src_fldr} -name "vide*L1*" -mmin +30 -exec rm {} \; -print
 find ${src_fldr} -name "vide*L0T[23456]*" -mmin +60 -exec rm {} \; -print
 find ${src_fldr} -name "vide*md" -mmin +240 -exec rm {} \; -print
 
-mv ${src_fldr}/video_* "${DestDir}"
-ls ${src_fldr}/video_* "${DestDir}"
+/usr/bin/adb push ${src_fldr}/ /sdcard/VectorsData/
 
 # date >> /var/spool/vector/run_out
 

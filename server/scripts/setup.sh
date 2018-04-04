@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "$#" -ne 3 ]; then
-    echo "Usage: setup.sh /path/to/gitrepo /path/to/SHMFolder /path/to/JSVMFolder"
+    echo "Usage: setup.sh /path/to/vectors/server /path/to/SHMFolder /path/to/JSVMFolder"
     exit
 fi
 

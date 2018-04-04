@@ -7,12 +7,10 @@ Initial Setup
 Download JSVM and SHM code and unzip to appropriate folder
 
 First runs setup_asroot.sh with sudo ; e.g.
-aperture@aperture:~/roamnet/server/scripts$ sudo bash setup_asroot.sh /home/aperture/roamnet/server
+aperture@aperture:~/vectors/server/scripts$ sudo bash setup_asroot.sh /home/aperture/vectors/server
 
 Then run setup.sh ; e.g.
-aperture@aperture:~/roamnet/server/scripts$ bash setup.sh /home/aperture/roamnet/server /home/aperture/Downloads/SHM-12.4 /home/aperture/Downloads/JSVM-master/JSVM
-
-
+aperture@aperture:~/vectors/server/scripts$ bash setup.sh /home/aperture/vectors/server /home/aperture/Downloads/SHM-12.4 /home/aperture/Downloads/JSVM-master/JSVM
 
 ************************
 Running cron job.

@@ -2,21 +2,21 @@
 
 # this file by cron wrapper called after layer files are generated
 
-tgtdir=`/usr/bin/adb shell "ls /sdcard/RoamnetData/ ; exit 0" | head -n 1`
+tgtdir=`/usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0" | head -n 1`
 
 dest_fldr="/var/www/video_in"
 import="${dest_fldr}/import"
 newLine="
 "
 timeAtDest=`date +%s`
-/usr/bin/adb pull /sdcard/RoamnetData/ ${import}
+/usr/bin/adb pull /sdcard/VectorsData/ ${import}
 rcvdFiles=`ls ${import}/video*| grep -v json`
 outStr=""
 for file in ${rcvdFiles} ; do
    mv ${file} ${dest_fldr}
    mv ${file}.json ${dest_fldr}
    fileName=$(basename ${file})
-   /usr/bin/adb shell "rm /sdcard/RoamnetData/${fileName}*; exit 0"
+   /usr/bin/adb shell "rm /sdcard/VectorsData/${fileName}*; exit 0"
    echo "Moved ${file}"
    if [ -f "${dest_fldr}/${fileName}" ] ; then
        outStr=$"${outStr}${newLine}{\"filename\":\"${fileName}\",\"time\":${timeAtDest}},"
@@ -30,7 +30,7 @@ subStr=`head -n 500 ${dest_fldr}/rcvdlist.txt | grep -v "^$"`
 str2=${subStr::-1} ; # remove the last ","
 
 echo "{\"ack_time\":${timeAtDest},"items":[${str2}]}" > /tmp/ack_video_00.json
-/usr/bin/adb push /tmp/ack_video_00.json /sdcard/RoamnetData/
+/usr/bin/adb push /tmp/ack_video_00.json /sdcard/VectorsData/
 if [ "$?" -ne "0" ]; then
       echo "Push of ack may have failed"
 fi

@@ -1,13 +1,13 @@
 #!/bin/sh
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: setup.sh /path/to/gitrepo"
+    echo "Usage: setup.sh /path/to/vectors/server"
     exit
 fi
 
-if [ "$EUID" -ne 0 ]
-  then echo "Please run as root"
-  exit
+if [ $EUID -ne 0 ]; then
+    echo "Please run as root"
+    exit
 fi
 
 pToRepo=$1
