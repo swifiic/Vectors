@@ -6,6 +6,9 @@ import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class AboutActivity extends AppCompatActivity {
 
     @Override
@@ -15,9 +18,15 @@ public class AboutActivity extends AppCompatActivity {
         TextView swifiicLinkText = findViewById(R.id.swifiicLink);
         TextView fiveHunderedYearsText = findViewById(R.id.fiveHundredLink);
         TextView googleFormText = findViewById(R.id.googleFormLink);
+        TextView buildVersionText = findViewById(R.id.buildVersion);
         swifiicLinkText.setMovementMethod(LinkMovementMethod.getInstance());
         fiveHunderedYearsText.setMovementMethod(LinkMovementMethod.getInstance());
         googleFormText.setMovementMethod(LinkMovementMethod.getInstance());
+
+        Date buildDate = new Date(BuildConfig.TIMESTAMP);
+        String timeStamp = new SimpleDateFormat("yyyyMMdd").format(buildDate);
+        String hostname = BuildConfig.BUILD_HOST;
+        buildVersionText.setText("Build Version: " + timeStamp + " on " + hostname);
         //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
 //        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }

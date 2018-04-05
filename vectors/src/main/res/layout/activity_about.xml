@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="16dp"
+                android:padding="8dp"
                 android:text="@string/vectors"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -76,6 +76,16 @@
                 android:padding="8dp"
                 android:text="@string/five_hundred_years_link"
                 android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/buildVersion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="16dp"
+                android:text="@string/vectors"
+                android:textSize="16sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </ScrollView>
 

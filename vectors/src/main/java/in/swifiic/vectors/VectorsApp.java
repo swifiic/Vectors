@@ -15,7 +15,7 @@ public class VectorsApp extends Application {
         return instance;
     }
 
-    public static Context getContext(){
+    public static Context getContext() {
         return instance;
         // or return instance.getApplicationContext();
     }
