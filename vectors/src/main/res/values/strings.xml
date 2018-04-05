@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Vectors</string>
+    <string name="vectors">Vectors</string>
+    <string name="vectors_full_form">Video Communication through Opportunistic Relays and Scalable Video Coding</string>
+    <string name="about_vectors">Vectors is a research project at BITS Pilani Hyderabad Campus for studying the effectiveness of using Delay Tolerant Networks for sending user-generated Video. This project uses the Scalable Video Codec (SVC) for encoding video data. \n\nAndroid phones are used as nodes for relaying the data. The app is optimises the sending of data over Bluetooth to minimise power consumption and storage space used.</string>
+    <string name="five_hundred_years_link"><a href="http://500py.blogspot.in/2014/06/welcome.html?m=1">500 Person Years of Rural Employment Initiative</a></string>
+    <string name="swifiic_link"><a href="http://www.swifiic.in/">SWiFiIC Project Link</a></string>
 </resources>
