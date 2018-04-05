@@ -99,9 +99,16 @@ public class MainBGService extends IntentService {
     public class LocalBinder extends Binder {
         MainBGService getService() {
             // Return this instance of LocalService so clients can call public methods
-            ourRef = MainBGService.this;
+            if (null == ourRef) {
+                ourRef = MainBGService.this;
+                customLogger("Setting reference from BGService");
+            }
             return MainBGService.this;
         }
+    }
+
+    static public MainBGService getBGServiceRef() {
+        return ourRef;
     }
 
     public String getDeviceId() {
@@ -182,6 +189,7 @@ public class MainBGService extends IntentService {
         } else {
             customLogger( "Bgservicedisable");
         }
+        setBackgroundService();
     }
 
     public MainBGService() {
@@ -255,7 +263,7 @@ public class MainBGService extends IntentService {
     private void startAdvertising() {
         mConnectionClient.startAdvertising(
                 deviceId,
-                getPackageName(),
+                VectorsApp.getContext().getPackageName(),
                 mConnectionLifecycleCallback,
                 new AdvertisingOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(
@@ -276,7 +284,7 @@ public class MainBGService extends IntentService {
 
     private void startDiscovery() {
         mConnectionClient.startDiscovery(
-                getPackageName(),
+                VectorsApp.getContext().getPackageName(),
                 mEndpointDiscoveryCallback,
                 new DiscoveryOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(

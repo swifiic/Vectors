@@ -1,6 +1,7 @@
 package in.swifiic.vectors;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -138,9 +139,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void startApp() {
         Intent intent = new Intent(this, MainBGService.class);
-        startService(intent);
+
+        if (isMyServiceRunning(MainBGService.class)) {
+            customLogger("Service already running");
+        } else {
+            customLogger("Starting service");
+            startService(intent);
+        }
         bindService(intent, mConnection, BIND_AUTO_CREATE);
 
         final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
@@ -220,6 +237,13 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "Unbinding service conn");
+        unbindService(mConnection);
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
