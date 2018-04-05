@@ -266,7 +266,9 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.hasExtra(Constants.CONNECTION_STATUS)){
                 TextView textView = (TextView) findViewById(R.id.connectionStatusView);
-                textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS));
+                String timeStamp = new SimpleDateFormat("kk.mm.ss").format(new Date());
+
+                textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS) + " at " + timeStamp);
             }
             if(intent.hasExtra(Constants.LOG_STATUS)){
                 TextView logView = findViewById(R.id.logView);
