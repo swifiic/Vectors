@@ -196,8 +196,7 @@ public class MainBGService extends IntentService {
 
     private void customLogger(String msg) {
         Log.d(TAG, msg);
-        String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
-        String logMsg = timeStamp+' '+msg+"\n";
+        String logMsg = msg;
         addToLogBuffer(logMsg);
 
         // Broadcasts the Intent to receivers in this app.

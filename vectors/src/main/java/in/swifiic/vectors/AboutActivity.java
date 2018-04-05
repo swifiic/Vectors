@@ -14,9 +14,11 @@ public class AboutActivity extends AppCompatActivity {
         setContentView(R.layout.activity_about);
         TextView swifiicLinkText = findViewById(R.id.swifiicLink);
         TextView fiveHunderedYearsText = findViewById(R.id.fiveHundredLink);
+        TextView googleFormText = findViewById(R.id.googleFormLink);
         swifiicLinkText.setMovementMethod(LinkMovementMethod.getInstance());
         fiveHunderedYearsText.setMovementMethod(LinkMovementMethod.getInstance());
-//        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
+        googleFormText.setMovementMethod(LinkMovementMethod.getInstance());
+        //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
 //        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }
 }

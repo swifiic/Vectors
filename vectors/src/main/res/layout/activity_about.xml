@@ -54,6 +54,14 @@
                 android:textSize="16sp" />
 
             <TextView
+                android:id="@+id/googleFormLink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/google_form_link"
+                android:textSize="16sp" />
+
+            <TextView
                 android:id="@+id/swifiicLink"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

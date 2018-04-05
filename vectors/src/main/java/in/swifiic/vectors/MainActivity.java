@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences.Editor mEditor;
 
     final String TAG = "VectorsUI";
+    private int lineCounter = 0;
 
     void getPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
@@ -245,10 +246,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void customLogger(String msg) {
-        Log.d(TAG, msg);
         TextView logView = findViewById(R.id.logView);
+
+        if (lineCounter > Constants.LOG_TEXT_VIEW_LINES) {
+            logView.setText("");
+            lineCounter = 0;
+        }
+
         String timeStamp = new SimpleDateFormat("kk.mm.ss.SS").format(new Date());
         logView.append(timeStamp+' '+msg+"\n");
+        lineCounter++;
     }
 
     /*** Get the updates from Service to the UI ***/
@@ -263,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if(intent.hasExtra(Constants.LOG_STATUS)){
                 TextView logView = findViewById(R.id.logView);
-                logView.append(intent.getStringExtra(Constants.LOG_STATUS));
+                customLogger(intent.getStringExtra(Constants.LOG_STATUS));
             }
         }
     }
