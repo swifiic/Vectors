@@ -26,7 +26,11 @@ public class AboutActivity extends AppCompatActivity {
         Date buildDate = new Date(BuildConfig.TIMESTAMP);
         String timeStamp = new SimpleDateFormat("yyyyMMdd").format(buildDate);
         String hostname = BuildConfig.BUILD_HOST;
-        buildVersionText.setText("Build Version: " + timeStamp + " on " + hostname);
+        String buildType = "_Release";
+        if (BuildConfig.DEBUG) {
+            buildType = "_Debug";
+        }
+        buildVersionText.setText("Build Version: " + timeStamp + buildType + " on " + hostname);
         //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
 //        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }
