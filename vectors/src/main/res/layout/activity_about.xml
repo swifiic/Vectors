@@ -27,14 +27,22 @@
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center"
+                android:padding="10dp"
+                app:srcCompat="@drawable/web_hi_res_512" />
+
             <TextView
                 android:id="@+id/titleFullForm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/vectors_full_form"
                 android:gravity="center"
-                android:textStyle="bold"
-                android:padding="8dp" />
+                android:padding="8dp"
+                android:text="@string/vectors_full_form"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/aboutVectors"
@@ -51,7 +59,6 @@
                 android:layout_height="wrap_content"
                 android:padding="8dp"
                 android:text="@string/swifiic_link"
-                android:autoLink="web"
                 android:textSize="16sp" />
 
             <TextView
@@ -60,7 +67,6 @@
                 android:layout_height="wrap_content"
                 android:padding="8dp"
                 android:text="@string/five_hundred_years_link"
-                android:autoLink="web"
                 android:textSize="16sp" />
         </LinearLayout>
     </ScrollView>
