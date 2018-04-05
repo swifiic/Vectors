@@ -541,7 +541,7 @@ public class MainBGService extends IntentService {
             goodbyeReceived = true;
             checkConnectionTermination();
         } else {
-            customLogger(" got diff type " + parsedMsg);
+            customLogger(" got Diff type " + parsedMsg);
         }
     }
 
