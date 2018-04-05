@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 import static in.swifiic.vectors.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -232,7 +233,7 @@ public class MainBGService extends IntentService {
 
     }
 
-    private void restartNearby() {
+    synchronized private void restartNearby() {
         customLogger("RestartingNearby");
         incomingPayloads.clear();
         outgoingPayloads.clear();
@@ -242,7 +243,7 @@ public class MainBGService extends IntentService {
         mConnectionClient.stopAdvertising();
         mConnectionClient.stopDiscovery();
 //        mConnectionClient.stopAllEndpoints();
-
+        customLogger("StoppedComms");
         if (connectedEndpoint != null) {
             mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
             connectedEndpoint = null;
@@ -258,6 +259,7 @@ public class MainBGService extends IntentService {
         goodbyeSent = false;
         startAdvertising();
         startDiscovery();
+        customLogger("RestartedComm");
     }
 
     private void startAdvertising() {
@@ -470,7 +472,7 @@ public class MainBGService extends IntentService {
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
-                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
+//                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
                                 customLogger("Working with non-vid file, sent");
                             }
@@ -700,7 +702,7 @@ public class MainBGService extends IntentService {
         if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
-                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
+//                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
                     VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
