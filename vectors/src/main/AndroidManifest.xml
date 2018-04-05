@@ -29,12 +29,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".BootBroadcastReceiver" >
+
+        <receiver android:name=".BootBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
         <service android:name=".MainBGService" />
+
+        <activity android:name=".AboutActivity"></activity>
     </application>
 
 </manifest>

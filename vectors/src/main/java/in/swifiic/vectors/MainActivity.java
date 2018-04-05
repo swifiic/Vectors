@@ -14,6 +14,8 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         startApp();
                         return;
                     } else {
-                        Log.d(TAG, "We didn't get perms :(");
+                        Log.d(TAG, "We didn't get permissions");
                         break;
                     }
                 }
@@ -187,6 +189,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Here's a Snackbar", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                Intent intent = new Intent(VectorsApp.getContext(), AboutActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         customLogger("On Create");
         mEditor = mSharedPreferences.edit();
