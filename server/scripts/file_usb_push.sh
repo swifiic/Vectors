@@ -7,7 +7,7 @@ layerLast=`cat /var/spool/vector/lastLayer`
 counterPart=`printf "%05d" ${video_file_counter}`
 
 #DestDir=`ls -d /run/user/*/gvfs/mtp*/*/RoamnetData | head -n 1`
-DestDir=`/usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0" | head -n 1`
+DestDir=`/usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1*json ; exit 0" | head -n 1`
 
 # if bridge device is not connected we generate only one layer
 # but do not change the layerLast value
@@ -20,15 +20,15 @@ else
     if [ -z ${layerLast} ]; then
         layerLast=10;
     else
-        indexLast=$(( ${video_file_counter} - 1 ));
+        indexLast=$(( ${video_file_counter} - 4 ));
         indexSecondLast=$(( ${indexLast} - 1 ));
-        /usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0" > /tmp/tempList
+        /usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1* ; exit 0" > /tmp/tempList
         #ls -l "${DestDir}" > /tmp/tempList
-        count=`grep -c -E "${indexLast}_L0T1.out\$|${indexSecondLast}_L0T1.out\$" /tmp/tempList`
+        count=`grep -c -E "${indexLast}_L0T1.out|${indexSecondLast}_L0T1.out" /tmp/tempList`
         if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "10" ] ; then
             layerLast=$(( ${layerLast} + 1 ));
         fi
-        if [ "${count}" -eq "2" ] && [  "${layerLast}" -gt "1" ] ; then
+        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "1" ] ; then
             layerLast=$(( ${layerLast} - 1 ));
         fi
 
@@ -50,11 +50,18 @@ echo "Listing the target folder - may have errors or can be blank"
 #ls -l "${DestDir}"
 /usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0"
 
+
 timeAtOrigin=`date +%s`
-for (( k=0 ; k <= ${layerLast} ; k++ )) ; do
+for (( k=0 ; k <= 10 ; k++ )) ; do
     baseFileEnd=${fileNames[k]}
     count=${copyCounts[k]}
 
+    if  [ "$k" -gt "${layerLast}" ] ; then
+        echo "     -----   removing file ${src_fldr}/video_${counterPart}${baseFileEnd}"
+        rm ${src_fldr}/video_${counterPart}${baseFileEnd}
+        continue
+    fi
+    echo "Processing file ${src_fldr}/video_${counterPart}${baseFileEnd} if present"
     layer=$(( ($k-1) / 5 ));
     tempId=$(( ($k-1) % 5 ));
     if [ "$k" -eq "0" ] ; then
@@ -81,6 +88,13 @@ find ${src_fldr} -name "vide*L0T[23456]*" -mmin +60 -exec rm {} \; -print
 find ${src_fldr} -name "vide*md" -mmin +240 -exec rm {} \; -print
 
 /usr/bin/adb push ${src_fldr}/ /sdcard/VectorsData/
+if [ "$?" -ne "0" ]; then
+      echo "Push of content may have falied. Leaving the files  in ${src_fldr}"
+else
+      rm -f ${src_fldr}/video_*
+fi
+
+
 
 # date >> /var/spool/vector/run_out
 
