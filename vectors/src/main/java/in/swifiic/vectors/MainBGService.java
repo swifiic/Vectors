@@ -51,6 +51,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
 
 import static in.swifiic.vectors.MessageScheme.getMessageType;
@@ -80,6 +82,8 @@ public class MainBGService extends IntentService {
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
+    private Timer timer;
+    private TimerTask timerTask;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -191,7 +195,19 @@ public class MainBGService extends IntentService {
         } else {
             customLogger( "Bgservicedisable");
         }
+        initaliseTimer();
         setBackgroundService();
+    }
+
+    private void initaliseTimer() {
+        timer = new Timer();
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                softResetNearby();
+            }
+        };
+        timer.schedule(timerTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
     }
 
     public MainBGService() {
@@ -264,13 +280,14 @@ public class MainBGService extends IntentService {
     }
 
     private void softResetNearby() { // call this whenever we don't find nodes for some period of time
-        long currentTime = SystemClock.currentThreadTimeMillis()/1000;
+        long currentTime = System.currentTimeMillis()/1000;
         customLogger("Checking if time to reset nearby");
         if ((currentTime - lastNodeContactTime) > Constants.RESTART_NEARBY_SECS && connectedEndpoint == null && nearbyEnabled) {
             customLogger("Didn't find nodes for a while, force resetting nearby");
             restartNearby();
         } else {
-            customLogger("Not reset - last endpoint found at " + lastNodeContactTime);
+            long timeDiff = currentTime - lastNodeContactTime;
+            customLogger("Not reset - last endpoint found at " + timeDiff + " ConnectedEpName " + connectedEndpoint + " Nearby Enabled " + nearbyEnabled);
         }
     }
 
@@ -331,7 +348,7 @@ public class MainBGService extends IntentService {
     }
 
     public void setLastNodeContactTime() {
-        lastNodeContactTime = SystemClock.currentThreadTimeMillis()/1000;
+        lastNodeContactTime = System.currentTimeMillis()/1000;
     }
 
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
