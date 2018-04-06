@@ -79,6 +79,7 @@ public class MainBGService extends IntentService {
     private boolean enableNotifications = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
+    private long lastNodeContactTime = 0;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -262,6 +263,17 @@ public class MainBGService extends IntentService {
         customLogger("RestartedComm");
     }
 
+    private void softResetNearby() { // call this whenever we don't find nodes for some period of time
+        long currentTime = SystemClock.currentThreadTimeMillis()/1000;
+        customLogger("Checking if time to reset nearby");
+        if ((currentTime - lastNodeContactTime) > Constants.RESTART_NEARBY_SECS && connectedEndpoint == null && nearbyEnabled) {
+            customLogger("Didn't find nodes for a while, force resetting nearby");
+            restartNearby();
+        } else {
+            customLogger("Not reset - last endpoint found at " + lastNodeContactTime);
+        }
+    }
+
     private void startAdvertising() {
         mConnectionClient.startAdvertising(
                 deviceId,
@@ -318,13 +330,16 @@ public class MainBGService extends IntentService {
         mConnectionClient.stopAllEndpoints();
     }
 
+    public void setLastNodeContactTime() {
+        lastNodeContactTime = SystemClock.currentThreadTimeMillis()/1000;
+    }
 
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
-                public void onEndpointFound(
-                        String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
+                public void onEndpointFound(String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
+                    setLastNodeContactTime();
                     if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
@@ -360,6 +375,7 @@ public class MainBGService extends IntentService {
                 public void onConnectionInitiated(
                         String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
+                    setLastNodeContactTime();
                     customLogger("Pending connection From " + endpointName);
                     endpointName = connectionInfo.getEndpointName();
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
@@ -761,6 +777,7 @@ public class MainBGService extends IntentService {
     }
 
     private void checkConnectionTermination() {
+        setLastNodeContactTime();
         if (outgoingPayloads.isEmpty() && filePayloadFilenames.isEmpty() && goodbyeSent && goodbyeReceived) {
             customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
