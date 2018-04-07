@@ -125,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
         final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
         if (mBound) {
             if (getVectorsStatus()) {
-                toggleVectorsButton.setText("Stop Vectors");
+                toggleVectorsButton.setText(R.string.stop_button_text);
             } else {
-                toggleVectorsButton.setText("Start Vectors");
+                toggleVectorsButton.setText(R.string.start_button_text);
             }
             customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);

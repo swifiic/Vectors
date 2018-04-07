@@ -389,8 +389,7 @@ public class MainBGService extends IntentService {
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
                 @Override
-                public void onConnectionInitiated(
-                        String endpointId, ConnectionInfo connectionInfo) {
+                public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
                     customLogger("Pending connection From " + endpointName);
@@ -405,7 +404,7 @@ public class MainBGService extends IntentService {
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
-                            if (enableNotifications || true) {
+                            if (BuildConfig.DEBUG) {
                                 Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             }
                             sendConnectionStatus("Connected To: " + endpointName);
@@ -426,7 +425,7 @@ public class MainBGService extends IntentService {
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
-                            customLogger("Other EP might be connected connected");
+                            customLogger("Other EP might be connected");
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:

@@ -20,7 +20,7 @@ public final class Constants {
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
     public static final int DELAY_TIME_MS = 10;
-    public static final int RESTART_NEARBY_SECS = 600;
+    public static final int RESTART_NEARBY_SECS = 300;
     public static final String ENDPOINT_PREFIX = "Vectors_";
 
     // Bridge Constants
