@@ -12,29 +12,31 @@ DestDir=`/usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1*json ; exit 0" | head 
 # if bridge device is not connected we generate only one layer
 # but do not change the layerLast value
 if [ -z "${DestDir}" ]; then
-   layerLast=1;
+   layerLast=10;
 else
     # find if the base layer of last two layer has been delivered
     #  if last layer delivered and  layerLast < 10, increment it
     #  if last two layers not delivered and layerLast > 1, decrement it
     if [ -z ${layerLast} ]; then
-        layerLast=10;
+        layerLast=100;
     else
-        indexLast=$(( ${video_file_counter} - 4 ));
+        indexLast=$(( ${video_file_counter} - 5 ));
         indexSecondLast=$(( ${indexLast} - 1 ));
         /usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1* ; exit 0" > /tmp/tempList
         #ls -l "${DestDir}" > /tmp/tempList
         count=`grep -c -E "${indexLast}_L0T1.out|${indexSecondLast}_L0T1.out" /tmp/tempList`
-        if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "10" ] ; then
-            layerLast=$(( ${layerLast} + 1 ));
+        if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "105" ] ; then
+            layerLast=$(( ${layerLast} + 3 ));
         fi
-        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "1" ] ; then
+        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "11" ] ; then
             layerLast=$(( ${layerLast} - 1 ));
         fi
 
     fi
     echo ${layerLast} > /var/spool/vector/lastLayer
 fi
+
+layerLast=$(( ${layerLast} / 10 ));
 
 counterPart=`printf "%05d" ${video_file_counter}`
 origin=`hostname`
