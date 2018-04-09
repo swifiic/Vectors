@@ -6,14 +6,20 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by nic on 23/2/18.
@@ -74,7 +80,7 @@ public class FileModule {
 
     private void writeFile(File file, String data) {
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), 1024*16);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), Constants.FILE_BUFFER_SIZE);
             writer.write(data);
             writer.close();
             Log.d(TAG, "generic file written" + file.getName());
@@ -199,5 +205,46 @@ public class FileModule {
             return files.length;
         }
         return 0;
+    }
+
+    public void zipLogDirectory() {
+        File[] files = logDirectory.listFiles();
+        String[] fileList = new String[files.length];
+        int i = 0;
+        for (File f : files) {
+            fileList[i++] = f.getAbsolutePath();
+        }
+        if (files != null) {
+            String fileName = Constants.VIDEO_PREFIX + "_Log_" + System.currentTimeMillis()/1000;
+            zip(fileList, fileName);
+        }
+    }
+
+    public void zip(String[] _files, String zipFileName) {
+        try {
+            BufferedInputStream origin;
+            FileOutputStream dest = new FileOutputStream(new File(logDirectory,zipFileName));
+            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+            byte data[] = new byte[Constants.FILE_BUFFER_SIZE];
+
+            for (int i = 0; i < _files.length; i++) {
+                Log.v("Compress", "Adding: " + _files[i]);
+                FileInputStream fi = new FileInputStream(_files[i]);
+                origin = new BufferedInputStream(fi, Constants.FILE_BUFFER_SIZE);
+
+                ZipEntry entry = new ZipEntry(_files[i].substring(_files[i].lastIndexOf("/") + 1));
+                out.putNextEntry(entry);
+                int count;
+
+                while ((count = origin.read(data, 0, Constants.FILE_BUFFER_SIZE)) != -1) {
+                    out.write(data, 0, count);
+                }
+                origin.close();
+            }
+
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

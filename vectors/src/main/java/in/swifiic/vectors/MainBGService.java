@@ -392,8 +392,8 @@ public class MainBGService extends IntentService {
                 public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
-                    customLogger("Pending connection From " + endpointName);
                     endpointName = connectionInfo.getEndpointName();
+                    customLogger("Pending connection From " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
