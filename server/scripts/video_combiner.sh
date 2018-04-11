@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o xtrace
+
 mkdir -p /var/www/video_in/combined
 
 mkdir -p /var/www/video_in/encoded
@@ -8,11 +10,13 @@ mkdir -p /var/www/video_in/decoded
 
 mkdir -p /var/www/video_in/todecode
 
+mkdir -p /var/www/video_in/combined/yuv
+
+mkdir -p /var/www/video_in/combined/compressed
+
+mkdir -p /var/www/video_in/waste
+
 cd /var/www/video_in/
-
-cp ./video* ./todecode
-
-cd ./todecode
 
 files=()
 
@@ -44,7 +48,12 @@ for (( i = 0; i < 5; i++ )); do
     counterPart=`printf "%05d" ${seqNumInt}`
     files+=(${counterPart})
     ((seqNumInt++));
+    mv ./video_${counterPart}.md ./todecode
+    mv ./video_${counterPart}_L0T1.out ./todecode
 done
+
+
+cd ./todecode
 
 echo "files array elements"
 
@@ -78,14 +87,14 @@ do
 
            for (( j=1; j <= ${numFramesToAdd}; ++j ))
            do
-               cat firstFrame >> $newYUVFile
+               cat firstFrame >> /var/www/video_in/combined/yuv/$newYUVFile
            done
            rm frames*
            addFirstFrame=0
            numFramesToAdd=32
        fi
 
-       cat /var/www/video_in/decoded/out_${files[$i]}_Q.yuv >> $newYUVFile
+       cat /var/www/video_in/decoded/out_${files[$i]}_Q.yuv >> /var/www/video_in/combined/yuv/$newYUVFile
 
    else
        echo 'base layer not found'
@@ -106,7 +115,7 @@ do
 
        for (( j=1; j <= ${numFramesToAdd}; ++j ))
        do
-           cat lastFrame >> $newYUVFile
+           cat lastFrame >> /var/www/video_in/combined/yuv/$newYUVFile
        done
 
        i=i+count
@@ -114,11 +123,16 @@ do
    fi
 done
 
+dc_res_1="320 240 "
+dc_res_2="160 120 "
+
 echo  "scaling the video"
-# ffmpeg -s:v 160x120 -r 5 -i ${newYUVFile} -vf scale=320:240 -c:v rawvideo -pix_fmt yuyv422 ${newYUVFile}
-#
+/var/spool/vector/bin/DownConvertStaticd ${dc_res_2} /var/www/video_in/combined/yuv/${newYUVFile} ${dc_res_1} /var/www/video_in/combined/yuv/highRes_${newYUVFile}
+
 echo "convert yuv to .264 in mp4 container"
-# ffmpeg -f rawvideo -vcodec rawvideo -s 640x480 -r 30 -pix_fmt yuyv422 -i ${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 ${newYUVFile}.mp4
+ffmpeg -f rawvideo -vcodec rawvideo -s 320x240 -r 5 -pix_fmt yuv422p -i /var/www/video_in/combined/yuv/${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 /var/www/video_in/combined/compressed/${newYUVFile}.mp4
+
+mv /var/www/video_in/todecode/video_* ../waste
 
 # mv ./video_${fileCounter}* /var/www/video_in/combined
 
