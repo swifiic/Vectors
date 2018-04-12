@@ -131,6 +131,7 @@ public class MainBGService extends IntentService {
             if (!nearbyEnabled) {
                 stopDiscovery();
                 stopAdvertising();
+                SystemClock.sleep(Constants.DELAY_TIME_MS);
                 startAdvertising();
                 startDiscovery();
                 nearbyEnabled = true;
@@ -276,6 +277,7 @@ public class MainBGService extends IntentService {
         
         goodbyeReceived = false;
         goodbyeSent = false;
+        SystemClock.sleep(Constants.DELAY_TIME_MS);
         startAdvertising();
         startDiscovery();
         customLogger("RestartedComm");
@@ -445,8 +447,8 @@ public class MainBGService extends IntentService {
                 public void onDisconnected(String endpointId) {
                     // We've been disconnected from this endpoint. No more data can be
                     // sent or received.
-                    customLogger("Connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
+                    customLogger("Connection terminated, clearing arrays");
                     restartNearby();
                 }
             };
