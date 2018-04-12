@@ -406,6 +406,7 @@ public class MainBGService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                    customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
                             if (BuildConfig.DEBUG) {
@@ -646,9 +647,13 @@ public class MainBGService extends IntentService {
             if (vd != null) {
                 String videoDataJSON = vd.toString();
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-                Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-                while (!task.isComplete()) {
-                    SystemClock.sleep(Constants.DELAY_TIME_MS);
+                synchronized (mConnectionClient) {
+                    // sync this block so we don't get nasty issues of two sent at once
+                    mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+//                    Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+//                    while (!task.isComplete()) {
+//                        SystemClock.sleep(Constants.DELAY_TIME_MS);
+//                    }
                 }
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }

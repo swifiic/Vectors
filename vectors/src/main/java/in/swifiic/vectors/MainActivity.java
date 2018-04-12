@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import in.swifiic.common.Constants;
 
@@ -165,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!getVectorsStatus()) {
+                    if (BuildConfig.DEBUG) {
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Thank you for participating! For best results, please keep your Bluetooth on.", Toast.LENGTH_LONG).show();
+                    }
                     enableVectors();
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
