@@ -129,6 +129,8 @@ public class MainBGService extends IntentService {
     public void setBackgroundService() {
         if (enableBackgroundService()) {
             if (!nearbyEnabled) {
+                stopDiscovery();
+                stopAdvertising();
                 startAdvertising();
                 startDiscovery();
                 nearbyEnabled = true;
@@ -257,8 +259,8 @@ public class MainBGService extends IntentService {
         incomingPayloadReferences.clear();
         filePayloadFilenames.clear();
         outgoingTransfersMetadata.clear();
-        mConnectionClient.stopAdvertising();
-        mConnectionClient.stopDiscovery();
+        stopAdvertising();
+        stopDiscovery();
 //        mConnectionClient.stopAllEndpoints();
         customLogger("StoppedComms");
         if (connectedEndpoint != null) {
@@ -308,7 +310,7 @@ public class MainBGService extends IntentService {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("Advert fail");
+                                customLogger("Advert fail" + e.getMessage());
                             }
                         });
     }
@@ -330,7 +332,7 @@ public class MainBGService extends IntentService {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("Discovery FAILED!");
+                                customLogger("Discovery FAILED! " + e.getMessage());
                             }
                         });
     }
@@ -412,8 +414,8 @@ public class MainBGService extends IntentService {
                             mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             sendDestinationAck();
                             sendFileList();
-                            mConnectionClient.stopAdvertising();
-                            mConnectionClient.stopDiscovery();
+                            stopAdvertising();
+                            stopDiscovery();
                             break;
                         case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR: //this code is ignored
                             customLogger("endpt error, restart");
