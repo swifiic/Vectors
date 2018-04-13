@@ -4,8 +4,6 @@ mkdir -p ~/vectors/server/analysis
 
 time=`date +%Y-%m-%d_%H:%M:%S`
 
-#mv /var/spool/vector/run_out_rcvr /var/spool/vector/run_out_rcvr_${time}
-
 dataFile=data_${time}.txt
 
 cd /var/www/video_in

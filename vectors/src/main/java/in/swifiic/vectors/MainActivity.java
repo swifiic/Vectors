@@ -1,6 +1,7 @@
 package in.swifiic.vectors;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -14,15 +15,21 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import in.swifiic.common.Constants;
 
@@ -39,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences.Editor mEditor;
 
     final String TAG = "VectorsUI";
+    private int lineCounter = 0;
 
     void getPermissions() {
         List<String> listPermissionsNeeded = new ArrayList<>();
@@ -90,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                         startApp();
                         return;
                     } else {
-                        Log.d(TAG, "We didn't get perms :(");
+                        Log.d(TAG, "We didn't get permissions");
                         break;
                     }
                 }
@@ -118,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
         final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
         if (mBound) {
             if (getVectorsStatus()) {
-                toggleVectorsButton.setText("Stop Vectors");
+                toggleVectorsButton.setText(R.string.stop_button_text);
             } else {
-                toggleVectorsButton.setText("Start Vectors");
+                toggleVectorsButton.setText(R.string.start_button_text);
             }
             customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
@@ -132,9 +140,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void startApp() {
         Intent intent = new Intent(this, MainBGService.class);
-        startService(intent);
+
+        if (isMyServiceRunning(MainBGService.class)) {
+            customLogger("Service already running");
+        } else {
+            customLogger("Starting service");
+            startService(intent);
+        }
         bindService(intent, mConnection, BIND_AUTO_CREATE);
 
         final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
@@ -142,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!getVectorsStatus()) {
+                    if (BuildConfig.DEBUG) {
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Thank you for participating! For best results, please keep your Bluetooth on.", Toast.LENGTH_LONG).show();
+                    }
                     enableVectors();
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
@@ -187,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         customLogger("On Create");
         mEditor = mSharedPreferences.edit();
@@ -195,6 +224,31 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startApp();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.about:
+                startActivity(new Intent(this, AboutActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "Unbinding service conn");
+        unbindService(mConnection);
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -221,10 +275,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void customLogger(String msg) {
-        Log.d(TAG, msg);
         TextView logView = findViewById(R.id.logView);
+
+        if (lineCounter > Constants.LOG_TEXT_VIEW_LINES) {
+            logView.setText("");
+            lineCounter = 0;
+        }
+
         String timeStamp = new SimpleDateFormat("kk.mm.ss.SS").format(new Date());
         logView.append(timeStamp+' '+msg+"\n");
+        lineCounter++;
     }
 
     /*** Get the updates from Service to the UI ***/
@@ -235,11 +295,13 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.hasExtra(Constants.CONNECTION_STATUS)){
                 TextView textView = (TextView) findViewById(R.id.connectionStatusView);
-                textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS));
+                String timeStamp = new SimpleDateFormat("kk.mm.ss").format(new Date());
+
+                textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS) + " at " + timeStamp);
             }
             if(intent.hasExtra(Constants.LOG_STATUS)){
                 TextView logView = findViewById(R.id.logView);
-                logView.append(intent.getStringExtra(Constants.LOG_STATUS));
+                customLogger(intent.getStringExtra(Constants.LOG_STATUS));
             }
         }
     }

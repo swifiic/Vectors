@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.SimpleArrayMap;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
@@ -51,6 +52,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.locks.Lock;
 
 import static in.swifiic.vectors.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -78,6 +82,9 @@ public class MainBGService extends IntentService {
     private boolean enableNotifications = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
+    private long lastNodeContactTime = 0;
+    private Timer timer;
+    private TimerTask timerTask;
 
     private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
@@ -99,9 +106,16 @@ public class MainBGService extends IntentService {
     public class LocalBinder extends Binder {
         MainBGService getService() {
             // Return this instance of LocalService so clients can call public methods
-            ourRef = MainBGService.this;
+            if (null == ourRef) {
+                ourRef = MainBGService.this;
+                customLogger("Setting reference from BGService");
+            }
             return MainBGService.this;
         }
+    }
+
+    static public MainBGService getBGServiceRef() {
+        return ourRef;
     }
 
     public String getDeviceId() {
@@ -116,6 +130,9 @@ public class MainBGService extends IntentService {
     public void setBackgroundService() {
         if (enableBackgroundService()) {
             if (!nearbyEnabled) {
+                stopDiscovery();
+                stopAdvertising();
+                SystemClock.sleep(Constants.DELAY_TIME_MS);
                 startAdvertising();
                 startDiscovery();
                 nearbyEnabled = true;
@@ -182,6 +199,28 @@ public class MainBGService extends IntentService {
         } else {
             customLogger( "Bgservicedisable");
         }
+
+        Acknowledgement ack = mFileModule.getAckFromFile();
+        if (ack != null) {
+            // TODO - test this
+            byte[] x = Acknowledgement.getCompressedAcknowledgement(ack);
+            customLogger("X Str Len " + x.length);
+            Acknowledgement newAck = Acknowledgement.getDecompressedAck(x);
+        }
+
+        initaliseTimer();
+        setBackgroundService();
+    }
+
+    private void initaliseTimer() {
+        timer = new Timer();
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                softResetNearby();
+            }
+        };
+        timer.schedule(timerTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
     }
 
     public MainBGService() {
@@ -196,8 +235,7 @@ public class MainBGService extends IntentService {
 
     private void customLogger(String msg) {
         Log.d(TAG, msg);
-        String timeStamp = new SimpleDateFormat("HH.mm.ss").format(new Date());
-        String logMsg = timeStamp+' '+msg+"\n";
+        String logMsg = msg;
         addToLogBuffer(logMsg);
 
         // Broadcasts the Intent to receivers in this app.
@@ -225,17 +263,17 @@ public class MainBGService extends IntentService {
 
     }
 
-    private void restartNearby() {
+    synchronized private void restartNearby() {
         customLogger("RestartingNearby");
         incomingPayloads.clear();
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
         filePayloadFilenames.clear();
         outgoingTransfersMetadata.clear();
-        mConnectionClient.stopAdvertising();
-        mConnectionClient.stopDiscovery();
+        stopAdvertising();
+        stopDiscovery();
 //        mConnectionClient.stopAllEndpoints();
-
+        customLogger("StoppedComms");
         if (connectedEndpoint != null) {
             mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
             connectedEndpoint = null;
@@ -249,14 +287,28 @@ public class MainBGService extends IntentService {
         
         goodbyeReceived = false;
         goodbyeSent = false;
+        SystemClock.sleep(Constants.DELAY_TIME_MS);
         startAdvertising();
         startDiscovery();
+        customLogger("RestartedComm");
+    }
+
+    private void softResetNearby() { // call this whenever we don't find nodes for some period of time
+        long currentTime = System.currentTimeMillis()/1000;
+        customLogger("Checking if time to reset nearby");
+        if ((currentTime - lastNodeContactTime) > Constants.RESTART_NEARBY_SECS && connectedEndpoint == null && nearbyEnabled) {
+            customLogger("Didn't find nodes for a while, force resetting nearby");
+            restartNearby();
+        } else {
+            long timeDiff = currentTime - lastNodeContactTime;
+            customLogger("Not reset - last endpoint found at " + timeDiff + " ConnectedEpName " + connectedEndpoint + " Nearby Enabled " + nearbyEnabled);
+        }
     }
 
     private void startAdvertising() {
         mConnectionClient.startAdvertising(
                 deviceId,
-                getPackageName(),
+                VectorsApp.getContext().getPackageName(),
                 mConnectionLifecycleCallback,
                 new AdvertisingOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(
@@ -270,14 +322,14 @@ public class MainBGService extends IntentService {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("Advert fail");
+                                customLogger("Advert fail" + e.getMessage());
                             }
                         });
     }
 
     private void startDiscovery() {
         mConnectionClient.startDiscovery(
-                getPackageName(),
+                VectorsApp.getContext().getPackageName(),
                 mEndpointDiscoveryCallback,
                 new DiscoveryOptions(Strategy.P2P_CLUSTER))
                 .addOnSuccessListener(
@@ -292,7 +344,7 @@ public class MainBGService extends IntentService {
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("Discovery FAILED!");
+                                customLogger("Discovery FAILED! " + e.getMessage());
                             }
                         });
     }
@@ -309,13 +361,16 @@ public class MainBGService extends IntentService {
         mConnectionClient.stopAllEndpoints();
     }
 
+    public void setLastNodeContactTime() {
+        lastNodeContactTime = System.currentTimeMillis()/1000;
+    }
 
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
-                public void onEndpointFound(
-                        String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
+                public void onEndpointFound(String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
+                    setLastNodeContactTime();
                     if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
@@ -348,11 +403,11 @@ public class MainBGService extends IntentService {
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
                 @Override
-                public void onConnectionInitiated(
-                        String endpointId, ConnectionInfo connectionInfo) {
+                public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
-                    customLogger("Pending connection From " + endpointName);
+                    setLastNodeContactTime();
                     endpointName = connectionInfo.getEndpointName();
+                    customLogger("Pending connection From " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
@@ -361,9 +416,10 @@ public class MainBGService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                    customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
-                            if (enableNotifications || true) {
+                            if (BuildConfig.DEBUG) {
                                 Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             }
                             sendConnectionStatus("Connected To: " + endpointName);
@@ -371,8 +427,8 @@ public class MainBGService extends IntentService {
                             mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             sendDestinationAck();
                             sendFileList();
-                            mConnectionClient.stopAdvertising();
-                            mConnectionClient.stopDiscovery();
+                            stopAdvertising();
+                            stopDiscovery();
                             break;
                         case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR: //this code is ignored
                             customLogger("endpt error, restart");
@@ -384,7 +440,7 @@ public class MainBGService extends IntentService {
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
-                            customLogger("Other EP might be connected connected");
+                            customLogger("Other EP might be connected");
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
@@ -402,8 +458,8 @@ public class MainBGService extends IntentService {
                 public void onDisconnected(String endpointId) {
                     // We've been disconnected from this endpoint. No more data can be
                     // sent or received.
-                    customLogger("Connection terminated, clearing arrays");
                     sendConnectionStatus("Disconnected");
+                    customLogger("Connection terminated, clearing arrays");
                     restartNearby();
                 }
             };
@@ -426,7 +482,7 @@ public class MainBGService extends IntentService {
                         } catch (Exception e) {
                             customLogger("Byte payload fail " + e.getMessage());
                             if(payloadMsg != null){
-                                customLogger("Attempted to decode #" + payloadMsg + "#");
+                                customLogger("Attempted to decode " + payloadMsg + "#");
                             }
                             e.printStackTrace();
                         }
@@ -463,7 +519,7 @@ public class MainBGService extends IntentService {
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
-                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
+//                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
                                 customLogger("Working with non-vid file, sent");
                             }
@@ -532,7 +588,7 @@ public class MainBGService extends IntentService {
             goodbyeReceived = true;
             checkConnectionTermination();
         } else {
-            customLogger(" got diff type " + parsedMsg);
+            customLogger(" got Diff type " + parsedMsg);
         }
     }
 
@@ -553,12 +609,15 @@ public class MainBGService extends IntentService {
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
-            String dackMsg = ack.toString();
-            dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, dackMsg);
+            ack.addTraversedNode(deviceId);
+            // TODO - test this
+            byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
+            String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
+            String dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, compressedBase64);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
             customLogger("Sending ack with timestamp as " + ack.getAckTime());
         } else  {
-            customLogger("Skipping ack as it decodes to null ");
+            customLogger("Skipping ack as it decodes to null or does not exist.");
         }
     }
 
@@ -601,9 +660,13 @@ public class MainBGService extends IntentService {
             if (vd != null) {
                 String videoDataJSON = vd.toString();
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-                Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-                while (!task.isComplete()) {
-                    SystemClock.sleep(Constants.DELAY_TIME_MS);
+                synchronized (mConnectionClient) {
+                    // sync this block so we don't get nasty issues of two sent at once
+                    mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+//                    Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+//                    while (!task.isComplete()) {
+//                        SystemClock.sleep(Constants.DELAY_TIME_MS);
+//                    }
                 }
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }
@@ -646,8 +709,9 @@ public class MainBGService extends IntentService {
         mFileModule.writeToJSONFile(vd);
     }
 
-    private void processDackJSON(String parseMsg) {
-        Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
+    private void processDackJSON(String compressedBase64) {
+        byte[] data = Base64.decode(compressedBase64, Base64.DEFAULT);
+        Acknowledgement incomingAck = Acknowledgement.getDecompressedAck(data);
         customLogger("Received ack with timestamp as " + incomingAck.getAckTime());
         long currentTimeInSec = System.currentTimeMillis() / 1000;
         if(incomingAck.getAckTime() > currentTimeInSec + 3600){
@@ -693,7 +757,7 @@ public class MainBGService extends IntentService {
         if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
-                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
+//                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
                     VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
@@ -752,6 +816,7 @@ public class MainBGService extends IntentService {
     }
 
     private void checkConnectionTermination() {
+        setLastNodeContactTime();
         if (outgoingPayloads.isEmpty() && filePayloadFilenames.isEmpty() && goodbyeSent && goodbyeReceived) {
             customLogger("Time to terminate connection!");
             recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
