@@ -70,7 +70,7 @@ public class MainBGService extends IntentService {
     private ConnectionsClient mConnectionClient;
     private String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = false;
+    private boolean extraChecks = true;
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
@@ -605,7 +605,7 @@ public class MainBGService extends IntentService {
         for (VideoData vd : requestedVideoDatas) {
             ParcelFileDescriptor pfd = mFileModule.getPfd(vd.getFileName());
             if (pfd == null) {
-                customLogger("File missing");
+                customLogger("File missing " + vd.getFileName());
                 continue;
             }
             Payload filePayload = Payload.fromFile(pfd);
@@ -631,7 +631,8 @@ public class MainBGService extends IntentService {
             if (vd != null) {
                 String videoDataJSON = vd.toString();
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-                mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+                Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+                while(task.isComplete()) {}
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }
             mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
