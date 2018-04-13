@@ -7,8 +7,8 @@ android {
         applicationId "in.swifiic.vectors"
         minSdkVersion 23
         targetSdkVersion 26
-        versionCode 3
-        versionName "1.0"
+        versionCode 4
+        versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField 'String', 'BUILD_HOST', '"' + InetAddress.getLocalHost().getCanonicalHostName() + '"'
