@@ -482,7 +482,7 @@ public class MainBGService extends IntentService {
                         } catch (Exception e) {
                             customLogger("Byte payload fail " + e.getMessage());
                             if(payloadMsg != null){
-                                customLogger("Attempted to decode #" + payloadMsg + "#");
+                                customLogger("Attempted to decode " + payloadMsg + "#");
                             }
                             e.printStackTrace();
                         }

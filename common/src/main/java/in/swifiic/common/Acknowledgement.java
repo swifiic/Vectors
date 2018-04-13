@@ -21,16 +21,20 @@ import java.util.zip.Inflater;
 public class Acknowledgement {
 
     static final String TAG = "ACK-JSON";
-    private Long ackTime;
+    @SerializedName("ack_time")
+    @Expose
+    private Long ack_time;
+    @SerializedName("items")
+    @Expose
     private List<AckItem> items = null;
     private ArrayList<Pair<Long, String>> traversal;
 
     public Long getAckTime() {
-        return ackTime;
+        return ack_time;
     }
 
     public void setAckTime(Long ackTime) {
-        this.ackTime = ackTime;
+        this.ack_time = ackTime;
     }
 
     public List<AckItem> getItems() {
