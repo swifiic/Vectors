@@ -6,6 +6,7 @@ package in.swifiic.common;
 
 import android.text.util.Linkify;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
@@ -20,24 +21,9 @@ import java.util.zip.Inflater;
 public class Acknowledgement {
 
     static final String TAG = "ACK-JSON";
-
-    @SerializedName("type")
-    @Expose
-    private String type;
-    @SerializedName("ack_time")
-    @Expose
     private Long ackTime;
-    @SerializedName("items")
-    @Expose
     private List<AckItem> items = null;
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
+    private ArrayList<Pair<Long, String>> traversal;
 
     public Long getAckTime() {
         return ackTime;
@@ -49,6 +35,14 @@ public class Acknowledgement {
 
     public List<AckItem> getItems() {
         return items;
+    }
+
+    public void setItems(List<AckItem> items) {
+        this.items = items;
+    }
+
+    public Acknowledgement() {
+        traversal = new ArrayList<>();
     }
 
     public List<String> getAckedFilenames() {
@@ -68,9 +62,17 @@ public class Acknowledgement {
         return false;
     }
 
-
-    public void setItems(List<AckItem> items) {
-        this.items = items;
+    public void addTraversedNode(String deviceName) {
+        for (Pair pair : traversal) {
+            String _deviceName = (String)pair.second;
+            if (_deviceName.compareTo(deviceName) == 0) {
+                Log.d(TAG, "Device already traversed!");
+                return;
+            }
+        }
+        Long epochTimeSeconds = System.currentTimeMillis()/1000;
+        Pair<Long, String> pair = new Pair<>(epochTimeSeconds, deviceName);
+        traversal.add(pair);
     }
 
     @Override
@@ -92,7 +94,7 @@ public class Acknowledgement {
         compresser.finish();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buf = new byte[8192];
+        byte[] buf = new byte[32768];
         while (!compresser.finished()) {
             int byteCount = compresser.deflate(buf);
             baos.write(buf, 0, byteCount);

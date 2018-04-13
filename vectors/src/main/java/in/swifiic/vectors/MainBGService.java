@@ -206,7 +206,6 @@ public class MainBGService extends IntentService {
             byte[] x = Acknowledgement.getCompressedAcknowledgement(ack);
             customLogger("X Str Len " + x.length);
             Acknowledgement newAck = Acknowledgement.getDecompressedAck(x);
-            customLogger(newAck.toString());
         }
 
         initaliseTimer();
@@ -610,6 +609,7 @@ public class MainBGService extends IntentService {
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
+            ack.addTraversedNode(deviceId);
             // TODO - test this
             byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
             String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
@@ -617,7 +617,7 @@ public class MainBGService extends IntentService {
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
             customLogger("Sending ack with timestamp as " + ack.getAckTime());
         } else  {
-            customLogger("Skipping ack as it decodes to null ");
+            customLogger("Skipping ack as it decodes to null or does not exist.");
         }
     }
 
