@@ -70,7 +70,7 @@ public class MainBGService extends IntentService {
     private ConnectionsClient mConnectionClient;
     private String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = true;
+    private boolean extraChecks = false;
     private boolean goodbyeSent = false;
     private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
@@ -227,7 +227,7 @@ public class MainBGService extends IntentService {
         initBGService();
     }
 
-    private void customLogger(String msg) {
+    public void customLogger(String msg) {
         Log.d(TAG, msg);
         String logMsg = msg;
         addToLogBuffer(logMsg);
@@ -573,7 +573,7 @@ public class MainBGService extends IntentService {
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
 
-    private void sendGoodbye() {
+    public void sendGoodbye() {
         String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
         customLogger("Sent my goodbyes");
@@ -623,32 +623,10 @@ public class MainBGService extends IntentService {
         } catch (Exception e) {
             customLogger("FileMap transfer fail" + e.getMessage());
         }
-
-        for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
-            Payload filePayload = outgoingPayloadReferences.get(i);
-
-            outgoingPayloads.add(Long.valueOf(filePayload.getId()));
-
-            VideoData vd = requestedVideoDatas.get(i);
-            if (vd != null) {
-                String videoDataJSON = vd.toString();
-                videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
-                synchronized (mConnectionClient) {
-                    // sync this block so we don't get nasty issues of two sent at once
-                    mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-//                    Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
-//                    while (!task.isComplete()) {
-//                        SystemClock.sleep(Constants.DELAY_TIME_MS);
-//                    }
-                }
-                outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
-            }
-
-            Task task = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
-            while (!task.isComplete()) {
-                SystemClock.sleep(Constants.DELAY_TIME_MS );
-            }
-        }
+        //put code here?
+        FileTransferTask fileTransferTask = new FileTransferTask(outgoingPayloads, requestedVideoDatas, outgoingTransfersMetadata,
+                                                                outgoingPayloadReferences, mConnectionClient, connectedEndpoint, this);
+        fileTransferTask.execute(null, null, null);
     }
 
     private void processFileList(String filelist) {
