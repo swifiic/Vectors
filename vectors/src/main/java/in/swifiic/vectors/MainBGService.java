@@ -1,7 +1,6 @@
 package in.swifiic.vectors;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,7 +11,6 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.Base64;
@@ -70,7 +68,6 @@ public class MainBGService extends IntentService {
     private boolean nearbyEnabled = false;
 
     private ConnectionsClient mConnectionClient;
-    private NotificationManager mNotificationManager;
     private String connectedEndpoint;
     private String startTime;
     private boolean extraChecks = true;
@@ -86,8 +83,8 @@ public class MainBGService extends IntentService {
     private Timer timer;
     private TimerTask timerTask;
 
-    private final SimpleArrayMap<Long, NotificationCompat.Builder> incomingPayloads = new SimpleArrayMap<>();
-    private final SimpleArrayMap<Long, NotificationCompat.Builder> outgoingPayloads = new SimpleArrayMap<>();
+    private final ArrayList<Long> incomingPayloads = new ArrayList<>();
+    private final ArrayList<Long> outgoingPayloads = new ArrayList<>();
 
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
@@ -162,9 +159,6 @@ public class MainBGService extends IntentService {
     void initConnectionAndNotif(){
         if(null == mConnectionClient) {
             mConnectionClient = Nearby.getConnectionsClient(VectorsApp.getContext());
-        }
-        if(null == mNotificationManager) {
-            mNotificationManager = (NotificationManager) VectorsApp.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
         }
     }
 
@@ -488,11 +482,7 @@ public class MainBGService extends IntentService {
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
                         customLogger("Getting a file payload " + payload.asFile().getSize());
-                        NotificationCompat.Builder notification = buildNotification(payload, true /*isIncoming*/);
-                        if (enableNotifications) {
-                            mNotificationManager.notify((int) payload.getId(), notification.build());
-                        }
-                        incomingPayloads.put(Long.valueOf(payload.getId()), notification);
+                        incomingPayloads.add(Long.valueOf(payload.getId()));
                         incomingPayloadReferences.put(payload.getId(), payload);
                     } else {
                         customLogger("Diff type payload");
@@ -501,10 +491,8 @@ public class MainBGService extends IntentService {
 
                 @Override
                 public void onPayloadTransferUpdate(String endpointId, PayloadTransferUpdate update) {
-                    NotificationCompat.Builder notification = new NotificationCompat.Builder(getApplicationContext()).setSmallIcon(R.drawable.common_full_open_on_phone);
                     long payloadId = update.getPayloadId();
-                    if (incomingPayloads.containsKey(payloadId)) {
-                        notification = incomingPayloads.get(payloadId);
+                    if (incomingPayloads.contains(payloadId)) {
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
                             incomingPayloads.remove(payloadId);
                         }
@@ -512,8 +500,7 @@ public class MainBGService extends IntentService {
                             checkConnectionTermination();
                             // done receiving
                         }
-                    } else if (outgoingPayloads.containsKey(payloadId)) {
-                        notification = outgoingPayloads.get(payloadId);
+                    } else if (outgoingPayloads.contains(payloadId)) {
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
                             outgoingPayloads.remove(payloadId);
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
@@ -534,14 +521,8 @@ public class MainBGService extends IntentService {
                     switch(update.getStatus()) {
                         case PayloadTransferUpdate.Status.IN_PROGRESS:
                             int size = (int)update.getTotalBytes();
-                            notification.
-                                    setProgress(size, (int)update.getBytesTransferred(),
-                                            false /* indeterminate */);
                             break;
                         case PayloadTransferUpdate.Status.SUCCESS:
-                            notification
-                                    .setProgress(100, 100, false /* indeterminate */)
-                                    .setContentText("Transfer complete!");
                             String filename = filePayloadFilenames.remove(update.getPayloadId());
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
@@ -556,13 +537,7 @@ public class MainBGService extends IntentService {
                             }
                             break;
                         case PayloadTransferUpdate.Status.FAILURE:
-                            notification
-                                    .setProgress(0, 0, false)
-                                    .setContentText("Transfer failed");
                             break;
-                    }
-                    if (enableNotifications) {
-                        mNotificationManager.notify((int) payloadId, notification.build());
                     }
                 }
             };
@@ -651,11 +626,8 @@ public class MainBGService extends IntentService {
 
         for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
             Payload filePayload = outgoingPayloadReferences.get(i);
-            NotificationCompat.Builder notification = buildNotification(filePayload, false);
-            if (enableNotifications) {
-                mNotificationManager.notify((int) filePayload.getId(), notification.build());
-            }
-            outgoingPayloads.put(Long.valueOf(filePayload.getId()), notification);
+
+            outgoingPayloads.add(Long.valueOf(filePayload.getId()));
 
             VideoData vd = requestedVideoDatas.get(i);
             if (vd != null) {
@@ -824,17 +796,5 @@ public class MainBGService extends IntentService {
             sendConnectionStatus("Disconnect Initiated");
             restartNearby();
         }
-    }
-
-    private NotificationCompat.Builder buildNotification(Payload payload, boolean isIncoming) {
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(this).setContentTitle(isIncoming ? "Receiving..." : "Sending...").setSmallIcon(R.drawable.common_full_open_on_phone);
-        long size = payload.asFile().getSize();
-        boolean indeterminate = false;
-        if (size == -1) {
-            size = 100;
-            indeterminate = true;
-        }
-        notification.setProgress((int)size, 0, indeterminate);
-        return notification;
     }
 }
