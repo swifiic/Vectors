@@ -7,7 +7,7 @@ cd /var/spool/vector
 # use v4l2-ctl --list-formats-ext to find options on framerate etc.
 fileBase=/var/www/video_out
 framerate=5
-num_frames=32
+num_frames=65
 input=/dev/video0
 
 # resolution based arguments
@@ -48,7 +48,8 @@ if [ -z $ffmpegPath ]; then
 fi
 
 # recording and down converting to get QCIF file.
-${ffmpegPath} -f v4l2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
+# ${ffmpegPath} -f v4l2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
+${ffmpegPath} -f video4linux2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
 ${downConvertCommand}
 
 echo "Downconverded the file";
