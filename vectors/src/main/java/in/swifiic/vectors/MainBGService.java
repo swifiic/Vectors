@@ -624,9 +624,18 @@ public class MainBGService extends IntentService {
             customLogger("FileMap transfer fail" + e.getMessage());
         }
         //put code here?
-        FileTransferTask fileTransferTask = new FileTransferTask(outgoingPayloads, requestedVideoDatas, outgoingTransfersMetadata,
-                                                                outgoingPayloadReferences, mConnectionClient, connectedEndpoint, this);
-        fileTransferTask.execute(null, null, null);
+        for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
+            Payload filePayload = outgoingPayloadReferences.get(i);
+            outgoingPayloads.add(Long.valueOf(filePayload.getId()));
+            VideoData vd = requestedVideoDatas.get(i);
+            if (vd != null) {
+                String videoDataJSON = vd.toString();
+                videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
+                mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
+                outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
+            }
+            mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
+        }
     }
 
     private void processFileList(String filelist) {

@@ -18,7 +18,7 @@ import in.swifiic.common.VideoData;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
-public class FileTransferTask extends AsyncTask<Void, Void, Void> {
+public class FileTransferTask extends Thread {
     public ArrayList<Long> outgoingPayloads;
     public List<VideoData> requestedVideoDatas;
     public SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata;
@@ -38,7 +38,7 @@ public class FileTransferTask extends AsyncTask<Void, Void, Void> {
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    public void run() {
         for (int i = 0; i < outgoingPayloadReferences.size(); i++) {
             Payload filePayload = outgoingPayloadReferences.get(i);
             outgoingPayloads.add(Long.valueOf(filePayload.getId()));
@@ -51,13 +51,5 @@ public class FileTransferTask extends AsyncTask<Void, Void, Void> {
             }
             mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
         }
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-        ref.sendGoodbye();
-        ref.customLogger("Done sending files.");
     }
 }
