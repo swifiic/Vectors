@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.SimpleArrayMap;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
@@ -198,6 +199,16 @@ public class MainBGService extends IntentService {
         } else {
             customLogger( "Bgservicedisable");
         }
+
+        Acknowledgement ack = mFileModule.getAckFromFile();
+        if (ack != null) {
+            // TODO - test this
+            byte[] x = Acknowledgement.getCompressedAcknowledgement(ack);
+            customLogger("X Str Len " + x.length);
+            Acknowledgement newAck = Acknowledgement.getDecompressedAck(x);
+            customLogger(newAck.toString());
+        }
+
         initaliseTimer();
         setBackgroundService();
     }
@@ -599,8 +610,10 @@ public class MainBGService extends IntentService {
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
-            String dackMsg = ack.toString();
-            dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, dackMsg);
+            // TODO - test this
+            byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
+            String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
+            String dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, compressedBase64);
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
             customLogger("Sending ack with timestamp as " + ack.getAckTime());
         } else  {
@@ -696,8 +709,9 @@ public class MainBGService extends IntentService {
         mFileModule.writeToJSONFile(vd);
     }
 
-    private void processDackJSON(String parseMsg) {
-        Acknowledgement incomingAck = Acknowledgement.fromString(parseMsg);
+    private void processDackJSON(String compressedBase64) {
+        byte[] data = Base64.decode(compressedBase64, Base64.DEFAULT);
+        Acknowledgement incomingAck = Acknowledgement.getDecompressedAck(data);
         customLogger("Received ack with timestamp as " + incomingAck.getAckTime());
         long currentTimeInSec = System.currentTimeMillis() / 1000;
         if(incomingAck.getAckTime() > currentTimeInSec + 3600){

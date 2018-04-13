@@ -23,6 +23,7 @@ public final class Constants {
     public static final int RESTART_NEARBY_SECS = 300;
     public static final String ENDPOINT_PREFIX = "Vectors_";
     public static final int FILE_BUFFER_SIZE = 1024*16;
+    public static final int ACK_BUFFER_SIZE = 1024*128;
 
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";
