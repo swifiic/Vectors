@@ -614,8 +614,9 @@ public class MainBGService extends IntentService {
             byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
             String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
             String dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, compressedBase64);
+            customLogger("Sending ack with timestamp as " + ack.getAckTime() + " msg len " + dackMsg.length());
+
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
-            customLogger("Sending ack with timestamp as " + ack.getAckTime());
         } else  {
             customLogger("Skipping ack as it decodes to null or does not exist.");
         }
