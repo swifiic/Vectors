@@ -20,16 +20,19 @@ else
     if [ -z ${layerLast} ]; then
         layerLast=100;
     else
-        indexLast=$(( ${video_file_counter} - 5 ));
-        indexSecondLast=$(( ${indexLast} - 1 ));
+        indexLast=$(( ${video_file_counter} - 24 ));
+        indexSecondLast=$(( ${indexLast} - 8 ));
         /usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1* ; exit 0" > /tmp/tempList
         #ls -l "${DestDir}" > /tmp/tempList
         count=`grep -c -E "${indexLast}_L0T1.out|${indexSecondLast}_L0T1.out" /tmp/tempList`
-        if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "105" ] ; then
+        if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "101" ] ; then
+            layerLast=$(( ${layerLast} + 9 ));
+        fi
+        if [ "${count}" -eq "2" ] && [ "${layerLast}" -lt "105" ] ; then
             layerLast=$(( ${layerLast} + 3 ));
         fi
-        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "11" ] ; then
-            layerLast=$(( ${layerLast} - 1 ));
+        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "15" ] ; then
+            layerLast=$(( ( ${layerLast} * 9)/10 ));
         fi
 
     fi
@@ -46,10 +49,10 @@ src_fldr="/var/www/video_out"
 # video_00175_L0T2.out  video_00175_L0T4.out  video_00175_L1T1.out  video_00175_L1T3.out  video_00175_L1T5.out
 
 fileNames=( ".md" "_L0T1.out" "_L0T2.out" "_L0T3.out" "_L0T4.out" "_L0T5.out" "_L1T1.out" "_L1T2.out" "_L1T3.out" "_L1T4.out" "_L1T5.out" )
-copyCounts=( 32   32         16          16           8           8              6           6         6           6           6         )
+copyCounts=( 128   128         64          64           48           48              32           32         24           24           16         )
 
 echo "Listing the target folder - may have errors or can be blank"
-#ls -l "${DestDir}"
+ls -l "${src_fldr}"
 /usr/bin/adb shell "ls /sdcard/VectorsData/ ; exit 0"
 
 
