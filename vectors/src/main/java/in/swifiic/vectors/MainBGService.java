@@ -175,7 +175,7 @@ public class MainBGService extends IntentService {
 
     private String createDeviceId() {
         String androidId = Settings.Secure.getString(VectorsApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-        deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" +  androidId.substring(androidId.length() - 4); //get last 4 chars
+        deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" + BuildConfig.VERSION_NAME + "_" + androidId.substring(androidId.length() - 4); //get last 4 chars
         return deviceId;
     }
 
@@ -723,7 +723,7 @@ public class MainBGService extends IntentService {
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
                     } else {
-                        customLogger("JSON not decodeable for " + requestedFiles.get(i));
+                        customLogger("JSON not decodeable / not found for " + requestedFiles.get(i));
                     }
                 }
             }

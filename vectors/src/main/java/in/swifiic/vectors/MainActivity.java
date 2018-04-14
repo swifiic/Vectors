@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
             lineCounter = 0;
         }
 
-        String timeStamp = new SimpleDateFormat("kk.mm.ss.SS").format(new Date());
+        String timeStamp = new SimpleDateFormat("HH.mm.ss.SS").format(new Date());
         logView.append(timeStamp+' '+msg+"\n");
         lineCounter++;
     }
