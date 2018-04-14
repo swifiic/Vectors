@@ -67,8 +67,8 @@ public class MainBGService extends IntentService {
     private final IBinder mBinder = new LocalBinder();
     private boolean nearbyEnabled = false;
 
-    private ConnectionsClient mConnectionClient;
-    private String connectedEndpoint;
+    public ConnectionsClient mConnectionClient;
+    public String connectedEndpoint;
     private String startTime;
     private boolean extraChecks = true;
     private boolean goodbyeSent = false;
@@ -84,11 +84,11 @@ public class MainBGService extends IntentService {
     private TimerTask timerTask;
 
     private final ArrayList<Long> incomingPayloads = new ArrayList<>();
-    private final ArrayList<Long> outgoingPayloads = new ArrayList<>();
+    public final ArrayList<Long> outgoingPayloads = new ArrayList<>();
 
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-    private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
+    public SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
     private List<Pair<String, Long>> recentlyVisitedNodes = new ArrayList<>();
 
     SharedPreferences mSharedPreferences;
