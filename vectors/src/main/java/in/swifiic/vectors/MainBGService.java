@@ -186,7 +186,7 @@ public class MainBGService extends IntentService {
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         mEditor = mSharedPreferences.edit();
-        mEditor.putString(Constants.DEVICE_ID, deviceId);
+        mEditor.putString(Constants.DEVICE_ID, getDeviceId());
         mEditor.apply();
         if (enableBackgroundService()) {
             customLogger( "BgserviceEnable");
@@ -301,7 +301,7 @@ public class MainBGService extends IntentService {
 
     private void startAdvertising() {
         mConnectionClient.startAdvertising(
-                deviceId,
+                getDeviceId(),
                 VectorsApp.getContext().getPackageName(),
                 mConnectionLifecycleCallback,
                 new AdvertisingOptions(Strategy.P2P_CLUSTER))
@@ -370,7 +370,7 @@ public class MainBGService extends IntentService {
                         stopDiscovery();
                         customLogger("Stopping before requesting Conn");
                         mConnectionClient.requestConnection(
-                                deviceId,
+                                getDeviceId(),
                                 endpointId,
                                 mConnectionLifecycleCallback).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
@@ -584,7 +584,7 @@ public class MainBGService extends IntentService {
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
-            ack.addTraversedNode(deviceId);
+            ack.addTraversedNode(getDeviceId());
             // TODO - test this
             byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
             String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
@@ -736,7 +736,7 @@ public class MainBGService extends IntentService {
                 if (vd != null) {
                     if (vd.getTickets() > 1) {
                         vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
-                        vd.addTraversedNode(deviceId);
+                        vd.addTraversedNode(getDeviceId());
                         //send JSON and file
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 (dack != null && dack.containsFilename(vd.getFileName())))) {
