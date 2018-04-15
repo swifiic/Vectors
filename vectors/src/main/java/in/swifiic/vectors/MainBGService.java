@@ -81,6 +81,7 @@ public class MainBGService extends IntentService {
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
     private boolean enableNotifications = false;
+    private boolean attemptingConnection = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
@@ -262,6 +263,7 @@ public class MainBGService extends IntentService {
     }
 
     synchronized private void restartNearby() {
+        attemptingConnection = false;
         customLogger("RestartingNearby");
         incomingPayloads.clear();
         outgoingPayloads.clear();
@@ -369,9 +371,10 @@ public class MainBGService extends IntentService {
                 public void onEndpointFound(String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
                     setLastNodeContactTime();
-                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null && !attemptingConnection) {
                         stopAdvertising();
                         stopDiscovery();
+                        attemptingConnection = true;
                         customLogger("Stopping before requesting Conn");
                         mConnectionClient.requestConnection(
                                 getDeviceId(),
@@ -415,6 +418,7 @@ public class MainBGService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                    attemptingConnection = false;
                     customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
