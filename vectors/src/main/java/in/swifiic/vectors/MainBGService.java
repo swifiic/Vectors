@@ -285,7 +285,7 @@ public class MainBGService extends IntentService {
         
         goodbyeReceived = false;
         goodbyeSent = false;
-        SystemClock.sleep(Constants.DELAY_TIME_MS);
+        SystemClock.sleep(Constants.DELAY_TIME_MS*5);
         startAdvertising();
         startDiscovery();
         customLogger("RestartedComm");
@@ -376,18 +376,19 @@ public class MainBGService extends IntentService {
                         mConnectionClient.requestConnection(
                                 getDeviceId(),
                                 endpointId,
-                                mConnectionLifecycleCallback).addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                customLogger("requesting conn");
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                customLogger("Discovery failiure " + e.getMessage());
-                                restartNearby();
-                            }
-                        });
+                                mConnectionLifecycleCallback).
+                                addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            customLogger("requesting conn");
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            customLogger("Connection fail " + e.getMessage());
+                                            restartNearby();
+                                        }
+                                    });
                     }
                 }
 
