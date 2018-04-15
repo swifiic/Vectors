@@ -286,18 +286,8 @@ public class MainBGService extends IntentService {
         goodbyeReceived = false;
         goodbyeSent = false;
         SystemClock.sleep(Constants.DELAY_TIME_MS);
-        try {
-            Tasks.await(startAdvertising(), Constants.ADVERT_DISCOVERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            Tasks.await(startDiscovery(), Constants.ADVERT_DISCOVERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (ExecutionException e) {
-            customLogger("Exec exception " + e.getMessage());
-        } catch (InterruptedException e) {
-            customLogger("Interrupted exception " + e.getMessage());
-        } catch (TimeoutException e) {
-            customLogger("Timeout exception " + e.getMessage());
-        } catch (Exception e) {
-            customLogger("Other exception " + e.getMessage());
-        }
+        startAdvertising();
+        startDiscovery();
         customLogger("RestartedComm");
     }
 
