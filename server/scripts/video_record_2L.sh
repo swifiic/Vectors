@@ -29,7 +29,6 @@ dc_res_1="320 240 "
 dc_res_2="160 120 "
 srcWidthStr=" -wdt0 160 -hgt0 120 -wdt1 320 -hgt1 240 "
 
-
 video_file_counter=`cat ./counter`
 counterPart=`printf "%05d" ${video_file_counter}`
 temp_file_counter=$((video_file_counter+1))
@@ -50,6 +49,11 @@ fi
 # recording and down converting to get QCIF file.
 # ${ffmpegPath} -f v4l2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
 ${ffmpegPath} -f video4linux2 -framerate ${framerate} -video_size ${resolution} -i ${input} -vframes ${num_frames} rec/output_${counterPart}.yuv
+
+${ffmpegPath} -y -r ${framerate} -f rawvideo -s ${resolution} -pix_fmt yuyv422 -i rec/output_${counterPart}.yuv -pix_fmt yuv420p -f rawvideo -r ${framerate} -s ${resolution} rec/output_${counterPart}_yuv420p.yuv
+
+mv rec/output_${counterPart}_yuv420p.yuv rec/output_${counterPart}.yuv
+
 ${downConvertCommand}
 
 echo "Downconverded the file";
@@ -77,4 +81,3 @@ cd ${fileBase}
 
 # remove files older than 2 days - for transfer
 find . -type f -mtime +48 -exec rm {} \;
-

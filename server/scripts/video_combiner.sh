@@ -1,33 +1,48 @@
 #!/bin/sh
 
+# TODO: file in folder issue
+# TODO: H264 encoding not happening (buffer issue)
+
 set -o xtrace
 
-mkdir -p /var/www/video_in/combined
+if [ "$#" -ne 2 ]; then
+    echo "Usage: video_combiner.sh  \"no.of sequence numbers\"  \"no.of frames\""
+    exit
+fi
 
-mkdir -p /var/www/video_in/encoded
+base=/var/www/video_in
 
-mkdir -p /var/www/video_in/decoded
+# combined layers output bin
+mkdir -p ${base}/encoded
 
-mkdir -p /var/www/video_in/todecode
+# combined layers output yuv
+mkdir -p ${base}/decoded
 
-mkdir -p /var/www/video_in/combined/yuv
+# temp dir workspace
+mkdir -p ${base}/todecode
 
-mkdir -p /var/www/video_in/combined/compressed
 
-mkdir -p /var/www/video_in/waste
+mkdir -p ${base}/combined/yuv
 
-cd /var/www/video_in/
+mkdir -p ${base}/combined/compressed
 
-files=()
+mkdir -p ${base}/waste
+
+cd ${base}/dSpace
+
+files=() # array to save file sequence numbers
+
+numSeq=$1
 
 seqNumStr=""
 
+#get the first file in the folder
 while [[ true ]]; do
-    oldestMDFile=`find ./ -maxdepth 1 -type f -name "video*.md" -printf '%T@ %p\0' | sort -zn | sed -zn '1s/[0-9,\.]\+ //p'`
+    firstFile=` ls video_*.md | head -n 1`
 
-    echo ${oldestMDFile}
+    echo ${firstFile}
 
-    tmp=${oldestMDFile#*_}   # remove prefix ending in "_"
+    tmp=${firstFile#*_}   # remove prefix ending in "_"
     seqNumStr=${tmp%.*}   # remove suffix starting with "."
 
     echo "seq number = ${seqNumStr}"
@@ -36,24 +51,18 @@ while [[ true ]]; do
     if [[ -e video_${seqNumStr}_L0T1.out ]]; then
         break
     else
-        rm video_${seqNumStr}*
-        echo "hello"
+        mv video_${seqNumStr}* ../waste
     fi
 done
 
 seqNumInt=`expr $seqNumStr + 0`
 echo ${seqNumInt}
 
-for (( i = 0; i < 5; i++ )); do
-    counterPart=`printf "%05d" ${seqNumInt}`
+for (( i = ${seqNumInt}; i <= $((seqNumInt+numSeq)); i++ )); do
+    counterPart=`printf "%05d" ${i}`
     files+=(${counterPart})
-    ((seqNumInt++));
-    mv ./video_${counterPart}.md ./todecode
-    mv ./video_${counterPart}_L0T1.out ./todecode
+    mv ./video_${counterPart}.md ./video_${counterPart}_L0*.out ../todecode
 done
-
-
-cd ./todecode
 
 echo "files array elements"
 
@@ -64,7 +73,7 @@ newYUVFile=${newYUVFile:1}
 newYUVFile="output_${newYUVFile}.yuv"
 echo $newYUVFile
 
-addFirstFrame=0
+bAddFirstFrame=0
 
 numFramesToAdd=32
 
@@ -72,70 +81,77 @@ count=0
 
 echo "num values in array = ${#files[*]}"
 
-for (( i = 0; i < ${#files[*]}; ++ i ))
-do
-   echo ${files[$i]}
-   if [[ -f video_${files[$i]}_L0T1.out && -f video_${files[$i]}.md ]]; then
-
-       /var/spool/vector/bin/CombineLS video_${files[$i]} /var/www/video_in/encoded/enc_${files[$i]}.bin 5 2
-
-       /var/spool/vector/bin/TAppDecoderStaticd -b /var/www/video_in/encoded/enc_${files[$i]}.bin -ls 2 -o0 /var/www/video_in/decoded/out_${files[$i]}_Q.yuv
-
-       if [[ 1 == ${addFirstFrame} ]]; then
-           echo 'extending the first frame'
-           firstFrame=`ls -At frames* | tail -n 1`
-
-           for (( j=1; j <= ${numFramesToAdd}; ++j ))
-           do
-               cat firstFrame >> /var/www/video_in/combined/yuv/$newYUVFile
-           done
-           rm frames*
-           addFirstFrame=0
-           numFramesToAdd=32
-       fi
-
-       cat /var/www/video_in/decoded/out_${files[$i]}_Q.yuv >> /var/www/video_in/combined/yuv/$newYUVFile
-
-   else
-       echo 'base layer not found'
-       echo 'extending the last frame'
-       addFirstFrame=1
-
-       ffmpeg -f rawvideo -framerate 5 -s 640x480 -pixel_format yuyv422 -i out_${files[$i-1]}_Q.yuv -c copy -f segment -segment_time 1 frames%d.yuv
-       lastFrame=`ls -Art frames* | tail -n 1`
-
-       for (( k = i+1; k < ${#files[*]}; k++ )); do
-           if [[ ! -f video_${files[$i]}_L0T1* && -f video_${files[$i]}.md  ]]; then
-               numFramesToAdd+=${numFramesToAdd}
-               ((count++))
-           else
-               break
-           fi
-       done
-
-       for (( j=1; j <= ${numFramesToAdd}; ++j ))
-       do
-           cat lastFrame >> /var/www/video_in/combined/yuv/$newYUVFile
-       done
-
-       i=i+count
-       count=0
-   fi
-done
+tFactor=0
+lCount=0
 
 dc_res_1="320 240 "
 dc_res_2="160 120 "
 
-echo  "scaling the video"
-/var/spool/vector/bin/DownConvertStaticd ${dc_res_2} /var/www/video_in/combined/yuv/${newYUVFile} ${dc_res_1} /var/www/video_in/combined/yuv/highRes_${newYUVFile}
+cd /var/www/video_in/todecode
 
+for (( i = 0; i < ${#files[*]}; ++ i ))
+do
+    echo "current file sequence number ${files[$i]}"
+
+    if [[ ! -e video_${files[$i]}.md ]]; then
+        # nothing can be done
+        # add frames from the previous and the next video
+        tFactor=0
+    elif [[ ! -e video_${files[$i]}_L0T1.out ]]; then
+        # nothing can be done
+        # add frames from the previous and the next video
+        tFactor=0
+    elif [[ ! -e video_${files[$i]}_L0T2.out ]]; then
+        # each frame 16 times
+        tFactor=16
+    elif [[ ! -e video_${files[$i]}_L0T3.out ]]; then
+        # each frame 8 times
+        tFactor=8
+    elif [[ ! -e video_${files[$i]}_L0T4.out ]]; then
+        # each frame 4 times
+        tFactor=4
+    elif [[ ! -e video_${files[$i]}_L0T5.out ]]; then
+        # each frame 2 times
+        tFactor=2
+    else
+        tFactor=1
+        echo "All the layers are available"
+    fi
+
+    if [[ ${tFactor} == 0 ]]; then
+        #add last frame of previous video
+        lastFrame=`ls /var/www/video_in/decoded/frames* -Art | tail -n 1`
+        for (( i = 0; i < 97; i++ )); do
+            cat ${lastFrame} >> /var/www/video_in/combined/yuv/${newYUVFile}
+        done
+    else
+        echo "combining the layers"
+        /var/spool/vector/bin/CombineLS video_${files[$i]} /var/www/video_in/encoded/enc_${files[$i]}.bin 5 2
+
+        echo "decoding the layers"
+        /var/spool/vector/bin/TAppDecoderStaticd -b /var/www/video_in/encoded/enc_${files[$i]}.bin -ls 2 -o0 /var/www/video_in/decoded/out_${files[$i]}_Q.yuv
+
+        echo  "scaling the video"
+        /var/spool/vector/bin/DownConvertStaticd ${dc_res_2} /var/www/video_in/decoded/out_${files[$i]}_Q.yuv ${dc_res_1} /var/www/video_in/decoded/out_${files[$i]}.yuv
+
+        echo "splitting frames"
+        ffmpeg -f rawvideo -framerate 5 -s 320x240 -pixel_format yuyv422 -i /var/www/video_in/decoded/out_${files[$i]}.yuv -c copy -f segment -segment_time 0.01 /var/www/video_in/decoded/frames%d.yuv
+
+        echo "creating the new YUV file"
+        tNumFrames=`ls /var/www/video_in/decoded/frames* | wc -l`
+        for (( k = 0; k < ${tNumFrames}; k++ )); do
+            # for each frame
+            for (( j = 0; j < ${tFactor}; j++ )); do
+                # adding each frame tFactor times
+                cat /var/www/video_in/decoded/frames${k}.yuv >> /var/www/video_in/combined/yuv/${newYUVFile}
+            done
+        done
+    fi
+    mv ./video_${files[$i]}* /var/www/video_in/waste
+done
+
+rm /var/www/video_in/decoded/frames*
+
+compressedFile=${newYUVFile%.*}
 echo "convert yuv to .264 in mp4 container"
-ffmpeg -f rawvideo -vcodec rawvideo -s 320x240 -r 5 -pix_fmt yuv422p -i /var/www/video_in/combined/yuv/${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 /var/www/video_in/combined/compressed/${newYUVFile}.mp4
-
-mv /var/www/video_in/todecode/video_* ../waste
-
-# mv ./video_${fileCounter}* /var/www/video_in/combined
-
-# ffmpeg -f lavfi -i nullsrc=s=640x480:d=10:r=30 -i output_640x480.yuv -filter_complex "[0:v][1:v]overlay[video]" -map "[video]" -shortest output_video.yuv
-
-# ffmpeg -f rawvideo -framerate 5 -s 640x480 -pixel_format yuv420p -i in.yuv -c copy -f segment -segment_time 0.01 frames%d.yuv
+ffmpeg -f rawvideo -vcodec rawvideo -s 320x240 -r 5 -pix_fmt yuv422p -i /var/www/video_in/combined/yuv/${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 /var/www/video_in/combined/compressed/${compressedFile}.mp4
