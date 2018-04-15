@@ -24,6 +24,8 @@ public final class Constants {
     public static final String ENDPOINT_PREFIX = "Vectors_";
     public static final int FILE_BUFFER_SIZE = 1024*16;
     public static final int ACK_BUFFER_SIZE = 1024*128;
+    public static final int ADVERT_DISCOVERY_TIMEOUT_MS = 1000;
+    public static final int FILE_SENT_TIMEOUT_MS = 10000;
 
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";

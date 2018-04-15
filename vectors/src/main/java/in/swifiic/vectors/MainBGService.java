@@ -42,6 +42,7 @@ import com.google.android.gms.nearby.connection.Strategy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
@@ -52,6 +53,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 
 import static in.swifiic.vectors.MessageScheme.getMessageType;
@@ -282,8 +286,18 @@ public class MainBGService extends IntentService {
         goodbyeReceived = false;
         goodbyeSent = false;
         SystemClock.sleep(Constants.DELAY_TIME_MS);
-        startAdvertising();
-        startDiscovery();
+        try {
+            Tasks.await(startAdvertising(), Constants.ADVERT_DISCOVERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            Tasks.await(startDiscovery(), Constants.ADVERT_DISCOVERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (ExecutionException e) {
+            customLogger("Exec exception " + e.getMessage());
+        } catch (InterruptedException e) {
+            customLogger("Interrupted exception " + e.getMessage());
+        } catch (TimeoutException e) {
+            customLogger("Timeout exception " + e.getMessage());
+        } catch (Exception e) {
+            customLogger("Other exception " + e.getMessage());
+        }
         customLogger("RestartedComm");
     }
 
@@ -299,8 +313,8 @@ public class MainBGService extends IntentService {
         }
     }
 
-    private void startAdvertising() {
-        mConnectionClient.startAdvertising(
+    private Task<Void> startAdvertising() {
+        return mConnectionClient.startAdvertising(
                 getDeviceId(),
                 VectorsApp.getContext().getPackageName(),
                 mConnectionLifecycleCallback,
@@ -321,8 +335,8 @@ public class MainBGService extends IntentService {
                         });
     }
 
-    private void startDiscovery() {
-        mConnectionClient.startDiscovery(
+    private Task<Void> startDiscovery() {
+        return mConnectionClient.startDiscovery(
                 VectorsApp.getContext().getPackageName(),
                 mEndpointDiscoveryCallback,
                 new DiscoveryOptions(Strategy.P2P_CLUSTER))
