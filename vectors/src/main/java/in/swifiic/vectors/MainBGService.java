@@ -81,7 +81,7 @@ public class MainBGService extends IntentService {
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
     private boolean enableNotifications = false;
-    private boolean attemptingConnection = false;
+    private boolean connectionRequested = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
@@ -263,7 +263,7 @@ public class MainBGService extends IntentService {
     }
 
     synchronized private void restartNearby() {
-        attemptingConnection = false;
+        connectionRequested = false;
         customLogger("RestartingNearby");
         incomingPayloads.clear();
         outgoingPayloads.clear();
@@ -368,13 +368,12 @@ public class MainBGService extends IntentService {
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
-                public void onEndpointFound(String endpointId, DiscoveredEndpointInfo discoveredEndpointInfo) {
+                public void onEndpointFound(String endpointId, final DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
                     setLastNodeContactTime();
-                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null && !attemptingConnection) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null && !connectionRequested) {
                         stopAdvertising();
                         stopDiscovery();
-                        attemptingConnection = true;
                         customLogger("Stopping before requesting Conn");
                         mConnectionClient.requestConnection(
                                 getDeviceId(),
@@ -389,6 +388,10 @@ public class MainBGService extends IntentService {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {
                                             customLogger("Connection fail " + e.getMessage());
+                                            if (e.getMessage().compareTo("8003: STATUS_ALREADY_CONNECTED_TO_ENDPOINT")==0) {
+                                                customLogger("adding " + discoveredEndpointInfo.getEndpointName() + " to timeout list");
+                                                recentlyVisitedNodes.add(new Pair<>(discoveredEndpointInfo.getEndpointName(), System.currentTimeMillis() / 1000));
+                                            }
                                             restartNearby();
                                         }
                                     });
@@ -408,6 +411,7 @@ public class MainBGService extends IntentService {
                 public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
+                    connectionRequested = true;
                     endpointName = connectionInfo.getEndpointName();
                     customLogger("Pending connection From " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
@@ -418,7 +422,7 @@ public class MainBGService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
-                    attemptingConnection = false;
+                    connectionRequested = false;
                     customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
