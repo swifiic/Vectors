@@ -384,7 +384,7 @@ public class MainBGService extends IntentService {
                         }).addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("fail conn t_t" + e.getMessage());
+                                customLogger("Discovery failiure " + e.getMessage());
                                 restartNearby();
                             }
                         });
