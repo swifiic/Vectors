@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                 Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
                 if (emailPattern.matcher(acc.name).matches()) {
                     possibleEmail = acc.name;
+                    break;
                 }
             }
             customLogger(possibleEmail);
