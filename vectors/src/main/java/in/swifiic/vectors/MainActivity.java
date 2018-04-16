@@ -171,7 +171,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
             }
-            customLogger(possibleEmail);
+            if (BuildConfig.DEBUG) {
+                customLogger(possibleEmail);
+            }
             mEditor.putString(Constants.USER_EMAIL_ID, possibleEmail);
             mEditor.apply();
         } else {
