@@ -128,6 +128,10 @@ public class MainBGService extends IntentService {
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
     }
 
+    public String getUserEmailId() {
+        return mSharedPreferences.getString(Constants.USER_EMAIL_ID, "example@example.com");
+    }
+
 
     public void setBackgroundService() {
         if (enableBackgroundService()) {
@@ -598,7 +602,7 @@ public class MainBGService extends IntentService {
     private void sendDestinationAck() {
         Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
-            ack.addTraversedNode(getDeviceId());
+            ack.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
             // TODO - test this
             byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
             String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
@@ -750,7 +754,7 @@ public class MainBGService extends IntentService {
                 if (vd != null) {
                     if (vd.getTickets() > 1) {
                         vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
-                        vd.addTraversedNode(getDeviceId());
+                        vd.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
                         //send JSON and file
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 (dack != null && dack.containsFilename(vd.getFileName())))) {

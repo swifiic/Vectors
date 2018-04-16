@@ -19,6 +19,7 @@ public final class Constants {
     public static final int LOG_TEXT_VIEW_LINES = 1000;
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
+    public static final String USER_EMAIL_ID = "swifiic.vectors.android.USER_EMAIL_ID";
     public static final int DELAY_TIME_MS = 10;
     public static final int RESTART_NEARBY_SECS = 300;
     public static final String ENDPOINT_PREFIX = "Vectors_";

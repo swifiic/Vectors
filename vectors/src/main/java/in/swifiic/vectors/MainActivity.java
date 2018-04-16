@@ -1,6 +1,8 @@
 package in.swifiic.vectors;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -23,6 +25,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -37,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     MainBGService mService;
@@ -65,6 +69,11 @@ public class MainActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.GET_ACCOUNTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.GET_ACCOUNTS);
+        }
 
         if (!listPermissionsNeeded.isEmpty()) {
             String[] requiredPermissionsArray = listPermissionsNeeded.toArray(new String[0]);
@@ -73,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean checkPermissions() {
+        // User Email isn't essential, so it's okay if the user doesn't want to share it
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED &&
@@ -151,6 +161,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startApp() {
+        Account[] accounts = AccountManager.get(VectorsApp.getContext()).getAccounts();
+        String possibleEmail = null;
+        if (accounts.length > 0) {
+            for (Account acc : accounts) {
+                Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
+                if (emailPattern.matcher(acc.name).matches()) {
+                    possibleEmail = acc.name;
+                }
+            }
+            customLogger(possibleEmail);
+            mEditor.putString(Constants.USER_EMAIL_ID, possibleEmail);
+            mEditor.apply();
+        } else {
+            customLogger("Email denied");
+        }
         Intent intent = new Intent(this, MainBGService.class);
 
         if (isMyServiceRunning(MainBGService.class)) {
@@ -218,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         customLogger("On Create");
+
         mEditor = mSharedPreferences.edit();
         if (!checkPermissions()) {
             getPermissions();
