@@ -30,7 +30,8 @@ public class AboutActivity extends AppCompatActivity {
         if (BuildConfig.DEBUG) {
             buildType = "_Debug";
         }
-        buildVersionText.setText("Build Version: " + timeStamp + buildType + " on " + hostname);
+        String versionName = BuildConfig.VERSION_NAME;
+        buildVersionText.setText("App Version: v" + versionName + "\nBuild Version: " + timeStamp + buildType + " on " + hostname);
         //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
 //        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }

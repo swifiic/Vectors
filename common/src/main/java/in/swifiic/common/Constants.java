@@ -20,8 +20,12 @@ public final class Constants {
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
     public static final int DELAY_TIME_MS = 10;
-    public static final int RESTART_NEARBY_SECS = 600;
+    public static final int RESTART_NEARBY_SECS = 300;
     public static final String ENDPOINT_PREFIX = "Vectors_";
+    public static final int FILE_BUFFER_SIZE = 1024*16;
+    public static final int ACK_BUFFER_SIZE = 1024*128;
+    public static final int ADVERT_DISCOVERY_TIMEOUT_MS = 1000;
+    public static final int FILE_SENT_TIMEOUT_MS = 10000;
 
     // Bridge Constants
     public static final String BURST_COUNT = "BURST_COUNT";

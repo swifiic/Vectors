@@ -141,7 +141,7 @@ public class VideoData {
     @Override
     public String toString() {
         Gson gson = new Gson();
-        Log.d(TAG, "JSON string " + gson.toJson(this));
+//        Log.d(TAG, "JSON string " + gson.toJson(this));
         return gson.toJson(this);
     }
 

@@ -1,13 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+
     compileSdkVersion 26
     defaultConfig {
         applicationId "in.swifiic.vectors"
         minSdkVersion 23
         targetSdkVersion 26
-        versionCode 2
-        versionName "1.0"
+        versionCode 4
+        versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField 'String', 'BUILD_HOST', '"' + InetAddress.getLocalHost().getCanonicalHostName() + '"'
@@ -21,18 +22,16 @@ android {
     lintOptions {
         abortOnError false
     }
-
 }
 
 dependencies {
     compile project(':common')
     compile 'com.jaredrummler:android-device-names:1.1.6'
     compile 'com.google.code.gson:gson:2.8.2'
-//    compile 'com.google.guava:guava:24.0-android'
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //    compile 'com.google.guava:guava:24.0-android'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
-
     implementation 'com.google.android.gms:play-services-nearby:11.8.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'

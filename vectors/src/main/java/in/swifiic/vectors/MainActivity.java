@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import in.swifiic.common.Constants;
 
@@ -125,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
         final Button toggleVectorsButton = findViewById(R.id.toggleVectors);
         if (mBound) {
             if (getVectorsStatus()) {
-                toggleVectorsButton.setText("Stop Vectors");
+                toggleVectorsButton.setText(R.string.stop_button_text);
             } else {
-                toggleVectorsButton.setText("Start Vectors");
+                toggleVectorsButton.setText(R.string.start_button_text);
             }
             customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
@@ -165,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!getVectorsStatus()) {
+                    if (BuildConfig.DEBUG) {
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Thank you for participating! For best results, please keep your Bluetooth on.", Toast.LENGTH_LONG).show();
+                    }
                     enableVectors();
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
@@ -277,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
             lineCounter = 0;
         }
 
-        String timeStamp = new SimpleDateFormat("kk.mm.ss.SS").format(new Date());
+        String timeStamp = new SimpleDateFormat("HH.mm.ss.SS").format(new Date());
         logView.append(timeStamp+' '+msg+"\n");
         lineCounter++;
     }
