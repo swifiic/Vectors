@@ -272,7 +272,7 @@ public class MainBGService extends IntentService {
         outgoingTransfersMetadata.clear();
         stopAdvertising();
         stopDiscovery();
-//        mConnectionClient.stopAllEndpoints();
+        mConnectionClient.stopAllEndpoints();
         customLogger("StoppedComms");
         if (connectedEndpoint != null) {
             mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
@@ -368,7 +368,7 @@ public class MainBGService extends IntentService {
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
-                public void onEndpointFound(String endpointId, final DiscoveredEndpointInfo discoveredEndpointInfo) {
+                public void onEndpointFound(final String endpointId, final DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
                     setLastNodeContactTime();
                     if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null && !connectionRequested) {
@@ -389,8 +389,9 @@ public class MainBGService extends IntentService {
                                         public void onFailure(@NonNull Exception e) {
                                             customLogger("Connection fail " + e.getMessage());
                                             if (e.getMessage().compareTo("8003: STATUS_ALREADY_CONNECTED_TO_ENDPOINT")==0) {
-                                                customLogger("adding " + discoveredEndpointInfo.getEndpointName() + " to timeout list");
+                                                customLogger("adding " + discoveredEndpointInfo.getEndpointName() + " to timeout list and disconn");
                                                 recentlyVisitedNodes.add(new Pair<>(discoveredEndpointInfo.getEndpointName(), System.currentTimeMillis() / 1000));
+                                                mConnectionClient.disconnectFromEndpoint(endpointId);
                                             }
                                             restartNearby();
                                         }
