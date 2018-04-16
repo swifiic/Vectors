@@ -524,6 +524,7 @@ public class MainBGService extends IntentService {
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
                                 mFileModule.writeToJSONFile(vd); // update JSON file
+                                mConnectionLog.addSentFile(vd.getFileName());
 //                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
                                 customLogger("Working with non-vid file, sent");
