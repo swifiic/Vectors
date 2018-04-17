@@ -424,7 +424,7 @@ public class MainBGService extends IntentService {
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
                     } else {
                         customLogger("Discarding connection");
-                        mConnectionClient.rejectConnection(endpointId);
+//                        mConnectionClient.rejectConnection(endpointId);
                     }
                 }
 
