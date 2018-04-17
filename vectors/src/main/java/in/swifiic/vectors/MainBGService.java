@@ -422,6 +422,9 @@ public class MainBGService extends IntentService {
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
                         customLogger("Connection initated w/ " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
+                    } else {
+                        customLogger("Discarding connection");
+                        mConnectionClient.rejectConnection(endpointId);
                     }
                 }
 
@@ -448,7 +451,8 @@ public class MainBGService extends IntentService {
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
-                            customLogger("Rejection Fail");
+                            customLogger("Rejected connection with " + endpointName);
+//                            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
