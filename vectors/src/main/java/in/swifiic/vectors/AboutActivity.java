@@ -15,10 +15,12 @@ public class AboutActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
+        TextView privacyPolicyText = findViewById(R.id.privacyPolicyLink);
         TextView swifiicLinkText = findViewById(R.id.swifiicLink);
         TextView fiveHunderedYearsText = findViewById(R.id.fiveHundredLink);
         TextView googleFormText = findViewById(R.id.googleFormLink);
         TextView buildVersionText = findViewById(R.id.buildVersion);
+        privacyPolicyText.setMovementMethod(LinkMovementMethod.getInstance());
         swifiicLinkText.setMovementMethod(LinkMovementMethod.getInstance());
         fiveHunderedYearsText.setMovementMethod(LinkMovementMethod.getInstance());
         googleFormText.setMovementMethod(LinkMovementMethod.getInstance());
@@ -30,7 +32,8 @@ public class AboutActivity extends AppCompatActivity {
         if (BuildConfig.DEBUG) {
             buildType = "_Debug";
         }
-        buildVersionText.setText("Build Version: " + timeStamp + buildType + " on " + hostname);
+        String versionName = BuildConfig.VERSION_NAME;
+        buildVersionText.setText("App Version: v" + versionName + "\nBuild Version: " + timeStamp + buildType + " on " + hostname);
         //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
 //        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }
