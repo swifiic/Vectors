@@ -452,6 +452,15 @@ public class MainBGService extends IntentService {
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
                             customLogger("Rejected connection with " + endpointName);
+//                            boolean addNode;
+//                            for (Pair<String, Long> x : recentlyVisitedNodes) {
+//                                if (x.first.compareTo(endpointName) == 0) {
+//                                    recentlyVisitedNodes.remove(x);
+//                                    customLogger("Updating old timestamp");
+//                                    break;
+//                                }
+//                            }
+////                            recentlyVisitedNodes.add()
 //                            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
                             restartNearby();
                             break;
