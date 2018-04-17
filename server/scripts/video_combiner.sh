@@ -135,7 +135,7 @@ do
         /var/spool/vector/bin/DownConvertStaticd ${dc_res_2} /var/www/video_in/decoded/out_${files[$i]}_Q.yuv ${dc_res_1} /var/www/video_in/decoded/out_${files[$i]}.yuv
 
         echo "splitting frames"
-        ffmpeg -f rawvideo -framerate 5 -s 320x240 -pixel_format yuyv422 -i /var/www/video_in/decoded/out_${files[$i]}.yuv -c copy -f segment -segment_time 0.01 /var/www/video_in/decoded/frames%d.yuv
+        ffmpeg -f rawvideo -framerate 5 -s 320x240 -pixel_format yuv420p -i /var/www/video_in/decoded/out_${files[$i]}.yuv -c copy -f segment -segment_time 0.01 /var/www/video_in/decoded/frames%d.yuv
 
         echo "creating the new YUV file"
         tNumFrames=`ls /var/www/video_in/decoded/frames* | wc -l`
@@ -154,4 +154,4 @@ rm /var/www/video_in/decoded/frames*
 
 compressedFile=${newYUVFile%.*}
 echo "convert yuv to .264 in mp4 container"
-ffmpeg -f rawvideo -vcodec rawvideo -s 320x240 -r 5 -pix_fmt yuv422p -i /var/www/video_in/combined/yuv/${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 /var/www/video_in/combined/compressed/${compressedFile}.mp4
+ffmpeg -f rawvideo -vcodec rawvideo -s 320x240 -r 5 -pix_fmt yuv420p -i /var/www/video_in/combined/yuv/${newYUVFile} -c:v libx264 -preset ultrafast -qp 0 /var/www/video_in/combined/compressed/${compressedFile}.mp4
