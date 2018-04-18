@@ -193,8 +193,8 @@ public class FileModule {
         try {
             String ackJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
             return Acknowledgement.fromString(ackJSON);
-        } catch (IOException e) {
-            Log.d(TAG, "Ack not found");
+        } catch (Exception e) {
+            Log.d(TAG, "Ack not found" + e.getMessage());
         }
         return null;
     }
