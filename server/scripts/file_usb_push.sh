@@ -20,23 +20,37 @@ else
     if [ -z ${layerLast} ]; then
         layerLast=100;
     else
-        indexLast=$(( ${video_file_counter} - 24 ));
-        indexSecondLast=$(( ${indexLast} - 8 ));
+        indexLast=$(( ${video_file_counter} - 40 )); # 4 hours ago
+        indexSecondLast=$(( ${indexLast} - 40 ));   # 8 hours (2+2) ago
+        indexThirdLast=$(( ${indexLast} - 80 ));    # 16 ours (2+6) ago
         /usr/bin/adb shell "ls /sdcard/VectorsData/*L0T1* ; exit 0" > /tmp/tempList
         #ls -l "${DestDir}" > /tmp/tempList
-        count=`grep -c -E "${indexLast}_L0T1.out|${indexSecondLast}_L0T1.out" /tmp/tempList`
+        count=`grep -c -E "${indexLast}_L0T1.out|${indexSecondLast}_L0T1.out|${indexThirdLast}_L0T1.out" /tmp/tempList`
+        oldMetric=${layerLast}
         if [ "${count}" -eq "0" ] && [ "${layerLast}" -lt "101" ] ; then
-            layerLast=$(( ${layerLast} + 9 ));
+            layerLast=$(( ${layerLast} + 4 ));
         fi
-        if [ "${count}" -eq "2" ] && [ "${layerLast}" -lt "105" ] ; then
-            layerLast=$(( ${layerLast} + 3 ));
+        if [ "${count}" -eq "2" ] ; then
+            if [ "${layerLast}" -lt "75" ] ; then
+                layerLast=$(( ${layerLast} + 2 ));
+            else
+                layerLast=$(( ( ${layerLast} * 9)/10 ));
+            fi
         fi
-        if [ "${count}" -eq "4" ] && [  "${layerLast}" -gt "15" ] ; then
+        if [ "${count}" -eq "4" ] ; then
+            if [ "${layerLast}" -lt "55" ] ; then
+                layerLast=$(( ${layerLast} + 1 ));
+            else
+                layerLast=$(( ( ${layerLast} * 9)/10 ));
+            fi
+        fi
+        if [ "${count}" -eq "6" ] && [  "${layerLast}" -gt "15" ] ; then
             layerLast=$(( ( ${layerLast} * 9)/10 ));
         fi
 
     fi
     echo ${layerLast} > /var/spool/vector/lastLayer
+    echo "New metric ${layerLast} for count ${count} and old metric ${oldMetric}"
 fi
 
 layerLast=$(( ${layerLast} / 10 ));
@@ -49,7 +63,8 @@ src_fldr="/var/www/video_out"
 # video_00175_L0T2.out  video_00175_L0T4.out  video_00175_L1T1.out  video_00175_L1T3.out  video_00175_L1T5.out
 
 fileNames=( ".md" "_L0T1.out" "_L0T2.out" "_L0T3.out" "_L0T4.out" "_L0T5.out" "_L1T1.out" "_L1T2.out" "_L1T3.out" "_L1T4.out" "_L1T5.out" )
-copyCounts=( 128   128         64          64           48           48              32           32         24           24           16         )
+#copyCounts=( 128   128         64          64           48           48              32           32         24           24           16         )
+copyCounts=( 512   512         256          256           192           192              128           128         96           96           64         )
 
 echo "Listing the target folder - may have errors or can be blank"
 ls -l "${src_fldr}"
