@@ -6,7 +6,7 @@ cd /var/spool/vector
 
 # use v4l2-ctl --list-formats-ext to find options on framerate etc.
 fileBase=/var/www/video_out
-framerate=5
+framerate=0.25
 num_frames=65
 input=/dev/video0
 
@@ -29,13 +29,15 @@ dc_res_1="320 240 "
 dc_res_2="160 120 "
 srcWidthStr=" -wdt0 160 -hgt0 120 -wdt1 320 -hgt1 240 "
 
+
 video_file_counter=`cat ./counter`
 counterPart=`printf "%05d" ${video_file_counter}`
 temp_file_counter=$((video_file_counter+1))
 echo ${temp_file_counter} > ./counter
 
 inputOutputFiles=" -i0 rec/output_${counterPart}_Q.yuv -i1 rec/output_${counterPart}.yuv -b rec/output_${counterPart}.bin"
-framerateStr=" -fr0 ${framerate} -fr1 ${framerate} "
+# framerateStr=" -fr0 ${framerate} -fr1 ${framerate} "
+framerateStr=" -fr0 1 -fr1 1 "
 encoderCommand="bin/TAppEncoderStaticd -c cfg/encoder_randomaccess_scalable.cfg -c cfg/2L-2X_vector.cfg -c cfg/layers2_final.cfg ${inputOutputFiles} ${srcWidthStr} ${framerateStr} -f ${num_frames}"
 extractCommand="../bin/ExtractAddLS output_${counterPart}.bin video_${counterPart} 5 2"
 downConvertCommand="bin/DownConvertStaticd ${dc_res_1} rec/output_${counterPart}.yuv ${dc_res_2} rec/output_${counterPart}_Q.yuv"
@@ -81,3 +83,4 @@ cd ${fileBase}
 
 # remove files older than 2 days - for transfer
 find . -type f -mtime +48 -exec rm {} \;
+
