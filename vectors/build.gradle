@@ -25,7 +25,6 @@ android {
 }
 
 dependencies {
-    compile project(':common')
     compile 'com.jaredrummler:android-device-names:1.1.6'
     compile 'com.google.code.gson:gson:2.8.2'
     //    compile 'com.google.guava:guava:24.0-android'
