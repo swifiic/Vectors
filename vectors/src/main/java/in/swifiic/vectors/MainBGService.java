@@ -666,6 +666,7 @@ public class MainBGService extends IntentService {
                 videoDataJSON = MessageScheme.createStringType(MessageScheme.MessageType.JSON, videoDataJSON);
                 Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(videoDataJSON.getBytes(UTF_8)));
                 while(task.isComplete()) {}
+                customLogger("Sent file - " + vd.getFileName());
                 outgoingTransfersMetadata.put(Long.valueOf(filePayload.getId()), vd);
             }
             mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
