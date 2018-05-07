@@ -1,3 +1,27 @@
+/***************************************************************************
+ *   Copyright (C) 2018 by The SWiFiIC Project <apps4rural@gmail.com>      *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA            *
+ ***************************************************************************/
+
+/***************************************************************************
+ *   Code for Campus Experiments: April 2018                               *
+ *   Authors: Abhishek Thakur, Arnav Dhamija, Tejashwar Reddy G            *
+ ***************************************************************************/
+
 package in.swifiic.vectors;
 
 import android.app.IntentService;
@@ -53,10 +77,6 @@ import java.util.TimerTask;
 import static in.swifiic.vectors.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/***
- * Abhishek Thakur : coding the background service with Binder
- * Ref: https://developer.android.com/guide/components/bound-services.html
- */
 public class MainBGService extends IntentService {
 
     // Binder given to clients
@@ -68,7 +88,7 @@ public class MainBGService extends IntentService {
     private String startTime;
     private boolean extraChecks = true;
     private boolean goodbyeSent = false;
-    private StorageModule mStorageModule;
+    private FileModule mFileModule;
     private ConnectionLog mConnectionLog;
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
@@ -149,7 +169,7 @@ public class MainBGService extends IntentService {
     }
 
     public int getFileListSize() {
-        return mStorageModule.getFilesCount();
+        return mFileModule.getFilesCount();
     }
 
     @Override
@@ -181,7 +201,7 @@ public class MainBGService extends IntentService {
     }
 
     void initBGService() {
-        mStorageModule = new StorageModule(this);
+        mFileModule = new FileModule(this);
         deviceId = createDeviceId();
         initConnectionAndNotif();
         startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
@@ -195,7 +215,7 @@ public class MainBGService extends IntentService {
             customLogger( "Bgservicedisable");
         }
 
-        Acknowledgement ack = mStorageModule.getAckFromFile();
+        Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
             // TODO - test this
             byte[] x = Acknowledgement.getCompressedAcknowledgement(ack);
@@ -240,7 +260,7 @@ public class MainBGService extends IntentService {
 
     private void addToLogBuffer(String logMsg) {
         if (bufferLines >= Constants.LOG_BUFFER_SIZE) {
-            mStorageModule.writeLogBuffer(logBuffer);
+            mFileModule.writeLogBuffer(logBuffer);
             logBuffer.setLength(0); // hack to clear the buffer
             bufferLines = 0;
         }
@@ -277,7 +297,7 @@ public class MainBGService extends IntentService {
 
         if (mConnectionLog != null) {
             mConnectionLog.connectionTerminated();
-            mStorageModule.writeConnectionLog(mConnectionLog);
+            mFileModule.writeConnectionLog(mConnectionLog);
         }
         mConnectionLog = null;
         
@@ -529,7 +549,7 @@ public class MainBGService extends IntentService {
                             outgoingPayloads.remove(payloadId);
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
-                                mStorageModule.writeToJSONFile(vd); // update JSON file
+                                mFileModule.writeToJSONFile(vd); // update JSON file
                                 mConnectionLog.addSentFile(vd.getFileName());
 //                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
@@ -556,7 +576,7 @@ public class MainBGService extends IntentService {
                                     payloadFile.delete();
                                 } else {
                                     customLogger("Fname " + filename);
-                                    payloadFile.renameTo(new File(mStorageModule.getDataDirectory(), filename));
+                                    payloadFile.renameTo(new File(mFileModule.getDataDirectory(), filename));
                                     mConnectionLog.addReceivedFile(filename);
                                 }
                             }
@@ -593,7 +613,7 @@ public class MainBGService extends IntentService {
     }
 
     private void sendFileList() {
-        String fileList = mStorageModule.getQuickFileList();
+        String fileList = mFileModule.getQuickFileList();
         fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
@@ -607,7 +627,7 @@ public class MainBGService extends IntentService {
     }
 
     private void sendDestinationAck() {
-        Acknowledgement ack = mStorageModule.getAckFromFile();
+        Acknowledgement ack = mFileModule.getAckFromFile();
         if (ack != null) {
             ack.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
             // TODO - test this
@@ -628,7 +648,7 @@ public class MainBGService extends IntentService {
         List<Payload> outgoingPayloadReferences = new ArrayList<>();
 
         for (VideoData vd : requestedVideoDatas) {
-            ParcelFileDescriptor pfd = mStorageModule.getPfd(vd.getFileName());
+            ParcelFileDescriptor pfd = mFileModule.getPfd(vd.getFileName());
             if (pfd == null) {
                 customLogger("File missing " + vd.getFileName());
                 continue;
@@ -668,7 +688,7 @@ public class MainBGService extends IntentService {
     private void processFileList(String filelist) {
         customLogger("Rcvd a filelist of " + filelist);
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
-        List<String> currFilenames = Arrays.asList(mStorageModule.getQuickFileList().split(","));
+        List<String> currFilenames = Arrays.asList(mFileModule.getQuickFileList().split(","));
         List<String> requestFilenames = new ArrayList<>();
 
         // This code is very bad, but it's the only way not to get a NPE :P
@@ -683,7 +703,7 @@ public class MainBGService extends IntentService {
                 requestFilenames.add(rcvdFilenames.get(i));
             }
         }
-        String requestFilesCSV = StorageModule.convertListToCSV(requestFilenames);
+        String requestFilesCSV = FileModule.convertListToCSV(requestFilenames);
         customLogger("We want the files of " + requestFilesCSV);
         // we send the files we want to get here
         requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
@@ -693,7 +713,7 @@ public class MainBGService extends IntentService {
 
     private void processJSONMsg(String parseMsg) {
         VideoData vd = VideoData.fromString(parseMsg);
-        mStorageModule.writeToJSONFile(vd);
+        mFileModule.writeToJSONFile(vd);
     }
 
     private void processDackJSON(String compressedBase64) {
@@ -705,23 +725,23 @@ public class MainBGService extends IntentService {
             customLogger("Discarding the ack with possibly skewed clock");
             return;
         }
-        Acknowledgement currentAck = mStorageModule.getAckFromFile();
+        Acknowledgement currentAck = mFileModule.getAckFromFile();
         if (currentAck == null) {
-            mStorageModule.writeAckToJSONFile(incomingAck);
+            mFileModule.writeAckToJSONFile(incomingAck);
         } else {
             if (incomingAck.getAckTime() > currentAck.getAckTime()) {
                 customLogger("Newer ack " + currentAck.getAckTime() + "  received, writing back to file");
-                mStorageModule.writeAckToJSONFile(incomingAck);
+                mFileModule.writeAckToJSONFile(incomingAck);
             }
         }
 
-        String localFileList = mStorageModule.getQuickFileList();
+        String localFileList = mFileModule.getQuickFileList();
 
-        List<AckItem> itemsInAck = mStorageModule.getAckFromFile().getItems();
+        List<AckItem> itemsInAck = mFileModule.getAckFromFile().getItems();
         for (AckItem item : itemsInAck) {
             String fileToCheck = item.getFilename();
             if (localFileList.contains(fileToCheck)) {
-                mStorageModule.deleteFile(fileToCheck);
+                mFileModule.deleteFile(fileToCheck);
                 customLogger("Deleting on Ack "+ fileToCheck);
             }
         }
@@ -737,7 +757,7 @@ public class MainBGService extends IntentService {
     }
 
     private void processRequestFiles2(String filelist) {
-        Acknowledgement dack = mStorageModule.getAckFromFile();
+        Acknowledgement dack = mFileModule.getAckFromFile();
 
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
@@ -745,7 +765,7 @@ public class MainBGService extends IntentService {
             for (int i = 0; i < requestedFiles.size(); i++) {
                 if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
 //                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
-                    VideoData vd = mStorageModule.getVideoDataFromFile(requestedFiles.get(i));
+                    VideoData vd = mFileModule.getVideoDataFromFile(requestedFiles.get(i));
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
                     } else {
@@ -767,7 +787,7 @@ public class MainBGService extends IntentService {
                         if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
                                 (dack != null && dack.containsFilename(vd.getFileName())))) {
                             customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
-                            mStorageModule.deleteFile(vd.getFileName());
+                            mFileModule.deleteFile(vd.getFileName());
                             requestedVideoDatas.remove(i);
                         }
                     }

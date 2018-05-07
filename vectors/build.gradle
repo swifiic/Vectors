@@ -25,9 +25,9 @@ android {
 }
 
 dependencies {
+//    compile project(':common')
     compile 'com.jaredrummler:android-device-names:1.1.6'
     compile 'com.google.code.gson:gson:2.8.2'
-    //    compile 'com.google.guava:guava:24.0-android'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
