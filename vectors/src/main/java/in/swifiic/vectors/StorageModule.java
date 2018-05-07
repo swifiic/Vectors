@@ -50,13 +50,13 @@ import in.swifiic.vectors.helper.Acknowledgement;
 import in.swifiic.vectors.helper.ConnectionLog;
 import in.swifiic.vectors.helper.VideoData;
 
-public class FileModule {
+public class StorageModule {
     private File dataDirectory;
     private File logDirectory;
-    private final String TAG = "FileModule";
+    private final String TAG = "StorageModule";
     private Context mContext;
 
-    public FileModule(Context context) {
+    public StorageModule(Context context) {
         dataDirectory = new File(Environment.getExternalStorageDirectory()+ Constants.FLDR);
         logDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FOLDER_LOG);
         if (!dataDirectory.exists()) {

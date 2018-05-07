@@ -37,7 +37,7 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".MainBGService" />
+        <service android:name=".VectorsService" />
 
         <activity android:name=".AboutActivity"></activity>
     </application>

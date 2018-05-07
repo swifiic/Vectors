@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    MainBGService mService;
+    VectorsService mService;
     boolean mBound = false;
 
     SharedPreferences mSharedPreferences;
@@ -199,9 +199,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             customLogger("Email denied");
         }
-        Intent intent = new Intent(this, MainBGService.class);
+        Intent intent = new Intent(this, VectorsService.class);
 
-        if (isMyServiceRunning(MainBGService.class)) {
+        if (isMyServiceRunning(VectorsService.class)) {
             customLogger("Service already running");
         } else {
             customLogger("Starting service");
@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            MainBGService.LocalBinder binder = (MainBGService.LocalBinder) service;
+            VectorsService.LocalBinder binder = (VectorsService.LocalBinder) service;
             mService = binder.getService();
 //            customLogger("Service conn!");
             mBound = true;

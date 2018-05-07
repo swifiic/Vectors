@@ -37,7 +37,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
         if (intent.getAction().equals(Constants.ANDROID_BOOT_COMPLETION)) {
             //Service
             Log.d("bCast", "VectorsBGService started");
-            Intent serviceIntent = new Intent(context, MainBGService.class);
+            Intent serviceIntent = new Intent(context, VectorsService.class);
             context.startService(serviceIntent);
         }
     }
