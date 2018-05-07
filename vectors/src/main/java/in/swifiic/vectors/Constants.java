@@ -1,4 +1,4 @@
-package in.swifiic.common;
+package in.swifiic.vectors;
 
 /**
  * Created by abhishek on 19/3/18.

@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import in.swifiic.common.Constants;
-
 public class BootBroadcastReceiver extends BroadcastReceiver {
 
     @Override

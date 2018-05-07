@@ -1,10 +1,9 @@
-package in.swifiic.common;
+package in.swifiic.vectors.helper;
 
 /**
  * Created by abhishek on 27/3/18.
  */
 
-import android.text.util.Linkify;
 import android.util.Log;
 import android.util.Pair;
 
@@ -17,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
+
+import in.swifiic.vectors.Constants;
 
 public class Acknowledgement {
 

@@ -1,4 +1,4 @@
-package in.swifiic.common;
+package in.swifiic.vectors;
 
 import android.content.Context;
 import android.net.Uri;
@@ -21,18 +21,23 @@ import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import in.swifiic.vectors.Constants;
+import in.swifiic.vectors.helper.Acknowledgement;
+import in.swifiic.vectors.helper.ConnectionLog;
+import in.swifiic.vectors.helper.VideoData;
+
 /**
  * Created by nic on 23/2/18.
  */
 
-public class FileModule {
+public class StorageModule {
     private File dataDirectory;
     private File logDirectory;
-    private final String TAG = "FileModule";
+    private final String TAG = "StorageModule";
     private Context mContext;
 
-    public FileModule(Context context) {
-        dataDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FLDR);
+    public StorageModule(Context context) {
+        dataDirectory = new File(Environment.getExternalStorageDirectory()+ Constants.FLDR);
         logDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FOLDER_LOG);
         if (!dataDirectory.exists()) {
             if (dataDirectory.mkdir()) {

@@ -1,4 +1,4 @@
-package in.swifiic.common;
+package in.swifiic.vectors.helper;
 
 import android.util.Log;
 import android.util.Pair;
