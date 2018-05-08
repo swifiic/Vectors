@@ -42,7 +42,7 @@ public final class Constants {
     public static final String BASE_NAME =  "video_00";
     public static final String ENDPOINT_PREFIX = "Vectors_";
     public static final String ACK_FILENAME = ACK_PREFIX + BASE_NAME;
-    
+
     public static final int MIN_CONNECTION_GAP_TIME = 60;
     public static final int LOG_BUFFER_SIZE = 200;
     public static final int LOG_TEXT_VIEW_LINES = 1000;

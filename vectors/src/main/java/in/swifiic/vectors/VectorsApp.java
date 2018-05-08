@@ -30,13 +30,8 @@ import android.content.Context;
 public class VectorsApp extends Application {
     private static VectorsApp instance;
 
-    public static VectorsApp getInstance() {
-        return instance;
-    }
-
     public static Context getContext() {
         return instance;
-        // or return instance.getApplicationContext();
     }
 
     @Override

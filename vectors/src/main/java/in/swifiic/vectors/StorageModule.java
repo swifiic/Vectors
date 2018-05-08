@@ -49,6 +49,11 @@ import in.swifiic.vectors.helper.Acknowledgement;
 import in.swifiic.vectors.helper.ConnectionLog;
 import in.swifiic.vectors.helper.VideoData;
 
+/**
+ * Class for managing all File IO on the Internal Storage of the device
+ * Maintains a directory of received payloads in VectorsData/ and corresponding logs in VectorsLogs/
+ */
+
 public class StorageModule {
     private File dataDirectory;
     private File logDirectory;
@@ -59,14 +64,10 @@ public class StorageModule {
         dataDirectory = new File(Environment.getExternalStorageDirectory()+ Constants.FLDR);
         logDirectory = new File(Environment.getExternalStorageDirectory()+Constants.FOLDER_LOG);
         if (!dataDirectory.exists()) {
-            if (dataDirectory.mkdir()) {
-                Log.d(TAG, "Created dir");
-            }
+            dataDirectory.mkdir();
         }
         if (!logDirectory.exists()) {
-            if (logDirectory.mkdir()) {
-                Log.d(TAG, "Created log dir");
-            }
+            logDirectory.mkdir();
         }
         mContext = context;
     }
@@ -92,7 +93,6 @@ public class StorageModule {
 
     public ParcelFileDescriptor getPfd(String filename) {
         Uri uri = Uri.fromFile(new File(dataDirectory, filename));
-        Log.d(TAG, "Chosen file URI: " + uri);
         try {
             ParcelFileDescriptor pfd = mContext.getContentResolver().openFileDescriptor(uri, "r");
             return pfd;
@@ -107,7 +107,6 @@ public class StorageModule {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file, false), Constants.FILE_BUFFER_SIZE);
             writer.write(data);
             writer.close();
-            Log.d(TAG, "generic file written" + file.getName());
         } catch (Exception e) {
         }
     }
@@ -118,8 +117,6 @@ public class StorageModule {
             Long currTime = System.currentTimeMillis()/1000;
             writeFile(new File(logDirectory,
                     Constants.LOGGER_FILENAME + "_" + Long.toString(currTime)), data);
-        } else {
-            Log.d(TAG, "Null logger File");
         }
     }
 
@@ -128,8 +125,6 @@ public class StorageModule {
             String data = connectionLog.toString();
             writeFile(new File(logDirectory, Constants.CONNECTION_LOG_FILENAME + "_" +
                                 connectionLog.getConnectionStartedTime()+".json"), data);
-        } else {
-            Log.d(TAG, "Null Log");
         }
     }
 
@@ -137,8 +132,6 @@ public class StorageModule {
         if (videoData != null) {
             String data = videoData.toString();
             writeFile(new File(dataDirectory, videoData.getFileName() + ".json"), data);
-        } else {
-            Log.d(TAG, "null???");
         }
     }
 
@@ -146,8 +139,6 @@ public class StorageModule {
         if (destinationAck != null) {
             String data = destinationAck.toString();
             writeFile(new File(dataDirectory, Constants.ACK_FILENAME + ".json"), data);
-        } else {
-            Log.d(TAG, "Null");
         }
     }
 
@@ -229,46 +220,5 @@ public class StorageModule {
             return files.length;
         }
         return 0;
-    }
-
-    public void zipLogDirectory() {
-        File[] files = logDirectory.listFiles();
-        String[] fileList = new String[files.length];
-        int i = 0;
-        for (File f : files) {
-            fileList[i++] = f.getAbsolutePath();
-        }
-        if (files != null) {
-            String fileName = Constants.PAYLOAD_PREFIX + "_Log_" + System.currentTimeMillis()/1000;
-            zip(fileList, fileName);
-        }
-    }
-
-    public void zip(String[] _files, String zipFileName) {
-        try {
-            BufferedInputStream origin;
-            FileOutputStream dest = new FileOutputStream(new File(logDirectory,zipFileName));
-            ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
-            byte data[] = new byte[Constants.FILE_BUFFER_SIZE];
-
-            for (int i = 0; i < _files.length; i++) {
-                Log.v("Compress", "Adding: " + _files[i]);
-                FileInputStream fi = new FileInputStream(_files[i]);
-                origin = new BufferedInputStream(fi, Constants.FILE_BUFFER_SIZE);
-
-                ZipEntry entry = new ZipEntry(_files[i].substring(_files[i].lastIndexOf("/") + 1));
-                out.putNextEntry(entry);
-                int count;
-
-                while ((count = origin.read(data, 0, Constants.FILE_BUFFER_SIZE)) != -1) {
-                    out.write(data, 0, count);
-                }
-                origin.close();
-            }
-
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

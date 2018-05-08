@@ -39,11 +39,14 @@ public class AboutActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
+
         TextView privacyPolicyText = findViewById(R.id.privacyPolicyLink);
         TextView swifiicLinkText = findViewById(R.id.swifiicLink);
         TextView fiveHunderedYearsText = findViewById(R.id.fiveHundredLink);
         TextView googleFormText = findViewById(R.id.googleFormLink);
         TextView buildVersionText = findViewById(R.id.buildVersion);
+
+        // Make the URLs clickable
         privacyPolicyText.setMovementMethod(LinkMovementMethod.getInstance());
         swifiicLinkText.setMovementMethod(LinkMovementMethod.getInstance());
         fiveHunderedYearsText.setMovementMethod(LinkMovementMethod.getInstance());
@@ -52,11 +55,13 @@ public class AboutActivity extends AppCompatActivity {
         Date buildDate = new Date(BuildConfig.TIMESTAMP);
         String timeStamp = new SimpleDateFormat("yyyyMMdd").format(buildDate);
         String hostname = BuildConfig.BUILD_HOST;
+
         String buildType = "_Release";
         if (BuildConfig.DEBUG) {
             buildType = "_Debug";
         }
         String versionName = BuildConfig.VERSION_NAME;
+
         buildVersionText.setText("App Version: v" + versionName + "\nBuild Version: " + timeStamp + buildType + " on " + hostname);
     }
 }

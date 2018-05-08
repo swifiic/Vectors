@@ -24,6 +24,10 @@
 
 package in.swifiic.vectors;
 
+/**
+ * Defines the structure of the control messages used for transitioning between connection states
+ */
+
 public class MessageScheme {
 
     public static String parsePayloadString(String originalMsg) {

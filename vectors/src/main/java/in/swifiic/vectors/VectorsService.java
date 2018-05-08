@@ -78,7 +78,6 @@ import static in.swifiic.vectors.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class VectorsService extends IntentService {
-
     // Binder given to clients
     private final IBinder mBinder = new LocalBinder();
     private boolean nearbyEnabled = false;
@@ -92,7 +91,6 @@ public class VectorsService extends IntentService {
     private ConnectionLog mConnectionLog;
     private StringBuilder logBuffer = new StringBuilder();
     private int bufferLines = 0;
-    private boolean enableNotifications = false;
     private boolean connectionRequested = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
@@ -109,7 +107,7 @@ public class VectorsService extends IntentService {
     private List<Pair<String, Long>> recentlyVisitedNodes = new ArrayList<>();
 
     SharedPreferences mSharedPreferences;
-    SharedPreferences.Editor mEditor; // TODO - may not need edit
+    SharedPreferences.Editor mEditor;
 
     static VectorsService ourRef = null;
 
@@ -126,10 +124,6 @@ public class VectorsService extends IntentService {
             }
             return VectorsService.this;
         }
-    }
-
-    static public VectorsService getBGServiceRef() {
-        return ourRef;
     }
 
     public String getDeviceId() {
@@ -191,7 +185,6 @@ public class VectorsService extends IntentService {
     @Override
     protected void onHandleIntent(Intent workIntent) {
         initConnectionAndNotif();
-        String dataString = workIntent.getDataString();
     }
 
     private String createDeviceId() {
@@ -464,16 +457,6 @@ public class VectorsService extends IntentService {
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
                             customLogger("Rejected connection with " + endpointName);
-//                            boolean addNode;
-//                            for (Pair<String, Long> x : recentlyVisitedNodes) {
-//                                if (x.first.compareTo(endpointName) == 0) {
-//                                    recentlyVisitedNodes.remove(x);
-//                                    customLogger("Updating old timestamp");
-//                                    break;
-//                                }
-//                            }
-////                            recentlyVisitedNodes.add()
-//                            recentlyVisitedNodes.add(new Pair<>(endpointName, System.currentTimeMillis() / 1000));
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
@@ -493,8 +476,6 @@ public class VectorsService extends IntentService {
 
                 @Override
                 public void onDisconnected(String endpointId) {
-                    // We've been disconnected from this endpoint. No more data can be
-                    // sent or received.
                     sendConnectionStatus("Disconnected");
                     customLogger("Connection terminated, clearing arrays");
                     restartNearby();
@@ -507,7 +488,7 @@ public class VectorsService extends IntentService {
                 public void onPayloadReceived(String endpointId, Payload payload) {
                     if (payload.getType() == Payload.Type.BYTES) {
                         String payloadMsg = "";
-                        try {//                            customLogger("Getting a byte pyalod " + payloadMsg);
+                        try {
                             payloadMsg = new String(payload.asBytes(), "UTF-8");
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
 
@@ -542,24 +523,20 @@ public class VectorsService extends IntentService {
                         }
                         if (incomingPayloads.isEmpty()) {
                             checkConnectionTermination();
-                            // done receiving
                         }
                     } else if (outgoingPayloads.contains(payloadId)) {
                         if (update.getStatus() != PayloadTransferUpdate.Status.IN_PROGRESS) {
                             outgoingPayloads.remove(payloadId);
                             VideoData vd = outgoingTransfersMetadata.remove(payloadId);
                             if (vd != null) {
-                                mStorageModule.writeToJSONFile(vd); // update JSON file
+                                mStorageModule.writeToJSONFile(vd);
                                 mConnectionLog.addSentFile(vd.getFileName());
-//                                customLogger("JSON for " + vd.getFileName() + " curr tickets " + vd.getTickets());
                             } else {
                                 customLogger("Working with non-vid file, sent");
                             }
                         }
                         if (outgoingPayloads.isEmpty()) {
-//                            customLogger("No more outbound payloads (For now)");
                             checkConnectionTermination();
-                            // done sending
                         }
                     }
                     Payload payload = incomingPayloadReferences.get(update.getPayloadId());
@@ -658,7 +635,6 @@ public class VectorsService extends IntentService {
             outgoingPayloadReferences.add(filePayload); // release when done
         }
         customLogger("FileMap" + fileMap.toString());
-        // first send filemap
         try {
             String fileMapMsg = MessageScheme.createStringType(MessageScheme.MessageType.FILEMAP, fileMap.toString());
             Task task = mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileMapMsg.getBytes(UTF_8)));
@@ -705,6 +681,7 @@ public class VectorsService extends IntentService {
         }
         String requestFilesCSV = StorageModule.convertListToCSV(requestFilenames);
         customLogger("We want the files of " + requestFilesCSV);
+
         // we send the files we want to get here
         requestFilesCSV = MessageScheme.createStringType(MessageScheme.MessageType.REQUESTFILES, requestFilesCSV);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(requestFilesCSV.getBytes(UTF_8)));
