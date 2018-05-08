@@ -45,6 +45,8 @@ public class VideoData {
     private int maxSvcLayer;
     private long creationTime; // unix time
     private int ttl; // in seconds
+    private String sourceNode;
+    private String destinationNode;
     private ArrayList<Pair<Long, String>> traversal;
 
     public void addTraversedNode(String deviceName) {
@@ -135,6 +137,22 @@ public class VideoData {
         Log.d(TAG, this.toString());
     }
 
+    public String getSourceNode() {
+        return sourceNode;
+    }
+
+    public void setSourceNode(String sourceNode) {
+        this.sourceNode = sourceNode;
+    }
+
+    public String getDestinationNode() {
+        return destinationNode;
+    }
+
+    public void setDestinationNode(String destinationNode) {
+        this.destinationNode = destinationNode;
+    }
+
     public static VideoData fromString(String jsonEncodedVideoData) {
         Gson gson = new Gson();
         return gson.fromJson(jsonEncodedVideoData, VideoData.class);
@@ -159,7 +177,6 @@ public class VideoData {
     @Override
     public String toString() {
         Gson gson = new Gson();
-//        Log.d(TAG, "JSON string " + gson.toJson(this));
         return gson.toJson(this);
     }
 

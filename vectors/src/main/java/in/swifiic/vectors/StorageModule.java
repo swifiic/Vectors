@@ -195,7 +195,14 @@ public class StorageModule {
         String jsonFilename = videoFileName + ".json";
         try {
             String videoDataJSON = new Scanner(new File(dataDirectory, jsonFilename)).useDelimiter("\\Z").next();
-            return VideoData.fromString(videoDataJSON);
+            VideoData vd = VideoData.fromString(videoDataJSON);
+
+            // Delete payloads in which the TTL has expired
+            if (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000) {
+                deleteFile(vd.getFileName());
+                return null;
+            }
+            return vd;
         } catch (IOException e) {
             deleteFile(videoFileName);
             Log.e(TAG, "File not found");
