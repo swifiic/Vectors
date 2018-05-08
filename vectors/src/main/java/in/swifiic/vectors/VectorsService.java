@@ -85,7 +85,6 @@ public class VectorsService extends IntentService {
     public ConnectionsClient mConnectionClient;
     public String connectedEndpoint;
     private String startTime;
-    private boolean extraChecks = true;
     private boolean goodbyeSent = false;
     private StorageModule mStorageModule;
     private ConnectionLog mConnectionLog;
