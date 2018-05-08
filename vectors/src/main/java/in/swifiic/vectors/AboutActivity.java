@@ -58,7 +58,5 @@ public class AboutActivity extends AppCompatActivity {
         }
         String versionName = BuildConfig.VERSION_NAME;
         buildVersionText.setText("App Version: v" + versionName + "\nBuild Version: " + timeStamp + buildType + " on " + hostname);
-        //        Linkify.addLinks(swifiicLinkText, Linkify.ALL);
-//        Linkify.addLinks(fiveHunderedYearsText, Linkify.ALL);
     }
 }

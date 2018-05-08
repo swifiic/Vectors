@@ -45,7 +45,6 @@ import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import in.swifiic.vectors.Constants;
 import in.swifiic.vectors.helper.Acknowledgement;
 import in.swifiic.vectors.helper.ConnectionLog;
 import in.swifiic.vectors.helper.VideoData;
@@ -191,7 +190,7 @@ public class StorageModule {
     public boolean deleteFile(String filename) {
         boolean jsonDeleted = true;
         boolean fileDeleted = true;
-        if (filename.startsWith(Constants.VIDEO_PREFIX)) {
+        if (filename.startsWith(Constants.PAYLOAD_PREFIX)) {
             File jsonFile = new File(dataDirectory, filename + ".json");
             jsonDeleted = jsonFile.delete();
 
@@ -240,7 +239,7 @@ public class StorageModule {
             fileList[i++] = f.getAbsolutePath();
         }
         if (files != null) {
-            String fileName = Constants.VIDEO_PREFIX + "_Log_" + System.currentTimeMillis()/1000;
+            String fileName = Constants.PAYLOAD_PREFIX + "_Log_" + System.currentTimeMillis()/1000;
             zip(fileList, fileName);
         }
     }

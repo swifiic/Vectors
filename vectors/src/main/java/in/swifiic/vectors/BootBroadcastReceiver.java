@@ -30,13 +30,12 @@ import android.content.Intent;
 import android.util.Log;
 
 public class BootBroadcastReceiver extends BroadcastReceiver {
+    private final String TAG = "BootBCast";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        // BOOT_COMPLETED” start Service
         if (intent.getAction().equals(Constants.ANDROID_BOOT_COMPLETION)) {
-            //Service
-            Log.d("bCast", "VectorsBGService started");
+            Log.d(TAG, "VectorsBGService started");
             Intent serviceIntent = new Intent(context, VectorsService.class);
             context.startService(serviceIntent);
         }

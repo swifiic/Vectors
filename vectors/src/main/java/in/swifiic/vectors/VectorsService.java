@@ -763,7 +763,7 @@ public class VectorsService extends IntentService {
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         if (filelist.length() > 1) {
             for (int i = 0; i < requestedFiles.size(); i++) {
-                if (requestedFiles.get(i).startsWith(Constants.VIDEO_PREFIX)) {
+                if (requestedFiles.get(i).startsWith(Constants.PAYLOAD_PREFIX)) {
 //                    customLogger("Attempting JSON for: " + requestedFiles.get(i));
                     VideoData vd = mStorageModule.getVideoDataFromFile(requestedFiles.get(i));
                     if (vd != null) {
