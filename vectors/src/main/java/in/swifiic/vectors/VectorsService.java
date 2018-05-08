@@ -756,7 +756,7 @@ public class VectorsService extends IntentService {
             for (int i = 0; i < requestedVideoDatas.size(); i++) {
                 VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
                 if (vd != null) {
-                    if (vd.getTickets() > 1) {
+                    if (vd.getTickets() > 1 || endpointName.compareTo(vd.getDestinationNode())==0) {
                         vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
                         vd.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
                         //send JSON and file
