@@ -577,7 +577,7 @@ public class VectorsService extends IntentService {
         } else if (type == MessageScheme.MessageType.FILEMAP) {
             processFileMap(parsedMsg);
         } else if (type == MessageScheme.MessageType.REQUESTFILES) {
-            processRequestFiles2(parsedMsg);
+            processRequestFiles(parsedMsg);
         } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
             processDackJSON(parsedMsg);
         } else if (type == MessageScheme.MessageType.GOODBYE) {
@@ -733,9 +733,7 @@ public class VectorsService extends IntentService {
         }
     }
 
-    private void processRequestFiles2(String filelist) {
-        Acknowledgement dack = mStorageModule.getAckFromFile();
-
+    private void processRequestFiles(String filelist) {
         List<String> requestedFiles = Arrays.asList(filelist.split(","));
         List<VideoData> requestedVideoDatas = new ArrayList<>();
         if (filelist.length() > 1) {
@@ -745,27 +743,21 @@ public class VectorsService extends IntentService {
                     if (vd != null) {
                         requestedVideoDatas.add(vd);
                     } else {
-                        customLogger("JSON not decodeable / not found for " + requestedFiles.get(i));
+                        customLogger("File deleted OR JSON not decodeable / not found for " + requestedFiles.get(i));
                     }
                 }
             }
 
-            // sort by tickets and send in that order
+            // Sort by tickets and send in that order
             VideoData.sortListCopyCount(requestedVideoDatas);
 
             for (int i = 0; i < requestedVideoDatas.size(); i++) {
-                VideoData vd = requestedVideoDatas.get(i); // TODO - test if this is a shallow copy
+                VideoData vd = requestedVideoDatas.get(i);
                 if (vd != null) {
                     if (vd.getTickets() > 1 || endpointName.compareTo(vd.getDestinationNode())==0) {
-                        vd.setTickets(vd.getTickets() / 2); // SNW strategy allows us to only send half
+                        // SNW strategy allows us to only send half
+                        vd.setTickets(vd.getTickets() / 2);
                         vd.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
-                        //send JSON and file
-                        if (extraChecks && (vd.getCreationTime() + vd.getTtl() < System.currentTimeMillis() / 1000 ||
-                                (dack != null && dack.containsFilename(vd.getFileName())))) {
-                            customLogger("File has been acked/too old to send - Deleting " + vd.getFileName());
-                            mStorageModule.deleteFile(vd.getFileName());
-                            requestedVideoDatas.remove(i);
-                        }
                     }
                 }
             }
