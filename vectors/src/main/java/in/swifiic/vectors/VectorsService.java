@@ -115,7 +115,6 @@ public class VectorsService extends IntentService {
             // Return this instance of LocalService so clients can call public methods
             if (null == ourRef) {
                 ourRef = VectorsService.this;
-                customLogger("Setting reference from BGService");
             }
             return VectorsService.this;
         }
@@ -129,11 +128,15 @@ public class VectorsService extends IntentService {
         return mSharedPreferences.getBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
     }
 
-    public String getUserEmailId() {
-        return mSharedPreferences.getString(Constants.USER_EMAIL_ID, "example@example.com");
+    private void sendConnectionStatus(String msg){
+
+        Intent localIntent =  new Intent(Constants.BROADCAST_ACTION)
+                .putExtra(Constants.CONNECTION_STATUS, msg);
+
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+
     }
-
-
     public void setBackgroundService() {
         if (enableBackgroundService()) {
             if (!nearbyEnabled) {
@@ -172,6 +175,15 @@ public class VectorsService extends IntentService {
     public int onStartCommand(Intent startIntent, int flags, int startId) {
         return START_STICKY;
     }
+
+
+    // The user can opt-in to provide their email ID for analysis purposes. Otherwise a dummy ID is used.
+
+    public String getUserEmailId() {
+        return mSharedPreferences.getString(Constants.USER_EMAIL_ID, "example@example.com");
+    }
+
+
 
     @Override
     protected void onHandleIntent(Intent workIntent) {
@@ -249,7 +261,7 @@ public class VectorsService extends IntentService {
         bufferLines++;
     }
 
-    private void sendConnectionStatus(String msg){
+    private void sendCsonnectionStatus(String msg){
 
         Intent localIntent =  new Intent(Constants.BROADCAST_ACTION)
                 .putExtra(Constants.CONNECTION_STATUS, msg);
@@ -258,6 +270,9 @@ public class VectorsService extends IntentService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
 
     }
+
+    // Restarts the Nearby client whenever a connection breaks or a timeout expires.
+    // Doing so brings the service into Discovery Mode for finding new devices.
 
     synchronized private void restartNearby() {
         customLogger("RestartingNearby");
@@ -292,6 +307,9 @@ public class VectorsService extends IntentService {
         customLogger("RestartedComm");
     }
 
+    // Resets Nearby if no devices have been found for a specified period to force the service to go
+    // into the Discovery state
+
     private void softResetNearby() { // call this whenever we don't find nodes for some period of time
         long currentTime = System.currentTimeMillis()/1000;
         customLogger("Checking if time to reset nearby");
@@ -304,6 +322,8 @@ public class VectorsService extends IntentService {
         }
     }
 
+    // Initialises the Nearby Connection client for Advertising itself to other Nearby devices
+
     private Task<Void> startAdvertising() {
         return mConnectionClient.startAdvertising(
                 getDeviceId(),
@@ -314,17 +334,19 @@ public class VectorsService extends IntentService {
                         new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void unusedResult) {
-                                customLogger("Advertising Go!");
+                                customLogger("Advertising Successful");
                             }
                         })
                 .addOnFailureListener(
                         new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                customLogger("Advert fail" + e.getMessage());
+                                customLogger("Advertising Failed " + e.getMessage());
                             }
                         });
     }
+
+    // Initialises the Nearby Connection client for Discovering other Nearby devices
 
     private Task<Void> startDiscovery() {
         return mConnectionClient.startDiscovery(
@@ -364,46 +386,54 @@ public class VectorsService extends IntentService {
         lastNodeContactTime = System.currentTimeMillis()/1000;
     }
 
+    // Lifecycle of the Discovery mode. Once we find a compatible node, we send a connection request to it
+    // or act on the connection it has already connected to us. After a connection is established, the
+    // states in the mConnectionLifeCycleCallback are carried out.
+
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
                 public void onEndpointFound(final String endpointId, final DiscoveredEndpointInfo discoveredEndpointInfo) {
-                    customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
+                    customLogger("Endpoint Discovered: " + discoveredEndpointInfo.getEndpointName());
                     setLastNodeContactTime();
-                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX)
+                            && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
-                        customLogger("Stopping before requesting Conn");
                         mConnectionClient.requestConnection(
-                                getDeviceId(),
-                                endpointId,
-                                mConnectionLifecycleCallback).
-                                addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            customLogger("requesting conn");
+                            getDeviceId(),
+                            endpointId,
+                            mConnectionLifecycleCallback).
+                            addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        customLogger("Connection failed: " + e.getMessage());
+                                        // Hacky fix to ack on this error, as we do not get the exception IDs programatically
+                                        if (e.getMessage().compareTo("8003: STATUS_ALREADY_CONNECTED_TO_ENDPOINT") == 0) {
+                                            // Add the node to the recently visited list so we don't connect to it again
+                                            recentlyVisitedNodes.add(new Pair<>(discoveredEndpointInfo.getEndpointName(), System.currentTimeMillis() / 1000));
+                                            mConnectionClient.disconnectFromEndpoint(endpointId);
                                         }
-                                    }).addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            customLogger("Connection fail " + e.getMessage());
-                                            if (e.getMessage().compareTo("8003: STATUS_ALREADY_CONNECTED_TO_ENDPOINT")==0) {
-                                                customLogger("adding " + discoveredEndpointInfo.getEndpointName() + " to timeout list and disconn");
-                                                recentlyVisitedNodes.add(new Pair<>(discoveredEndpointInfo.getEndpointName(), System.currentTimeMillis() / 1000));
-                                                mConnectionClient.disconnectFromEndpoint(endpointId);
-                                            }
-                                            restartNearby();
-                                        }
-                                    });
+                                        restartNearby();
+                                    }
+                                });
                     }
                 }
 
                 @Override
                 public void onEndpointLost(String endpointId) {
-                    customLogger("lost ENDPOINT: " + endpointId);
+                    customLogger("Endpoint lost: " + endpointId);
                     restartNearby();
                 }
             };
+
+    // Once a node has been discovered, this callback handles the states of checking whether the node
+    // has been seen recently and setting up the connection in case it hasn't. Intial connection setup
+    // messages of exchanging ACKs and file lists is done if the connection is successful.
 
     private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
@@ -412,13 +442,12 @@ public class VectorsService extends IntentService {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
                     endpointName = connectionInfo.getEndpointName();
-                    customLogger("Pending connection From " + endpointName);
+                    customLogger("Pending connection from " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
-                        customLogger("Connection initated w/ " + endpointName);
+                        customLogger("Connection initated with " + endpointName);
                         mConnectionClient.acceptConnection(endpointId, mPayloadCallback);
                     } else {
-                        customLogger("Discarding connection");
-//                        mConnectionClient.rejectConnection(endpointId);
+                        customLogger("Recently seen node, discarding connection");
                     }
                 }
 
@@ -430,7 +459,7 @@ public class VectorsService extends IntentService {
                             if (BuildConfig.DEBUG) {
                                 Toast.makeText(getApplicationContext(), "Connection Established", Toast.LENGTH_LONG).show();
                             }
-                            sendConnectionStatus("Connected To: " + endpointName);
+                            sendConnectionStatus("Connected to: " + endpointName);
                             connectedEndpoint = endpointId;
                             mConnectionLog = new ConnectionLog(deviceId, endpointName);
                             sendDestinationAck();
@@ -438,26 +467,21 @@ public class VectorsService extends IntentService {
                             stopAdvertising();
                             stopDiscovery();
                             break;
-                        case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR: //this code is ignored
-                            customLogger("endpt error, restart");
+                        // Currently we handle all connection errors by restarting Nearby
+                        case ConnectionsStatusCodes.STATUS_ENDPOINT_IO_ERROR:
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                             // The connection was rejected by one or both sides.
-                            customLogger("Rejected connection with " + endpointName);
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ALREADY_CONNECTED_TO_ENDPOINT:
-                            customLogger("Other EP might be connected");
                             restartNearby();
                             break;
                         case ConnectionsStatusCodes.STATUS_ERROR:
-                            customLogger("Unknown STATUS_ERROR");
-                            // The connection broke before it was able to be accepted.
                             restartNearby();
                             break;
                         default:
-                            customLogger("Different error");
                             restartNearby();
                     }
                 }
@@ -465,10 +489,14 @@ public class VectorsService extends IntentService {
                 @Override
                 public void onDisconnected(String endpointId) {
                     sendConnectionStatus("Disconnected");
-                    customLogger("Connection terminated, clearing arrays");
+                    customLogger("Connection terminated");
                     restartNearby();
                 }
             };
+
+    // A Payload can either of Bytes or of a File. The type of the received Payload is checked here and
+    // the four byte header at the start of each byte Payload indicates the action to be taken. The headers
+    // are defined in the MessageScheme class
 
     private final PayloadCallback mPayloadCallback =
             new PayloadCallback() {
@@ -481,24 +509,22 @@ public class VectorsService extends IntentService {
                             MessageScheme.MessageType type = getMessageType(payloadMsg);
 
                             String parsedMsg = MessageScheme.parsePayloadString(payloadMsg);
-                            if (parsedMsg == null) {
-                                customLogger("Null payload MSG");
+                            if (parsedMsg != null) {
+                                handleBytePayload(type, parsedMsg);
+                            } else {
+                                customLogger("Null payload message");
                             }
-                            handleBytePayload(type, parsedMsg);
                         } catch (Exception e) {
-                            customLogger("Byte payload fail " + e.getMessage());
-                            if(payloadMsg != null){
-                                customLogger("Attempted to decode " + payloadMsg + "#");
+                            customLogger("Corrupted byte payload " + e.getMessage());
+                            if(payloadMsg != null) {
                                 restartNearby();
                             }
                             e.printStackTrace();
                         }
                     } else if (payload.getType() == Payload.Type.FILE) {
-                        customLogger("Getting a file payload " + payload.asFile().getSize());
+                        customLogger("Receiving a file payload of size " + payload.asFile().getSize());
                         incomingPayloads.add(Long.valueOf(payload.getId()));
                         incomingPayloadReferences.put(payload.getId(), payload);
-                    } else {
-                        customLogger("Diff type payload");
                     }
                 }
 
@@ -519,8 +545,6 @@ public class VectorsService extends IntentService {
                             if (vd != null) {
                                 mStorageModule.writeToJSONFile(vd);
                                 mConnectionLog.addSentFile(vd.getFileName());
-                            } else {
-                                customLogger("Working with non-vid file, sent");
                             }
                         }
                         if (outgoingPayloads.isEmpty()) {
@@ -537,10 +561,8 @@ public class VectorsService extends IntentService {
                             if (payload != null) {
                                 File payloadFile = payload.asFile().asJavaFile();
                                 if (filename == null) {
-                                    customLogger("Strange wrong fname! aborting rename");
                                     payloadFile.delete();
                                 } else {
-                                    customLogger("Fname " + filename);
                                     payloadFile.renameTo(new File(mStorageModule.getDataDirectory(), filename));
                                     mConnectionLog.addReceivedFile(filename);
                                 }
@@ -552,14 +574,13 @@ public class VectorsService extends IntentService {
                 }
             };
 
+    // On receiving a Byte payload, the four byte header is checked and the corresponding action is called
 
     private void handleBytePayload(MessageScheme.MessageType type, String parsedMsg) {
         if (type == MessageScheme.MessageType.WELCOME) {
-            customLogger("Got a welcome MSG! " + parsedMsg);
         } else if (type == MessageScheme.MessageType.JSON) {
             processJSONMsg(parsedMsg);
         } else if (type == MessageScheme.MessageType.EXTRA) {
-            customLogger("Got an extra msg!" + parsedMsg);
         } else if (type == MessageScheme.MessageType.FILELIST) {
             processFileList(parsedMsg);
         } else if (type == MessageScheme.MessageType.FILEMAP) {
@@ -569,11 +590,11 @@ public class VectorsService extends IntentService {
         } else if (type == MessageScheme.MessageType.DESTINATIONACK) {
             processDackJSON(parsedMsg);
         } else if (type == MessageScheme.MessageType.GOODBYE) {
-            customLogger("Goodbye recv");
+            customLogger("Goodbye received");
             goodbyeReceived = true;
             checkConnectionTermination();
         } else {
-            customLogger(" got Diff type " + parsedMsg);
+            customLogger("Corrupted byte payload " + parsedMsg);
         }
     }
 
@@ -586,7 +607,7 @@ public class VectorsService extends IntentService {
     public void sendGoodbye() {
         String goodbye = MessageScheme.createStringType(MessageScheme.MessageType.GOODBYE, "DUMMYMSG");
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(goodbye.getBytes(UTF_8)));
-        customLogger("Sent my goodbyes");
+        customLogger("Sent my goodbye");
         goodbyeSent = true;
         checkConnectionTermination();
     }
@@ -595,12 +616,10 @@ public class VectorsService extends IntentService {
         Acknowledgement ack = mStorageModule.getAckFromFile();
         if (ack != null) {
             ack.addTraversedNode(getDeviceId() + " / " + getUserEmailId());
-            // TODO - test this
             byte[] compressedAckBytes = Acknowledgement.getCompressedAcknowledgement(ack);
             String compressedBase64 = Base64.encodeToString(compressedAckBytes, Base64.DEFAULT);
             String dackMsg = MessageScheme.createStringType(MessageScheme.MessageType.DESTINATIONACK, compressedBase64);
-            customLogger("Sending ack with timestamp as " + ack.getAckTime() + " msg len " + dackMsg.length());
-
+            customLogger("Sending ack with timestamp " + ack.getAckTime());
             mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(dackMsg.getBytes(UTF_8)));
         } else  {
             customLogger("Skipping ack as it decodes to null or does not exist.");
