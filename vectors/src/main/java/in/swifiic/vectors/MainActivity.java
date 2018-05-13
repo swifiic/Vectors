@@ -160,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 toggleVectorsButton.setText(R.string.start_button_text);
             }
-            customLogger("Service launched at: " + mService.getStartTime());
             TextView deviceIdView = findViewById(R.id.deviceIdView);
             deviceIdView.setText("Device ID: " + mService.getDeviceId());
             TextView availableFilesView = findViewById(R.id.availableFilesView);
@@ -310,7 +309,6 @@ public class MainActivity extends AppCompatActivity {
             mService = binder.getService();
 //            customLogger("Service conn!");
             mBound = true;
-            customLogger("Started w/bound: " + mService.getStartTime());
             setUIText();
             mService.setBackgroundService();
         }

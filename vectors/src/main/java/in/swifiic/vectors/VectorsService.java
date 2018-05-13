@@ -44,6 +44,7 @@ import android.widget.Toast;
 import in.swifiic.vectors.helper.AckItem;
 import in.swifiic.vectors.helper.Acknowledgement;
 import in.swifiic.vectors.helper.ConnectionLog;
+import in.swifiic.vectors.helper.MessageScheme;
 import in.swifiic.vectors.helper.VideoData;
 
 import com.google.android.gms.nearby.Nearby;
@@ -66,15 +67,13 @@ import com.google.android.gms.tasks.Task;
 import com.jaredrummler.android.device.DeviceName;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static in.swifiic.vectors.MessageScheme.getMessageType;
+import static in.swifiic.vectors.helper.MessageScheme.getMessageType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class VectorsService extends IntentService {
@@ -84,25 +83,22 @@ public class VectorsService extends IntentService {
 
     public ConnectionsClient mConnectionClient;
     public String connectedEndpoint;
-    private String startTime;
+
     private boolean goodbyeSent = false;
-    private StorageModule mStorageModule;
+    private StorageModule mStorageModule = new StorageModule(this);
     private ConnectionLog mConnectionLog;
-    private StringBuilder logBuffer = new StringBuilder();
+    private StringBuilder mLogBuffer = new StringBuilder();
     private int bufferLines = 0;
-    private boolean connectionRequested = false;
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
-    private Timer mTimer;
-    private TimerTask timerTask;
 
     private final ArrayList<Long> incomingPayloads = new ArrayList<>();
     public final ArrayList<Long> outgoingPayloads = new ArrayList<>();
 
     private final SimpleArrayMap<Long, Payload> incomingPayloadReferences = new SimpleArrayMap<>();
     private final SimpleArrayMap<Long, String> filePayloadFilenames = new SimpleArrayMap<>();
-    public SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
+    private SimpleArrayMap<Long, VideoData> outgoingTransfersMetadata = new SimpleArrayMap<>();
     private List<Pair<String, Long>> recentlyVisitedNodes = new ArrayList<>();
 
     SharedPreferences mSharedPreferences;
@@ -157,10 +153,6 @@ public class VectorsService extends IntentService {
         }
     }
 
-    public String getStartTime() {
-        return startTime;
-    }
-
     public int getFileListSize() {
         return mStorageModule.getFilesCount();
     }
@@ -188,15 +180,13 @@ public class VectorsService extends IntentService {
 
     private String createDeviceId() {
         String androidId = Settings.Secure.getString(VectorsApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-        deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" + BuildConfig.VERSION_NAME + "_" + androidId.substring(androidId.length() - 4); //get last 4 chars
+        deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" + BuildConfig.VERSION_NAME + "_" + androidId.substring(androidId.length() - 6); //get last 6 chars
         return deviceId;
     }
 
     void initBGService() {
-        mStorageModule = new StorageModule(this);
         deviceId = createDeviceId();
         initConnectionAndNotif();
-        startTime = new SimpleDateFormat("HH.mm.ss").format(new Date());
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
         mEditor = mSharedPreferences.edit();
         mEditor.putString(Constants.DEVICE_ID, getDeviceId());
@@ -218,15 +208,15 @@ public class VectorsService extends IntentService {
     }
 
     private void initaliseTimer() {
-        mTimer = new Timer();
+        Timer resetTimer = new Timer();
         // The timer tasks automatically restarts Nearby in case no new nodes have been discovered
-        timerTask = new TimerTask() {
+        TimerTask resetTask = new TimerTask() {
             @Override
             public void run() {
                 softResetNearby();
             }
         };
-        mTimer.schedule(timerTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
+        resetTimer.schedule(resetTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
     }
 
     public VectorsService() {
@@ -251,11 +241,11 @@ public class VectorsService extends IntentService {
 
     private void addToLogBuffer(String logMsg) {
         if (bufferLines >= Constants.LOG_BUFFER_SIZE) {
-            mStorageModule.writeLogBuffer(logBuffer);
-            logBuffer.setLength(0); // hack to clear the buffer
+            mStorageModule.writeLogBuffer(mLogBuffer);
+            mLogBuffer.setLength(0); // hack to clear the buffer
             bufferLines = 0;
         }
-        logBuffer.append(logMsg);
+        mLogBuffer.append(logMsg);
         bufferLines++;
     }
 
@@ -270,7 +260,6 @@ public class VectorsService extends IntentService {
     }
 
     synchronized private void restartNearby() {
-        connectionRequested = false;
         customLogger("RestartingNearby");
 
         incomingPayloads.clear();
@@ -381,7 +370,7 @@ public class VectorsService extends IntentService {
                 public void onEndpointFound(final String endpointId, final DiscoveredEndpointInfo discoveredEndpointInfo) {
                     customLogger("FOUND ENDPOINT: " + endpointId + "Info " + discoveredEndpointInfo.getEndpointName() + " id " + discoveredEndpointInfo.getServiceId());
                     setLastNodeContactTime();
-                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null && !connectionRequested) {
+                    if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX) && !recentlyVisited(endpointName) && connectedEndpoint == null) {
                         stopAdvertising();
                         stopDiscovery();
                         customLogger("Stopping before requesting Conn");
@@ -422,7 +411,6 @@ public class VectorsService extends IntentService {
                 public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
-                    connectionRequested = true;
                     endpointName = connectionInfo.getEndpointName();
                     customLogger("Pending connection From " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
@@ -436,7 +424,6 @@ public class VectorsService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
-                    connectionRequested = false;
                     customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
@@ -591,7 +578,7 @@ public class VectorsService extends IntentService {
     }
 
     private void sendFileList() {
-        String fileList = mStorageModule.getQuickFileList();
+        String fileList = mStorageModule.getFileList();
         fileList = MessageScheme.createStringType(MessageScheme.MessageType.FILELIST, fileList);
         mConnectionClient.sendPayload(connectedEndpoint, Payload.fromBytes(fileList.getBytes(UTF_8)));
     }
@@ -665,7 +652,7 @@ public class VectorsService extends IntentService {
     private void processFileList(String filelist) {
         customLogger("Rcvd a filelist of " + filelist);
         List<String> rcvdFilenames = Arrays.asList(filelist.split(","));
-        List<String> currFilenames = Arrays.asList(mStorageModule.getQuickFileList().split(","));
+        List<String> currFilenames = Arrays.asList(mStorageModule.getFileList().split(","));
         List<String> requestFilenames = new ArrayList<>();
 
         // This code is very bad, but it's the only way not to get a NPE :P
@@ -680,7 +667,7 @@ public class VectorsService extends IntentService {
                 requestFilenames.add(rcvdFilenames.get(i));
             }
         }
-        String requestFilesCSV = StorageModule.convertListToCSV(requestFilenames);
+        String requestFilesCSV = StorageModule.convertFileListToCSV(requestFilenames);
         customLogger("We want the files of " + requestFilesCSV);
 
         // we send the files we want to get here
@@ -713,7 +700,7 @@ public class VectorsService extends IntentService {
             }
         }
 
-        String localFileList = mStorageModule.getQuickFileList();
+        String localFileList = mStorageModule.getFileList();
 
         List<AckItem> itemsInAck = mStorageModule.getAckFromFile().getItems();
         for (AckItem item : itemsInAck) {
@@ -755,7 +742,7 @@ public class VectorsService extends IntentService {
             for (int i = 0; i < requestedVideoDatas.size(); i++) {
                 VideoData vd = requestedVideoDatas.get(i);
                 if (vd != null) {
-                    if (vd.getTickets() > 1 || endpointName.compareTo(vd.getDestinationNode())==0) {
+                    if (vd.getTickets() > 1 || endpointName.endsWith(vd.getDestinationNode())) {
                         // SNW strategy allows us to only send half
                         vd.setTickets(vd.getTickets() / 2);
                         vd.addTraversedNode(getDeviceId() + " / " + getUserEmailId());

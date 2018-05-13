@@ -72,7 +72,7 @@ public class StorageModule {
         mContext = context;
     }
 
-    public static String convertListToCSV(List<String> files) {
+    public static String convertFileListToCSV(List<String> files) {
         String fileName;
         StringBuilder csvFileList = new StringBuilder();
         for (int i = 0; i < files.size(); i++) {
@@ -142,7 +142,7 @@ public class StorageModule {
         }
     }
 
-    public String getQuickFileList() {
+    public String getFileList() {
         File[] files = dataDirectory.listFiles();
         String fileName;
         StringBuilder csvFileList = new StringBuilder();
