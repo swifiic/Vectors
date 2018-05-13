@@ -92,6 +92,7 @@ public class VectorsService extends IntentService {
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
+    private boolean connectionRequested = false;
 
     private final ArrayList<Long> incomingPayloads = new ArrayList<>();
     public final ArrayList<Long> outgoingPayloads = new ArrayList<>();
@@ -276,6 +277,7 @@ public class VectorsService extends IntentService {
 
     synchronized private void restartNearby() {
         customLogger("RestartingNearby");
+        connectionRequested = false;
 
         incomingPayloads.clear();
         outgoingPayloads.clear();
@@ -397,7 +399,7 @@ public class VectorsService extends IntentService {
                     customLogger("Endpoint Discovered: " + discoveredEndpointInfo.getEndpointName());
                     setLastNodeContactTime();
                     if (discoveredEndpointInfo.getEndpointName().startsWith(Constants.ENDPOINT_PREFIX)
-                            && !recentlyVisited(endpointName) && connectedEndpoint == null) {
+                            && !recentlyVisited(endpointName) && connectedEndpoint == null && !connectionRequested) {
                         stopAdvertising();
                         stopDiscovery();
                         mConnectionClient.requestConnection(
@@ -441,6 +443,7 @@ public class VectorsService extends IntentService {
                 public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
                     // Automatically accept the connection on both sides.
                     setLastNodeContactTime();
+                    connectionRequested = true;
                     endpointName = connectionInfo.getEndpointName();
                     customLogger("Pending connection from " + endpointName);
                     if (endpointName.startsWith("Vectors") && !recentlyVisited(endpointName)) {
@@ -453,6 +456,7 @@ public class VectorsService extends IntentService {
 
                 @Override
                 public void onConnectionResult(String endpointId, ConnectionResolution result) {
+                    connectionRequested = false;
                     customLogger("Checking Connection Status " + result.toString());
                     switch (result.getStatus().getStatusCode()) {
                         case ConnectionsStatusCodes.STATUS_OK:
@@ -777,16 +781,15 @@ public class VectorsService extends IntentService {
         for (int i = 0; i < recentlyVisitedNodes.size(); i++) {
             if (recentlyVisitedNodes.get(i).first.compareTo(endpointName)==0) {
                 if ((recentlyVisitedNodes.get(i).second + Constants.MIN_CONNECTION_GAP_TIME) > System.currentTimeMillis()/1000) {
-                    customLogger("Seen this guy before! Discarding conn");
+                    customLogger("Recently connected node, connection discarded");
                     return true;
                 } else {
-                    customLogger("Hello old friend" + recentlyVisitedNodes.get(i) + " curr at " + System.currentTimeMillis()/1000);
+                    customLogger("Reconnecting to " + recentlyVisitedNodes.get(i));
                     recentlyVisitedNodes.remove(i);
                     return false;
                 }
             }
         }
-        customLogger("New guy");
         return false;
     }
 
