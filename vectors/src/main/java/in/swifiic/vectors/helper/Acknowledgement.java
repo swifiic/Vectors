@@ -140,12 +140,11 @@ public class Acknowledgement {
             int resultLength = decompresser.inflate(result);
             decompresser.end();
             String outputString = new String(result, 0, resultLength, "UTF-8");
-//            Log.d(TAG, "O/p string " + outputString);
             return fromString(outputString);
         } catch(java.io.UnsupportedEncodingException ex) {
-            // handle
+            Log.e(TAG, "Encoding format exception");
         } catch (java.util.zip.DataFormatException ex) {
-            // handle
+            Log.e(TAG, "Data format exception");
         }
         return null;
     }

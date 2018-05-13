@@ -94,7 +94,7 @@ public class VectorsService extends IntentService {
     private String endpointName;
     private boolean goodbyeReceived = false;
     private long lastNodeContactTime = 0;
-    private Timer timer;
+    private Timer mTimer;
     private TimerTask timerTask;
 
     private final ArrayList<Long> incomingPayloads = new ArrayList<>();
@@ -209,9 +209,7 @@ public class VectorsService extends IntentService {
 
         Acknowledgement ack = mStorageModule.getAckFromFile();
         if (ack != null) {
-            // TODO - test this
             byte[] x = Acknowledgement.getCompressedAcknowledgement(ack);
-            customLogger("X Str Len " + x.length);
             Acknowledgement newAck = Acknowledgement.getDecompressedAck(x);
         }
 
@@ -220,14 +218,15 @@ public class VectorsService extends IntentService {
     }
 
     private void initaliseTimer() {
-        timer = new Timer();
+        mTimer = new Timer();
+        // The timer tasks automatically restarts Nearby in case no new nodes have been discovered
         timerTask = new TimerTask() {
             @Override
             public void run() {
                 softResetNearby();
             }
         };
-        timer.schedule(timerTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
+        mTimer.schedule(timerTask, 0, Constants.RESTART_NEARBY_SECS * 1000);
     }
 
     public VectorsService() {
@@ -273,15 +272,17 @@ public class VectorsService extends IntentService {
     synchronized private void restartNearby() {
         connectionRequested = false;
         customLogger("RestartingNearby");
+
         incomingPayloads.clear();
         outgoingPayloads.clear();
         incomingPayloadReferences.clear();
         filePayloadFilenames.clear();
         outgoingTransfersMetadata.clear();
+
         stopAdvertising();
         stopDiscovery();
         mConnectionClient.stopAllEndpoints();
-        customLogger("StoppedComms");
+
         if (connectedEndpoint != null) {
             mConnectionClient.disconnectFromEndpoint(connectedEndpoint);
             connectedEndpoint = null;
@@ -291,6 +292,7 @@ public class VectorsService extends IntentService {
             mConnectionLog.connectionTerminated();
             mStorageModule.writeConnectionLog(mConnectionLog);
         }
+
         mConnectionLog = null;
         
         goodbyeReceived = false;
