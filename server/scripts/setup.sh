@@ -38,7 +38,7 @@ pToJSVM=$2
 
 filesBase=/var/spool/vectors
 
-path=${pToRepo}
+path=${pToRepo}/..
 
 mkdir -p ${filesBase}/bin ${filesBase}/scripts ${filesBase}/rec
 
