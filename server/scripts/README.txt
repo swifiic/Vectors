@@ -34,10 +34,10 @@ To remove an existing cron job:
 ************************
 Binaries and CFG files
 ************************
-The binaries are copied into /var/spool/vector/bin
-The CFG files are copied into /var/spool/vector/cfg
-The recorded samples are stored in /var/spool/vector/rec
-There is a file named counter which takes care of the sample sequence number. It is located at /var/spool/vector/counter
+The binaries are copied into /var/spool/vectors/bin
+The CFG files are copied into /var/spool/vectors/cfg
+The recorded samples are stored in /var/spool/vectors/rec
+There is a file named counter which takes care of the sample sequence number. It is located at /var/spool/vectors/counter
 
 ***********************
 Details of sript files

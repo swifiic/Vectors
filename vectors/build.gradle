@@ -25,13 +25,12 @@ android {
 }
 
 dependencies {
-//    compile project(':common')
-    compile 'com.jaredrummler:android-device-names:1.1.6'
-    compile 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.jaredrummler:android-device-names:1.1.6'
+    implementation 'com.google.code.gson:gson:2.8.2'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support:design:26.1.0'
-    implementation 'com.google.android.gms:play-services-nearby:11.8.0'
+    implementation 'com.google.android.gms:play-services-nearby:15.0.1'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
