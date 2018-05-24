@@ -143,13 +143,23 @@ public class StorageModule {
     }
 
     public String getFileList() {
+        /* First query the list of files to get video data
+           Automatically deletes the expired content
+         */
+        File[] filesPreTTLCheck = dataDirectory.listFiles();
+        for (int i = 0; i < filesPreTTLCheck.length; i++) {
+            String fileName = filesPreTTLCheck[i].getName();
+            if (!fileName.contains(".json")) {
+                VideoData vd = getVideoDataFromFile(fileName);
+            }
+        }
+
         File[] files = dataDirectory.listFiles();
-        String fileName;
-        StringBuilder csvFileList = new StringBuilder();
+                StringBuilder csvFileList = new StringBuilder();
         if (files != null) {
             ArrayList<String> jsonList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
-                fileName = files[i].getName();
+                String fileName = files[i].getName();
                 if (!fileName.contains(".json")) {
                     if (i > 0) {
                         csvFileList.append(",");
