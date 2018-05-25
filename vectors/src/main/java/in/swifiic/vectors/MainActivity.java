@@ -139,13 +139,13 @@ public class MainActivity extends AppCompatActivity {
     private void enableVectors() {
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, true);
         mEditor.apply();
-        mService.setBackgroundService();
+        mService.refreshServiceState();
     }
 
     private void disableVectors() {
         mEditor.putBoolean(Constants.STATUS_ENABLE_BG_SERVICE, false);
         mEditor.apply();
-        mService.setBackgroundService();
+        mService.refreshServiceState();
     }
 
     private boolean getVectorsStatus() {
@@ -267,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         customLogger("On Create");
 
         mEditor = mSharedPreferences.edit();
+        lastConnectStr = mSharedPreferences.getString("LastConnects", "EMPTY");
         if (!checkPermissions()) {
             getPermissions();
         } else {
@@ -297,6 +298,12 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "Unbinding service conn");
         unbindService(mConnection);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
+        customLogger("On Create");
+
+        mEditor.putString("LastConnects", lastConnectStr);
+        mEditor.apply();
+
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -310,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
 //            customLogger("Service conn!");
             mBound = true;
             setUIText();
-            mService.setBackgroundService();
+            mService.refreshServiceState();
         }
 
         @Override
@@ -335,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*** Get the updates from Service to the UI ***/
+    String lastConnectStr;
     private class BGServiceUIUpdateReceiver extends BroadcastReceiver
     {
         private BGServiceUIUpdateReceiver() {}         // Prevents instantiation
@@ -342,9 +350,22 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.hasExtra(Constants.CONNECTION_STATUS)){
                 TextView textView = (TextView) findViewById(R.id.connectionStatusView);
-                String timeStamp = new SimpleDateFormat("kk.mm.ss").format(new Date());
+                String timeStamp = new SimpleDateFormat("dd.kk.mm.ss").format(new Date());
+                String toLog = intent.getStringExtra(Constants.CONNECTION_STATUS) + " at " + timeStamp;
+                if(toLog.contains(Constants.CONN_UP_LOG_STR)){
+                    toLog = toLog + " ## " + lastConnectStr;
+                    String oldLogs[] = toLog.split(" ## ", 4);
+                    String newLogStr = oldLogs[0];
+                    for (int i = 1; i < oldLogs.length; i++) {
+                            newLogStr = newLogStr + " ## " + oldLogs[i];
+                    }
+                    toLog = newLogStr;
+                    lastConnectStr = toLog;
+                } else {
+                    toLog = toLog + " ## " + lastConnectStr;
+                }
 
-                textView.setText(intent.getStringExtra(Constants.CONNECTION_STATUS) + " at " + timeStamp);
+                textView.setText(toLog);
             }
             if(intent.hasExtra(Constants.LOG_STATUS)){
                 TextView logView = findViewById(R.id.logView);

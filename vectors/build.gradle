@@ -1,14 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-
     compileSdkVersion 26
     defaultConfig {
         applicationId "in.swifiic.vectors"
         minSdkVersion 23
-        targetSdkVersion 26
+        targetSdkVersion 24
         versionCode 7
-        versionName "1.2.2"
+        versionName '1.2.3'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
         buildConfigField 'String', 'BUILD_HOST', '"' + InetAddress.getLocalHost().getCanonicalHostName() + '"'
@@ -18,9 +17,15 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug {
+            jniDebuggable true
+        }
     }
     lintOptions {
         abortOnError false
+    }
+    buildToolsVersion '27.0.3'
+    productFlavors {
     }
 }
 

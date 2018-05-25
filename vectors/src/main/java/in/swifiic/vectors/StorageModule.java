@@ -41,6 +41,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -142,7 +143,7 @@ public class StorageModule {
         }
     }
 
-    public String getFileList() {
+    public String getFileListToSend() {
         /* First query the list of files to get video data
            Automatically deletes the expired content
          */
@@ -155,21 +156,24 @@ public class StorageModule {
         }
 
         File[] files = dataDirectory.listFiles();
-                StringBuilder csvFileList = new StringBuilder();
+        StringBuilder csvFileList = new StringBuilder();
+        int fileCount =0;
         if (files != null) {
             ArrayList<String> jsonList = new ArrayList<String>();
             for (int i = 0; i < files.length; i++) {
                 String fileName = files[i].getName();
                 if (!fileName.contains(".json")) {
-                    if (i > 0) {
+                    if (csvFileList.length() > 0) {
                         csvFileList.append(",");
                     }
                     csvFileList.append(fileName);
+                    fileCount++;
                 } else {
                     jsonList.add(fileName);
                 }
             }
             String retVal = csvFileList.toString();
+            // Additional logic to remove orphaned json files
             if (!jsonList.isEmpty()) {
                 for (int i = 0; i < jsonList.size(); i++) {
                     String fName = jsonList.get(i);
@@ -183,9 +187,49 @@ public class StorageModule {
                     Log.w(TAG, "Deleted unmatched JSON file with name " + fName);
                 }
             }
+            if(fileCount > Constants.MAX_FILES_TO_LIST){
+                String[] elements=retVal.split(",");
+                int incCountMax = 1 + (2 *fileCount) / Constants.MAX_FILES_TO_LIST ;
+                Random rn = new Random();
+                int truncatedListCount=0;
+                StringBuilder csvFileList2 = new StringBuilder();
+                csvFileList2.append(elements[0]);
+                for(int i =1; i < elements.length; ){
+                    csvFileList2.append(",");
+                    csvFileList2.append(elements[i]);
+                    int randomInc = rn.nextInt(incCountMax);
+                    i=i+ randomInc + 1;
+                    truncatedListCount++;
+                }
+                retVal = csvFileList2.toString();
+                Log.w(TAG, "getFileList reduced from " + fileCount  + " to " + truncatedListCount);
+            }
             return retVal;
         }
-        return null;
+        return "";
+    }
+
+    public String getFileListComplete() {
+        /* No optimization - just return all the files
+         */
+
+        File[] files = dataDirectory.listFiles();
+        StringBuilder csvFileList = new StringBuilder();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].getName();
+                if (!fileName.contains(".json")) {
+                    if (csvFileList.length() > 0) {
+                        csvFileList.append(",");
+                    }
+                    csvFileList.append(fileName);
+                }
+            }
+            String retVal = csvFileList.toString();
+
+            return retVal;
+        }
+        return "";
     }
 
     public boolean deleteFile(String filename) {

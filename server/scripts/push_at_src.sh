@@ -28,7 +28,8 @@
 
 filesBase=/var/spool/vectors
 set -o xtrace
-dest_node="f083"
+# for Remi1S dest_node="f083"   : G3 a3e6df
+dest_node="a3e6df"
 src_node="42bf"
 video_file_counter=$1
 layerLast=`cat ${filesBase}/lastLayer`
@@ -89,7 +90,7 @@ layerLast=$(( ${layerLast} / 10 ));  # # no roundoff here
 
 counterPart=`printf "%05d" ${video_file_counter}`
 origin=`hostname`
-src_fldr="/var/www/video_out"
+src_fldr="${filesBase}/video_out"
 
 # video_00175_L0T1.out  video_00175_L0T3.out  video_00175_L0T5.out  video_00175_L1T2.out  video_00175_L1T4.out  video_00175.md
 # video_00175_L0T2.out  video_00175_L0T4.out  video_00175_L1T1.out  video_00175_L1T3.out  video_00175_L1T5.out

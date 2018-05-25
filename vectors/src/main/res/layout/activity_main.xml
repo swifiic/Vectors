@@ -24,25 +24,25 @@
             android:id="@+id/deviceIdView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:padding="5dp"
             android:text="DeviceId"
-            android:textSize="18sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/connectionStatusView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="No Connection"
-            android:textSize="18sp" />
+            android:layout_height="100dp"
+            android:padding="5dp"
+            android:text="No Connection\n To check"
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/availableFilesView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
+            android:padding="5dp"
             android:text="Available Files"
-            android:textSize="18sp" />
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/logClearButton"
