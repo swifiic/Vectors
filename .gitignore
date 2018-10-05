@@ -19,3 +19,8 @@ local.properties
 .externalNativeBuild
 .directory
 /release
+vectors/.classpath
+vectors/.project
+vectors/.settings/org.eclipse.buildship.core.prefs
+vectors/gradlew
+vectors/gradlew.bat

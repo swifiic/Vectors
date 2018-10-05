@@ -1,0 +1,1 @@
+Please refer to the [wiki page](https://github.com/swifiic/Vectors/wiki/Android-Nodes) on setting up the Android Devices for installation details.

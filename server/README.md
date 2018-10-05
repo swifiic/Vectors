@@ -1,0 +1,1 @@
+Please refer to the [wiki page](https://github.com/swifiic/Vectors/wiki/Ubuntu-PC-Nodes) on setting up the Ubuntu Nodes for installation details.
