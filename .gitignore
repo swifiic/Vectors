@@ -9,6 +9,7 @@
 
 *.iml
 .gradle
+.settings
 gradle/
 local.properties
 .idea
@@ -24,3 +25,5 @@ vectors/.project
 vectors/.settings/org.eclipse.buildship.core.prefs
 vectors/gradlew
 vectors/gradlew.bat
+server/scripts/config
+.project
