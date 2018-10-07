@@ -24,7 +24,7 @@
 ############################################################################
 
 
-
+source config
 set -o xtrace
 
 filesBase=/var/spool/vectors
@@ -34,7 +34,7 @@ cd ${filesBase}
 outBase=${filesBase}/video_out
 framerate=0.25
 num_frames=65
-input=/dev/video0
+input=$webcam_dev
 
 # resolution based arguments
 # # # # # # high Res
@@ -44,17 +44,20 @@ input=/dev/video0
 # srcWidthStr=" -wdt0 640 -hgt0 480 -wdt1 1280 -hgt1 960 "
 
 # # # # # # Medium Res
-# resolution=640x480
-# dc_res_1="640 480 "
-# dc_res_2="320 240 "
-# srcWidthStr=" -wdt0 320 -hgt0 240 -wdt1 640 -hgt1 480 "
+if [ "$vid_quality" == "m" ]; then
+    resolution=640x480
+    dc_res_1="640 480 "
+    dc_res_2="320 240 "
+    srcWidthStr=" -wdt0 320 -hgt0 240 -wdt1 640 -hgt1 480 "
+fi
 
 # # # # # # Low res
-resolution=320x240
-dc_res_1="320 240 "
-dc_res_2="160 120 "
-srcWidthStr=" -wdt0 160 -hgt0 120 -wdt1 320 -hgt1 240 "
-
+if [ "$vid_quality" == "l" ]; then
+    resolution=320x240
+    dc_res_1="320 240 "
+    dc_res_2="160 120 "
+    srcWidthStr=" -wdt0 160 -hgt0 120 -wdt1 320 -hgt1 240 "
+fi
 
 video_file_counter=`cat ./counter`
 cntr=`printf "%05d" ${video_file_counter}`
