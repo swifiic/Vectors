@@ -32,8 +32,8 @@ cd ${filesBase}
 
 # use v4l2-ctl --list-formats-ext to find options on framerate etc.
 outBase=${filesBase}/video_out
-framerate=0.25
-num_frames=65
+framerate=$frame_rate
+num_frames=$frame_number
 input=$webcam_dev
 
 # resolution based arguments

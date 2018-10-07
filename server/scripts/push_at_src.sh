@@ -25,12 +25,12 @@
 
 
 # this file is called by cron wrapper called after layer files are generated
-
+source config
 filesBase=/var/spool/vectors
 set -o xtrace
 # for Remi1S dest_node="f083"   : G3 a3e6df
-dest_node="a3e6df"
-src_node="42bf"
+# dest_node="a3e6df"
+# src_node="42bf"
 video_file_counter=$1
 layerLast=`cat ${filesBase}/lastLayer`
 counterPart=`printf "%05d" ${video_file_counter}`
@@ -125,7 +125,7 @@ for (( k=0 ; k <= 10 ; k++ )) ; do
     if [ -f "${src_fldr}/video_${counterPart}${baseFileEnd}" ] ; then
         echo " processing ${src_fldr}/video_${counterPart}${baseFileEnd} for count ${count} layer ${layer} and tempId=${tempId}";
 
-        outStr="{\"creationTime\":${timeAtOrigin},\"fileName\":\"video_${counterPart}${baseFileEnd}\",\"maxSvcLayer\":2,\"maxTemporalLayer\":5,\"sequenceNumber\":${video_file_counter},\"svcLayer\":${layer},\"temporalLayer\":${tempId},\"tickets\":${count},\"traversal\":[{\"first\":${timeAtOrigin},\"second\":\"${origin}\"}],\"ttl\":86400,\"destinationNode\":\"${destNode}\",\"sourceNode\":\"${srcNode}\"}"
+        outStr="{\"creationTime\":${timeAtOrigin},\"fileName\":\"video_${counterPart}${baseFileEnd}\",\"maxSvcLayer\":2,\"maxTemporalLayer\":5,\"sequenceNumber\":${video_file_counter},\"svcLayer\":${layer},\"temporalLayer\":${tempId},\"tickets\":${count},\"traversal\":[{\"first\":${timeAtOrigin},\"second\":\"${origin}\"}],\"ttl\":$ttl_time,\"destinationNode\":\"${destNode}\",\"sourceNode\":\"${srcNode}\"}"
         echo ${outStr}
         echo ${outStr} > ${src_fldr}/video_${counterPart}${baseFileEnd}.json
     else

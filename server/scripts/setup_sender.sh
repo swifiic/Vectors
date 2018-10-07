@@ -5,10 +5,12 @@
 # sh install_shvc.sh
 echo; read -p "Default webcam suffix to be used; enter X in /dev/videoX (e.g. enter '1' for '/dev/video1'): " webcam_suffix
 echo; read -p "Frequency of capture interval (minutes): " cron_time
-echo; read -p "Time between frames (seconds): " frame_time
+echo; read -p "Framerate (seconds): " frame_rate
 echo; read -p "TTL of video chunk files (hours): " ttl_time
 echo; read -p "Frames before job: " frame_number
 echo; read -p "Video quality (l/m): " vid_quality
+echo; read -p "Source node (last 4 digits): " src_node
+echo; read -p "Destination node (last 4 digits):" dest_node
 
 if  [ "$vid_quality" != "l" -a "$vid_quality" != "m" ]; then
     vid_quality="l"
@@ -17,14 +19,17 @@ webcam_dev="/dev/video"$webcam_suffix
 config_file="config"
 rm $config_file
 touch $config_file
+ttl_time=$((ttl_time*3600))
 echo "webcam_dev="$webcam_dev >> $config_file
 echo "cron_time="$cron_time >> $config_file
-echo "frame_time="$frame_time >> $config_file
+echo "frame_rate="$frame_rate >> $config_file
 echo "ttl_time="$ttl_time >> $config_file
 echo "frame_number="$frame_number >> $config_file
 echo "vid_quality="$vid_quality >> $config_file
+echo "src_node="$src_node >> $config_file
+echo "dest_node="$dest_node >> $config_file
 
-./setup.sh shm jsvm
+# ./setup.sh shm jsvm
 # * resolution
 #     * check for V4L2 webcam
 #     * which webcam to use by default?
