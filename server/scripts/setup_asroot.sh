@@ -23,7 +23,7 @@
 #    Authors: Abhishek Thakur, Arnav Dhamija, Tejashwar Reddy G            #
 ############################################################################
 
-apt install -y adb
+apt install -y adb git
 filesBase=/var/spool/vectors
 mkdir -p ${filesBase}/video_in/import
 mkdir -p ${filesBase}/video_out
