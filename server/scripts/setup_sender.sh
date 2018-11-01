@@ -39,7 +39,7 @@ echo "vid_quality="$vid_quality >> $config_file
 echo "src_node="$src_node >> $config_file
 echo "dest_node="$dest_node >> $config_file
 
-cron_path="$PWD"/rcvr_cron.sh
+cron_path="$PWD"/src_cron_ack_pull.sh  
 
 (crontab -l ; echo "*/$cron_time * * * * $cron_path")| crontab -
 # ./setup.sh shm jsvm/JSVM
