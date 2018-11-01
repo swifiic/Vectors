@@ -39,9 +39,12 @@ echo "vid_quality="$vid_quality >> $config_file
 echo "src_node="$src_node >> $config_file
 echo "dest_node="$dest_node >> $config_file
 
-cron_path="$PWD"/src_cron_ack_pull.sh  
+cron_pull_path="$PWD"/src_cron_ack_pull.sh  
+cron_vid_path="$PWD"/src_cron_ack_pull.sh  
 
-(crontab -l ; echo "*/$cron_time * * * * $cron_path")| crontab -
+(crontab -l ; echo "*/$cron_time * * * * $cron_pull_path")| crontab -
+(crontab -l ; echo "*/$cron_time * * * * $cron_vid_path")| crontab -
+
 # ./setup.sh shm jsvm/JSVM
 # * resolution
 #     * check for V4L2 webcam
