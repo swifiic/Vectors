@@ -39,8 +39,10 @@ echo "vid_quality="$vid_quality >> $config_file
 echo "src_node="$src_node >> $config_file
 echo "dest_node="$dest_node >> $config_file
 
-# (crontab -l ; echo "*/$cron_time * * * * scripts/rcvr_cron.sh")| crontab -
-# ./setup.sh shm jsvm
+cron_path="$PWD"/rcvr_cron.sh
+
+(crontab -l ; echo "*/$cron_time * * * * $cron_path")| crontab -
+# ./setup.sh shm jsvm/JSVM
 # * resolution
 #     * check for V4L2 webcam
 #     * which webcam to use by default?
