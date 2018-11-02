@@ -3,7 +3,7 @@ sh scripts/install_shvc.sh
 
 sh setup_asroot.sh
 sh install_shvc.sh
-sudo bash setup.sh shm jsvm/JSVM
+sudo bash setup.sh $PWD/shm $PWD/jsvm/JSVM
 echo; read -p "Default webcam suffix to be used; enter X in /dev/videoX (e.g. enter '1' for '/dev/video1'): " webcam_suffix
 echo; read -p "Frequency of the capture cron job (minutes): " cron_time
 echo; read -p "Framerate (seconds): " frame_rate
