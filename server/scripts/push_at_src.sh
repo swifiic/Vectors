@@ -25,8 +25,8 @@
 
 
 # this file is called by cron wrapper called after layer files are generated
-source config
 filesBase=/var/spool/vectors
+source ${filesBase}/scripts/config
 set -o xtrace
 # for Remi1S dest_node="f083"   : G3 a3e6df
 # dest_node="a3e6df"

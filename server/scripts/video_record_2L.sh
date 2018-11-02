@@ -24,10 +24,10 @@
 ############################################################################
 
 
-source config
 set -o xtrace
 
 filesBase=/var/spool/vectors
+source ${filesBase}/scripts/config
 cd ${filesBase}
 
 # use v4l2-ctl --list-formats-ext to find options on framerate etc.
