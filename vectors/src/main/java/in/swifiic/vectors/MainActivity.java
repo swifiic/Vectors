@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.hasExtra(Constants.CONNECTION_STATUS)){
                 TextView textView = (TextView) findViewById(R.id.connectionStatusView);
-                String timeStamp = new SimpleDateFormat("dd.kk.mm.ss").format(new Date());
+                String timeStamp = new SimpleDateFormat("kk.mm.ss").format(new Date());
                 String toLog = intent.getStringExtra(Constants.CONNECTION_STATUS) + " at " + timeStamp;
                 if(toLog.contains(Constants.CONN_UP_LOG_STR)){
                     toLog = toLog + " ## " + lastConnectStr;
