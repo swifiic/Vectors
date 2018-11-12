@@ -335,7 +335,7 @@
                     getDeviceId(),
                     VectorsApp.getContext().getPackageName(),
                     mConnectionLifecycleCallback,
-                    new AdvertisingOptions(Strategy.P2P_POINT_TO_POINT))
+                    new AdvertisingOptions.Builder().setStrategy(Strategy.P2P_POINT_TO_POINT).build())
                     .addOnSuccessListener(
                             new OnSuccessListener<Void>() {
                                 @Override
@@ -358,20 +358,19 @@
             return mConnectionClient.startDiscovery(
                     VectorsApp.getContext().getPackageName(),
                     mEndpointDiscoveryCallback,
-                    new DiscoveryOptions(Strategy.P2P_POINT_TO_POINT))
+                    new DiscoveryOptions.Builder().setStrategy(Strategy.P2P_POINT_TO_POINT).build())
                     .addOnSuccessListener(
                             new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void unusedResult) {
-                                    customLogger("Discovery go!");
-                                    // We're discovering!
+                                    customLogger("Discovery Successful");
                                 }
                             })
                     .addOnFailureListener(
                             new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
-                                    customLogger("Discovery FAILED! " + e.getMessage());
+                                    customLogger("Discovery Failed " + e.getMessage());
                                 }
                             });
         }
