@@ -73,6 +73,7 @@
     import java.util.List;
     import java.util.Timer;
     import java.util.TimerTask;
+    import java.util.UUID;
 
     import static in.swifiic.vectors.helper.MessageScheme.getMessageType;
     import static java.nio.charset.StandardCharsets.UTF_8;
@@ -210,10 +211,11 @@
 
 
 
-        private String createDeviceId() {
+        private void generateDeviceId() {
             String androidId = Settings.Secure.getString(VectorsApp.getContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-            deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" + BuildConfig.VERSION_NAME + "_" + androidId.substring(androidId.length() - 6); //get last 6 chars
-            return deviceId;
+            // We create a nonce to allow us to uniquely identify each connection between two devices
+            String nonce = UUID.randomUUID().toString().substring(0, 6);
+            deviceId = Constants.ENDPOINT_PREFIX + DeviceName.getDeviceName() + "_" + BuildConfig.VERSION_NAME + "_" + nonce + "_" + androidId.substring(androidId.length() - 6); //get last 6 chars
         }
 
 
@@ -221,11 +223,8 @@
             SharedPreferences mSharedPreferences= PreferenceManager.getDefaultSharedPreferences(VectorsApp.getContext());
             SharedPreferences.Editor mEditor= mSharedPreferences.edit();
 
-            deviceId = createDeviceId();
             initConnectionAndNotif();
 
-            mEditor.putString(Constants.DEVICE_ID, getDeviceId());
-            mEditor.apply();
             if (vectorsServiceEnabled()) {
                 customLogger( "BgserviceEnable");
             } else {
@@ -330,11 +329,13 @@
         // Initialises the Nearby Connection client for Advertising itself to other Nearby devices
 
         private Task<Void> startAdvertising() {
+            generateDeviceId();
+
             return mConnectionClient.startAdvertising(
                     getDeviceId(),
                     VectorsApp.getContext().getPackageName(),
                     mConnectionLifecycleCallback,
-                    new AdvertisingOptions(Strategy.P2P_CLUSTER))
+                    new AdvertisingOptions(Strategy.P2P_POINT_TO_POINT))
                     .addOnSuccessListener(
                             new OnSuccessListener<Void>() {
                                 @Override
@@ -357,7 +358,7 @@
             return mConnectionClient.startDiscovery(
                     VectorsApp.getContext().getPackageName(),
                     mEndpointDiscoveryCallback,
-                    new DiscoveryOptions(Strategy.P2P_CLUSTER))
+                    new DiscoveryOptions(Strategy.P2P_POINT_TO_POINT))
                     .addOnSuccessListener(
                             new OnSuccessListener<Void>() {
                                 @Override
@@ -469,7 +470,7 @@
                                 }
                                 sendConnectionStatus(Constants.CONN_UP_LOG_STR + endpointName);
                                 connectedEndpoint = endpointId;
-                                mConnectionLog = new ConnectionLog(deviceId, endpointName);
+                                mConnectionLog = new ConnectionLog(getDeviceId(), endpointName);
                                 sendDestinationAck();
                                 sendFileList();
                                 stopAdvertising();

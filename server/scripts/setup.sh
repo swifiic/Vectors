@@ -67,4 +67,4 @@ echo "Deployed JSVM binaries"
 cp ${path}/src/CombineLS ${path}/src/ExtractAddLS ${filesBase}/bin
 echo "Deployed Vectors binaries"
 
-chmod a+x ${filesBase}/scripts/*
+chmod a+x ${filesBase}/*

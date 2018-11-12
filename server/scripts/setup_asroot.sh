@@ -23,7 +23,7 @@
 #    Authors: Abhishek Thakur, Arnav Dhamija, Tejashwar Reddy G            #
 ############################################################################
 
-sudo apt install -y adb git subversion ffmpeg make build-essential
+sudo apt install -y adb git subversion ffmpeg make build-essential || echo "Could not get the required packages, please check your network connection" && exit
 filesBase=/var/spool/vectors
 sudo mkdir -p ${filesBase}/video_in/import
 sudo mkdir -p ${filesBase}/video_out

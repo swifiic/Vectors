@@ -10,7 +10,7 @@ echo; read -p "Video quality (l/m): " vid_quality
 echo; read -p "Source node (last 4 digits): " src_node
 echo; read -p "Destination node (last 4 digits):" dest_node
 
-webcam_suffix="${webcam_suffix:-5}"
+webcam_suffix="${webcam_suffix:-0}"
 cron_time="${cron_time:-10}"
 frame_rate="${frame_rate:-0.25}"
 ttl_time="${ttl_time:-24}"
@@ -36,6 +36,8 @@ echo "frame_number="$frame_number >> $config_file
 echo "vid_quality="$vid_quality >> $config_file
 echo "src_node="$src_node >> $config_file
 echo "dest_node="$dest_node >> $config_file
+
+cp $config_file ${filesBase}/scripts
 
 cron_pull_path="$PWD"/src_cron_ack_pull.sh  
 cron_vid_path="$PWD"/src_cron_video.sh  
