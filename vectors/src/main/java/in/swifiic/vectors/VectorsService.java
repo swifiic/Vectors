@@ -673,14 +673,14 @@
                 Task pendingTransfer = mConnectionClient.sendPayload(connectedEndpoint, outgoingPayloadReferences.get(i));
                 taskList.add(pendingTransfer);
             }
-            for(int i =0; i < taskList.size(); i++){
-                try {
-                    final Object result = Tasks.await(taskList.get(i));
-                } catch (Exception ex){
-                    customLogger("Interrupted while waiting for task comepletion " + i + " from total of " + taskList.size());
-                }
-
-            }
+//            sendGoodbye();
+//            for(int i =0; i < taskList.size(); i++){
+//                try {
+//                    final Object result = Tasks.await(taskList.get(i));
+//                } catch (Exception ex){
+//                    customLogger("Interrupted while waiting for task comepletion " + i + " from total of " + taskList.size() + " " + ex.getMessage());
+//                }
+//            }
         }
 
         private void processFileList(String filelist) {
@@ -698,8 +698,9 @@
                 }
                 if (includeFile) {
                     requestFilenames.add(rcvdFilenames.get(i));
-                    if(Constants.MAX_FILES_TO_REQ < requestFilenames.size())
+                    if(Constants.MAX_FILES_TO_REQ < requestFilenames.size()) {
                         break;
+                    }
                 }
             }
             String requestFilesCSV = StorageModule.convertFileListToCSV(requestFilenames);

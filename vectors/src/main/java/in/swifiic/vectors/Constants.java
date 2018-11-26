@@ -33,13 +33,13 @@ public final class Constants {
 
     public static final String STATUS_ENABLE_BG_SERVICE = "connectionStatus";
     public static final String DEVICE_ID = "DEVICE_ID";
-    public static final String PAYLOAD_PREFIX = "video";
+    public static final String PAYLOAD_PREFIX = "op";
     public static final String CONNECTION_LOG_FILENAME = "ConnectionLog";
     public static final String LOGGER_FILENAME = "LogFile";
     public static final String FLDR =  "/VectorsData";
     public static final String FOLDER_LOG = "/VectorsLogs";
     public static final String ACK_PREFIX = "ack_";
-    public static final String BASE_NAME =  "video_00";
+    public static final String BASE_NAME =  PAYLOAD_PREFIX + "_00";
     public static final String ENDPOINT_PREFIX = "Vectors_";
     public static final String CONN_UP_LOG_STR = "Connected to: ";
     public static final String ACK_FILENAME = ACK_PREFIX + BASE_NAME;
